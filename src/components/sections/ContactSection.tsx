@@ -159,8 +159,7 @@ const ContactSection = () => {
                   type="submit"
                   size="lg"
                   loading={isSubmitting}
-                  className="w-full"
-                  variant="ocean"
+                  className="w-full bg-accent hover:bg-accent/90"
                 >
                   <Send className="mr-2 w-5 h-5" />
                   Send Message

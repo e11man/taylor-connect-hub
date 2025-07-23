@@ -14,16 +14,16 @@ const Header = () => {
   ];
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-lg border-b border-border/50">
-      <div className="container-ocean">
+    <header className="bg-primary shadow-sm sticky top-0 z-50">
+      <div className="container-custom">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center">
-              <Heart className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+              <Heart className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-primary">Community Connect</h1>
+              <h1 className="text-xl font-montserrat font-bold text-white">Community Connect</h1>
             </div>
           </div>
 
@@ -33,7 +33,7 @@ const Header = () => {
               <a
                 key={item.name}
                 href={item.href}
-                className="text-foreground hover:text-primary transition-ocean font-medium"
+                className="text-white hover:text-secondary transition-smooth font-medium font-montserrat"
               >
                 {item.name}
               </a>
@@ -42,17 +42,17 @@ const Header = () => {
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center space-x-4">
-            <SecondaryButton variant="ghost" size="sm">
+            <SecondaryButton variant="ghost" size="sm" className="text-white hover:bg-white/10">
               Log In
             </SecondaryButton>
-            <PrimaryButton size="sm">
+            <PrimaryButton size="sm" className="bg-accent hover:bg-accent/90">
               Request Volunteers
             </PrimaryButton>
           </div>
 
           {/* Mobile menu button */}
           <button
-            className="md:hidden p-2 rounded-lg hover:bg-secondary/50 transition-ocean"
+            className="md:hidden p-2 rounded-lg text-white hover:bg-white/10 transition-smooth"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             {isMenuOpen ? (
@@ -65,23 +65,23 @@ const Header = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden bg-background/95 backdrop-blur-lg border-t border-border/50 animate-slide-up">
+          <div className="md:hidden bg-primary border-t border-white/10 animate-slide-up">
             <div className="py-4 space-y-3">
               {navigation.map((item) => (
                 <a
                   key={item.name}
                   href={item.href}
-                  className="block px-4 py-2 text-foreground hover:text-primary hover:bg-secondary/50 rounded-lg transition-ocean font-medium"
+                  className="block px-4 py-2 text-white hover:bg-white/10 rounded-lg transition-smooth font-medium font-montserrat"
                   onClick={() => setIsMenuOpen(false)}
                 >
                   {item.name}
                 </a>
               ))}
-              <div className="flex flex-col space-y-2 px-4 pt-4 border-t border-border/50">
-                <SecondaryButton variant="ghost" size="sm">
+              <div className="flex flex-col space-y-2 px-4 pt-4 border-t border-white/10">
+                <SecondaryButton variant="ghost" size="sm" className="text-white hover:bg-white/10">
                   Log In
                 </SecondaryButton>
-                <PrimaryButton size="sm">
+                <PrimaryButton size="sm" className="bg-accent hover:bg-accent/90">
                   Request Volunteers
                 </PrimaryButton>
               </div>

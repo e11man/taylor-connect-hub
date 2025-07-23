@@ -144,10 +144,9 @@ const OpportunitiesSection = () => {
               </div>
 
               {/* Action Button */}
-              <PrimaryButton 
+              <PrimaryButton
                 size="md" 
-                className="w-full group-hover:scale-105 transition-spring"
-                variant="ocean"
+                className="w-full group-hover:scale-105 transition-smooth bg-accent hover:bg-accent/90"
               >
                 Join Now
               </PrimaryButton>
@@ -157,7 +156,7 @@ const OpportunitiesSection = () => {
 
         {/* View More */}
         <div className="text-center mt-12 animate-fade-in" style={{ animationDelay: '0.8s' }}>
-          <PrimaryButton size="lg" variant="wave">
+          <PrimaryButton size="lg" className="bg-accent hover:bg-accent/90">
             View All Opportunities
           </PrimaryButton>
         </div>
