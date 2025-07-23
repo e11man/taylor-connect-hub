@@ -147,76 +147,6 @@
 }
 
 @layer components {
-  /* Ocean wave animations */
-  @keyframes wave {
-    0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
-    25% { transform: translateX(-5px) translateY(-5px) rotate(1deg); }
-    50% { transform: translateX(0) translateY(-10px) rotate(0deg); }
-    75% { transform: translateX(5px) translateY(-5px) rotate(-1deg); }
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-10px); }
-  }
-
-  @keyframes slide-up {
-    from {
-      opacity: 0;
-      transform: translateY(30px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes scale-in {
-    from {
-      opacity: 0;
-      transform: scale(0.9);
-    }
-    to {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-
-  @keyframes glow-pulse {
-    0%, 100% { box-shadow: 0 0 20px hsl(var(--accent) / 0.3); }
-    50% { box-shadow: 0 0 40px hsl(var(--accent) / 0.6); }
-  }
-
-  /* Animation classes */
-  .animate-wave {
-    animation: wave 3s ease-in-out infinite;
-  }
-
-  .animate-float {
-    animation: float 3s ease-in-out infinite;
-  }
-
-  .animate-slide-up {
-    animation: slide-up 0.6s ease-out forwards;
-  }
-
-  .animate-fade-in {
-    animation: fade-in 0.8s ease-out forwards;
-  }
-
-  .animate-scale-in {
-    animation: scale-in 0.5s ease-out forwards;
-  }
-
-  .animate-glow-pulse {
-    animation: glow-pulse 2s ease-in-out infinite;
-  }
-
   /* Utility classes for smooth interactions */
   .transition-ocean {
     transition: var(--transition-smooth);
@@ -253,7 +183,7 @@
   }
 
   .card-glow {
-    @apply bg-card rounded-2xl p-6 transition-ocean hover-glow hover-lift;
+    @apply bg-card rounded-2xl p-6 transition-ocean hover:shadow-glow hover-lift;
   }
 
   /* Text effects */
