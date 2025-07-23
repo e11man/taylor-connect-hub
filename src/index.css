@@ -2,41 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Community Connect Design System - Ocean Theme */
 
 @layer base {
   :root {
+    /* Ocean-inspired color palette */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 210 100% 6%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 210 100% 6%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --popover-foreground: 210 100% 6%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    /* Navy blue primary (Community Connect brand) */
+    --primary: 210 100% 20%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 210 100% 30%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    /* Ocean teal secondary */
+    --secondary: 190 100% 95%;
+    --secondary-foreground: 210 100% 20%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    /* Muted ocean tones */
+    --muted: 200 20% 96%;
+    --muted-foreground: 210 20% 50%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    /* Vibrant cyan accent */
+    --accent: 190 100% 50%;
+    --accent-foreground: 210 100% 6%;
+    --accent-light: 190 100% 90%;
+
+    /* Success ocean green */
+    --success: 160 100% 40%;
+    --success-foreground: 0 0% 100%;
+
+    /* Warning coral */
+    --warning: 25 100% 55%;
+    --warning-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    --border: 200 30% 90%;
+    --input: 200 30% 96%;
+    --ring: 190 100% 50%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Ocean gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--accent)));
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(var(--secondary)) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(var(--background)), hsl(200 30% 98%));
+    --gradient-glow: radial-gradient(circle, hsl(var(--accent) / 0.3), transparent 70%);
+
+    /* Shadows with ocean tones */
+    --shadow-ocean: 0 10px 30px -10px hsl(var(--primary) / 0.3);
+    --shadow-card: 0 4px 20px -4px hsl(var(--primary) / 0.1);
+    --shadow-glow: 0 0 40px hsl(var(--accent) / 0.4);
+
+    /* Smooth transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
 
     --sidebar-background: 0 0% 98%;
 
@@ -56,41 +84,51 @@ All colors MUST be HSL.
   }
 
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
+    --background: 210 100% 6%;
+    --foreground: 0 0% 98%;
 
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
+    --card: 210 100% 8%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 210 100% 8%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 190 100% 50%;
+    --primary-foreground: 210 100% 6%;
+    --primary-glow: 190 100% 60%;
 
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 210 50% 12%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
+    --muted: 210 30% 15%;
+    --muted-foreground: 200 10% 60%;
 
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 190 100% 50%;
+    --accent-foreground: 210 100% 6%;
+    --accent-light: 190 50% 20%;
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
+    --success: 160 100% 40%;
+    --success-foreground: 0 0% 100%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --warning: 25 100% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 30% 20%;
+    --input: 210 30% 15%;
+    --ring: 190 100% 50%;
+
+    /* Dark mode gradients */
+    --gradient-ocean: linear-gradient(135deg, hsl(var(--accent)), hsl(var(--primary-glow)));
+    --gradient-hero: linear-gradient(180deg, hsl(var(--background)) 0%, hsl(210 50% 10%) 100%);
+    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(210 40% 12%));
+    --gradient-glow: radial-gradient(circle, hsl(var(--accent) / 0.3), transparent 70%);
+
+    --shadow-ocean: 0 10px 30px -10px hsl(var(--accent) / 0.4);
+    --shadow-card: 0 4px 20px -4px hsl(var(--accent) / 0.2);
+    --shadow-glow: 0 0 40px hsl(var(--accent) / 0.5);
   }
 }
 
@@ -101,5 +139,134 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Ocean wave animations */
+  @keyframes wave {
+    0%, 100% { transform: translateX(0) translateY(0) rotate(0deg); }
+    25% { transform: translateX(-5px) translateY(-5px) rotate(1deg); }
+    50% { transform: translateX(0) translateY(-10px) rotate(0deg); }
+    75% { transform: translateX(5px) translateY(-5px) rotate(-1deg); }
+  }
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+
+  @keyframes slide-up {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.9);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 20px hsl(var(--accent) / 0.3); }
+    50% { box-shadow: 0 0 40px hsl(var(--accent) / 0.6); }
+  }
+
+  /* Animation classes */
+  .animate-wave {
+    animation: wave 3s ease-in-out infinite;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.6s ease-out forwards;
+  }
+
+  .animate-fade-in {
+    animation: fade-in 0.8s ease-out forwards;
+  }
+
+  .animate-scale-in {
+    animation: scale-in 0.5s ease-out forwards;
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 2s ease-in-out infinite;
+  }
+
+  /* Utility classes for smooth interactions */
+  .transition-ocean {
+    transition: var(--transition-smooth);
+  }
+
+  .transition-spring {
+    transition: var(--transition-spring);
+  }
+
+  .hover-lift {
+    @apply transition-ocean hover:-translate-y-2 hover:shadow-lg;
+  }
+
+  .hover-glow {
+    @apply transition-ocean hover:shadow-glow;
+  }
+
+  /* Button variants using design system */
+  .btn-ocean {
+    @apply bg-gradient-to-r from-primary to-accent text-primary-foreground px-6 py-3 rounded-xl font-semibold transition-spring hover:scale-105 hover:shadow-ocean;
+  }
+
+  .btn-wave {
+    @apply bg-accent text-accent-foreground px-6 py-3 rounded-xl font-semibold transition-spring hover:bg-accent/90 hover:scale-105;
+  }
+
+  .btn-outline-ocean {
+    @apply border-2 border-primary text-primary px-6 py-3 rounded-xl font-semibold transition-ocean hover:bg-primary hover:text-primary-foreground;
+  }
+
+  /* Card variants */
+  .card-ocean {
+    @apply bg-gradient-to-br from-card to-secondary/30 backdrop-blur-sm border border-border/50 rounded-2xl p-6 transition-ocean hover-lift;
+  }
+
+  .card-glow {
+    @apply bg-card rounded-2xl p-6 transition-ocean hover-glow hover-lift;
+  }
+
+  /* Text effects */
+  .text-gradient-ocean {
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+
+  /* Layout utilities */
+  .container-ocean {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .section-ocean {
+    @apply py-16 lg:py-24;
   }
 }
