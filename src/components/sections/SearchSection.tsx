@@ -8,24 +8,24 @@ const SearchSection = () => {
   const [activeCategory, setActiveCategory] = useState("all");
 
   const categories = [
-    { id: "all", name: "All", icon: "🌟" },
-    { id: "community", name: "Community", icon: "🏘️" },
-    { id: "education", name: "Education", icon: "📚" },
-    { id: "environment", name: "Environment", icon: "🌱" },
-    { id: "health", name: "Health", icon: "🏥" },
-    { id: "fundraising", name: "Fundraising", icon: "💰" },
-    { id: "other", name: "Other", icon: "✨" }
+    { id: "all", name: "All" },
+    { id: "community", name: "Community" },
+    { id: "education", name: "Education" },
+    { id: "environment", name: "Environment" },
+    { id: "health", name: "Health" },
+    { id: "fundraising", name: "Fundraising" },
+    { id: "other", name: "Other" }
   ];
 
   return (
-    <section className="section-ocean bg-gradient-to-b from-background to-secondary/30">
-      <div className="container-ocean">
+    <section className="bg-white section-padding">
+      <div className="container-custom">
         {/* Section Header */}
         <div className="text-center mb-12 animate-slide-up">
-          <h2 className="text-4xl md:text-5xl font-bold mb-6 text-primary">
+          <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
             Find Your Perfect Volunteer Opportunity
           </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
             Search and filter opportunities based on your interests, skills, and availability.
           </p>
         </div>
@@ -39,7 +39,7 @@ const SearchSection = () => {
               placeholder="Search by title, description, or category..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-12 pr-4 py-4 text-lg rounded-2xl border-2 border-border/50 focus:border-accent bg-background/80 backdrop-blur-sm transition-ocean"
+              className="pl-12 pr-4 py-4 text-lg rounded-2xl border-2 border-gray-200 focus:border-[#00AFCE] bg-white transition-all duration-300"
             />
           </div>
         </div>
@@ -47,7 +47,7 @@ const SearchSection = () => {
         {/* Category Filters */}
         <div className="mb-12 animate-slide-up" style={{ animationDelay: '0.5s' }}>
           <div className="text-center mb-8">
-            <h3 className="text-2xl font-semibold mb-4 text-primary">Filter Opportunities</h3>
+            <h3 className="text-2xl font-montserrat font-semibold mb-4 text-primary">Filter Opportunities</h3>
             <p className="text-muted-foreground">Click on a category to filter opportunities</p>
           </div>
 
@@ -57,14 +57,13 @@ const SearchSection = () => {
                 key={category.id}
                 onClick={() => setActiveCategory(category.id)}
                 className={`
-                  px-6 py-3 rounded-2xl font-semibold transition-spring border-2 hover:scale-105
+                  px-6 py-3 rounded-2xl font-montserrat font-semibold transition-all duration-300 border-2 hover:scale-105
                   ${activeCategory === category.id
-                    ? 'bg-accent text-accent-foreground border-accent shadow-lg'
-                    : 'bg-background text-foreground border-border/50 hover:border-accent/50 hover:bg-accent/5'
+                    ? 'bg-[#E14F3D] text-white border-[#E14F3D] shadow-lg'
+                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE]'
                   }
                 `}
               >
-                <span className="mr-2">{category.icon}</span>
                 {category.name}
               </button>
             ))}
@@ -74,7 +73,7 @@ const SearchSection = () => {
         {/* Quick Actions */}
         <div className="text-center animate-fade-in" style={{ animationDelay: '0.7s' }}>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <PrimaryButton size="lg" className="bg-gradient-to-r from-primary to-accent">
+            <PrimaryButton size="lg" className="bg-[#E14F3D] hover:bg-[#E14F3D]/90">
               <Filter className="mr-2 w-5 h-5" />
               Advanced Filters
             </PrimaryButton>

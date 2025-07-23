@@ -38,20 +38,24 @@ const HeroSection = () => {
           </div>
 
           {/* Stats Section */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto animate-fade-in" style={{ animationDelay: '0.3s' }}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto animate-fade-in" style={{ animationDelay: '0.3s' }}>
             {stats.map((stat, index) => (
               <div 
                 key={stat.label}
-                className="bg-white border border-border rounded-lg p-8 text-center transition-smooth hover:shadow-lg"
+                className="group relative bg-white border border-gray-200 rounded-2xl p-6 md:p-10 text-center transition-all duration-500 hover:shadow-lg hover:scale-105 overflow-hidden"
                 style={{ animationDelay: `${0.5 + index * 0.1}s` }}
               >
-                <div className="flex justify-center mb-4">
-                  <div className="w-12 h-12 bg-secondary rounded-lg flex items-center justify-center">
-                    <stat.icon className="w-6 h-6 text-white" />
+                <div className="relative flex justify-center mb-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-[#00AFCE] rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+                    <stat.icon className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
                 </div>
-                <div className="text-4xl font-montserrat font-bold mb-2 text-secondary">{stat.value}</div>
-                <div className="text-muted-foreground font-montserrat font-medium">{stat.label}</div>
+                <div className="relative text-4xl md:text-5xl font-montserrat font-black mb-2 md:mb-3 text-secondary group-hover:scale-110 transition-transform duration-300">
+                  {stat.value}
+                </div>
+                <div className="relative text-base md:text-lg text-gray-600 font-montserrat font-semibold tracking-wide group-hover:text-gray-800 transition-colors duration-300">
+                  {stat.label}
+                </div>
               </div>
             ))}
           </div>
