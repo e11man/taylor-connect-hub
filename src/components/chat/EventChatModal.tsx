@@ -185,25 +185,39 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-[400px] p-4 border rounded-lg" ref={scrollAreaRef}>
+        <ScrollArea className="flex-1 min-h-[400px] p-6" ref={scrollAreaRef}>
           {messages.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              No messages yet. Start the conversation!
+            <div className="text-center text-muted-foreground py-12">
+              <div className="mb-4">
+                <MessageCircle className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-lg font-medium text-gray-400">No messages yet</p>
+                <p className="text-sm text-gray-400">Start the conversation!</p>
+              </div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {messages.map((message) => (
-                <div key={message.id} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium text-primary">
-                      {formatMessageSender(message)}
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatTime(message.created_at)}
-                    </span>
+                <div key={message.id} className="flex flex-col">
+                  {/* Message bubble */}
+                  <div className={`flex ${message.organization_id ? 'justify-end' : 'justify-start'} mb-1`}>
+                    <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${
+                      message.organization_id 
+                        ? 'bg-[#00AFCE] text-white rounded-br-md' 
+                        : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                    }`}>
+                      <p className="text-sm leading-relaxed break-words">{message.message}</p>
+                    </div>
                   </div>
-                  <div className="bg-muted p-3 rounded-lg">
-                    <p className="text-sm">{message.message}</p>
+                  
+                  {/* Sender and time info */}
+                  <div className={`flex ${message.organization_id ? 'justify-end' : 'justify-start'} px-2`}>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span className="font-medium">
+                        {formatMessageSender(message)}
+                      </span>
+                      <span>•</span>
+                      <span>{formatTime(message.created_at)}</span>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -211,34 +225,39 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
           )}
         </ScrollArea>
 
-        <div className="space-y-3 pt-4 border-t">
-          {!user && (
-            <div className="text-sm text-muted-foreground">
-              You can post anonymously without signing in.
-            </div>
-          )}
-          
-          {user && !isHost && (
-            <div className="text-sm text-muted-foreground">
-              Your messages will be posted anonymously.
-            </div>
-          )}
+        <div className="px-6 py-4 border-t bg-gray-50 rounded-b-lg">
+          <div className="space-y-3">
+            {!user && (
+              <div className="text-sm text-muted-foreground">
+                You can post anonymously without signing in.
+              </div>
+            )}
+            
+            {user && !isHost && (
+              <div className="text-sm text-muted-foreground">
+                Your messages will be posted anonymously.
+              </div>
+            )}
 
-          <div className="flex gap-2">
-            <Input
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Type your message..."
-              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-              className="flex-1"
-            />
-            <Button 
-              onClick={sendMessage} 
-              disabled={loading || !newMessage.trim()}
-              size="icon"
-            >
-              <Send className="h-4 w-4" />
-            </Button>
+            <div className="flex gap-3 items-end">
+              <div className="flex-1 relative">
+                <Input
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  placeholder="Type your message..."
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  className="pr-12 py-3 rounded-full border-2 border-gray-200 focus:border-[#00AFCE] transition-colors"
+                />
+                <Button 
+                  onClick={sendMessage} 
+                  disabled={loading || !newMessage.trim()}
+                  size="sm"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 p-0"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit2, Trash2, Calendar, MapPin, Users, LogOut } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, MapPin, Users, LogOut, MessageCircle } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { EventChatModal } from "@/components/chat/EventChatModal";
 
 interface Event {
   id: string;
@@ -23,6 +24,7 @@ interface Event {
   location: string;
   max_participants: number;
   created_at: string;
+  organization_id: string;
 }
 
 interface Organization {
@@ -45,6 +47,8 @@ const OrganizationDashboard = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -419,6 +423,18 @@ const OrganizationDashboard = () => {
                       <Button 
                         variant="outline" 
                         size="sm"
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setChatModalOpen(true);
+                        }}
+                        className="flex items-center gap-1"
+                      >
+                        <MessageCircle className="w-3 h-3" />
+                        Chat
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
                         onClick={() => openEditModal(event)}
                         className="flex items-center gap-1"
                       >
@@ -515,6 +531,19 @@ const OrganizationDashboard = () => {
           </Dialog>
         </div>
       </main>
+      
+      {selectedEvent && (
+        <EventChatModal
+          isOpen={chatModalOpen}
+          onClose={() => {
+            setChatModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          eventId={selectedEvent.id}
+          eventTitle={selectedEvent.title}
+          organizationId={selectedEvent.organization_id || organization?.id || ''}
+        />
+      )}
       
       <Footer />
     </div>
