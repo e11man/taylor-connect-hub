@@ -28,11 +28,11 @@ const Index = () => {
         {user ? (
           <>
             <UserDashboard />
-            <div id="opportunities">
-              <OpportunitiesSection />
-            </div>
             <div id="search">
               <SearchSection />
+            </div>
+            <div id="opportunities">
+              <OpportunitiesSection />
             </div>
           </>
         ) : (
