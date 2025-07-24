@@ -29,7 +29,6 @@ interface EventChatModalProps {
 export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizationId }: EventChatModalProps) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [isAnonymous, setIsAnonymous] = useState(false);
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
@@ -126,14 +125,13 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
       const messageData: any = {
         event_id: eventId,
         message: newMessage.trim(),
-        is_anonymous: isAnonymous && !isHost, // Hosts can't be anonymous
+        is_anonymous: !isHost, // Only hosts are not anonymous
       };
 
       if (isHost && userOrganization) {
         messageData.organization_id = userOrganization.id;
-      } else if (!isAnonymous && user) {
-        messageData.user_id = user.id;
       }
+      // Regular users and anonymous users don't set user_id
 
       const { error } = await supabase
         .from('chat_messages')
@@ -142,7 +140,6 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
       if (error) throw error;
 
       setNewMessage('');
-      setIsAnonymous(false);
 
       toast({
         title: "Message sent",
@@ -215,23 +212,16 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
         </ScrollArea>
 
         <div className="space-y-3 pt-4 border-t">
-          {!isHost && !user && (
+          {!user && (
             <div className="text-sm text-muted-foreground">
-              You can post anonymously or{' '}
-              <button className="text-primary underline">sign in</button> to post as a volunteer.
+              You can post anonymously without signing in.
             </div>
           )}
           
-          {!isHost && user && (
-            <label className="flex items-center space-x-2 text-sm">
-              <input
-                type="checkbox"
-                checked={isAnonymous}
-                onChange={(e) => setIsAnonymous(e.target.checked)}
-                className="rounded"
-              />
-              <span>Post anonymously</span>
-            </label>
+          {user && !isHost && (
+            <div className="text-sm text-muted-foreground">
+              Your messages will be posted anonymously.
+            </div>
           )}
 
           <div className="flex gap-2">
