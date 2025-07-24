@@ -14,7 +14,101 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      events: {
+        Row: {
+          created_at: string
+          date: string
+          description: string | null
+          id: string
+          image_url: string | null
+          location: string | null
+          max_participants: number | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          max_participants?: number | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          location?: string | null
+          max_participants?: number | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          dorm: string | null
+          email: string
+          id: string
+          updated_at: string
+          user_id: string
+          wing: string | null
+        }
+        Insert: {
+          created_at?: string
+          dorm?: string | null
+          email: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          wing?: string | null
+        }
+        Update: {
+          created_at?: string
+          dorm?: string | null
+          email?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          wing?: string | null
+        }
+        Relationships: []
+      }
+      user_events: {
+        Row: {
+          event_id: string
+          id: string
+          signed_up_at: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          id?: string
+          signed_up_at?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          id?: string
+          signed_up_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_events_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
