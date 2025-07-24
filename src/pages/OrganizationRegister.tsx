@@ -8,6 +8,7 @@ import Footer from '@/components/layout/Footer';
 import UserAuthModal from '@/components/modals/UserAuthModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { getEmailConfirmUrl } from '@/utils/config';
 
 const OrganizationRegister: React.FC = () => {
   const { title, subtitle, form, signInLink } = organizationRegisterContent;
@@ -83,7 +84,7 @@ const OrganizationRegister: React.FC = () => {
           email: formData.email,
           password: formData.password,
           options: {
-            emailRedirectTo: `${window.location.origin}/organization-dashboard`,
+            emailRedirectTo: getEmailConfirmUrl('/organization-dashboard'),
             data: {
               user_type: 'organization',
               organization_name: formData.organizationName,

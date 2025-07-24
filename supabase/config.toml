@@ -9,8 +9,8 @@ max_rows = 1000
 
 [auth]
 enabled = true
-site_url = "http://127.0.0.1:3000"
-additional_redirect_urls = ["https://gzzbjifmrwvqbkwbyvhm.supabase.co"]
+site_url = "https://trae-taylor-connect-hub-b8ac.vercel.app"
+additional_redirect_urls = ["http://127.0.0.1:3000", "http://localhost:3000", "https://gzzbjifmrwvqbkwbyvhm.supabase.co"]
 jwt_expiry = 3600
 inactivity_timeout = 0
 refresh_token_rotation_enabled = true
