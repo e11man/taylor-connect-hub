@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff } from 'lucide-react';
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const dormAndFloorData = {
   "Away From Campus": ["Upland (abroad)"],
@@ -71,17 +73,61 @@ export function TaylorUserSignUp() {
     }
   }, [email]);
 
-  const handleSignUp = () => {
+  const { toast } = useToast();
+
+  const handleSignUp = async () => {
     if (password !== confirmPassword) {
-      alert('Passwords do not match!');
+      toast({
+        title: "Error",
+        description: "Passwords do not match!",
+        variant: "destructive",
+      });
       return;
     }
+    
     if (isTaylorUser && (!selectedDorm || !selectedFloor)) {
-      alert('Please select your dorm and floor.');
+      toast({
+        title: "Error", 
+        description: "Please select your dorm and floor.",
+        variant: "destructive",
+      });
       return;
     }
-    console.log('Signing up with:', { email, password, selectedDorm, selectedFloor, isTaylorUser });
-    // Add your sign-up logic here, potentially different for Taylor vs non-Taylor users
+
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            dorm: selectedDorm,
+            wing: selectedFloor,
+          }
+        }
+      });
+
+      if (error) {
+        toast({
+          title: "Sign Up Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Success!",
+          description: "Please check your email to confirm your account.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "An unexpected error occurred. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const dorms = Object.keys(dormAndFloorData);

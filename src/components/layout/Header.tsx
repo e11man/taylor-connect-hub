@@ -1,13 +1,17 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Heart } from "lucide-react";
+import { Heart, LogOut, User } from "lucide-react";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import RequestVolunteersModal from "@/components/modals/RequestVolunteersModal";
+import UserAuthModal from "@/components/modals/UserAuthModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const { user, signOut } = useAuth();
 
   const location = useLocation();
   const isHomePage = location.pathname === '/';
@@ -165,16 +169,57 @@ const Header = () => {
             </li>
           ))}
         </ul>
-        {/* CTA Button */}
-        <PrimaryButton
-          onClick={() => {
-            closeMenu();
-            setModalOpen(true);
-          }}
-          className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
-        >
-          Request Volunteers
-        </PrimaryButton>
+        {/* Auth/CTA Button */}
+        {user ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+              <User className="w-4 h-4 text-[#00AFCE]" />
+              <span className="text-sm font-medium text-gray-700 truncate">
+                {user.email}
+              </span>
+            </div>
+            <PrimaryButton
+              onClick={() => {
+                closeMenu();
+                setModalOpen(true);
+              }}
+              className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
+            >
+              Request Volunteers
+            </PrimaryButton>
+            <button
+              onClick={() => {
+                closeMenu();
+                signOut();
+              }}
+              className="w-full flex items-center justify-center gap-2 py-3 px-4 text-base font-semibold bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <PrimaryButton
+              onClick={() => {
+                closeMenu();
+                setAuthModalOpen(true);
+              }}
+              className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
+            >
+              Sign In / Sign Up
+            </PrimaryButton>
+            <PrimaryButton
+              onClick={() => {
+                closeMenu();
+                setModalOpen(true);
+              }}
+              className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl bg-[#E14F3D] hover:bg-[#C73E2F]"
+            >
+              Request Volunteers
+            </PrimaryButton>
+          </div>
+        )}
         <div className="flex-1" />
         {/* Footer */}
         <div className="mt-10 text-xs text-gray-500 text-center">
@@ -220,28 +265,74 @@ const Header = () => {
               </li>
             ))}
           </ul>
-          <PrimaryButton
-            onClick={() => setModalOpen(true)}
-            className="ml-4 shadow-sm hover:shadow-md whitespace-nowrap text-white"
-            style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
-            onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
-            onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
-          >
-            Request Volunteers
-          </PrimaryButton>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
+                  <User className="w-4 h-4 text-[#00AFCE]" />
+                  <span className="text-sm font-medium text-gray-700 max-w-32 truncate">
+                    {user.email}
+                  </span>
+                </div>
+                <PrimaryButton
+                  onClick={() => setModalOpen(true)}
+                  className="shadow-sm hover:shadow-md whitespace-nowrap text-white"
+                  style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
+                  onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
+                  onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
+                >
+                  Request Volunteers
+                </PrimaryButton>
+                <button
+                  onClick={signOut}
+                  className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-[#E14F3D] transition-colors"
+                  title="Sign Out"
+                >
+                  <LogOut className="w-4 h-4" />
+                </button>
+              </>
+            ) : (
+              <>
+                <PrimaryButton
+                  onClick={() => setAuthModalOpen(true)}
+                  className="shadow-sm hover:shadow-md whitespace-nowrap"
+                >
+                  Sign In
+                </PrimaryButton>
+                <PrimaryButton
+                  onClick={() => setModalOpen(true)}
+                  className="shadow-sm hover:shadow-md whitespace-nowrap text-white"
+                  style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
+                  onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
+                  onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
+                >
+                  Request Volunteers
+                </PrimaryButton>
+              </>
+            )}
+          </div>
         </nav>
 
-        {/* Mobile: CTA + Hamburger */}
+        {/* Mobile: Auth/CTA + Hamburger */}
         <div className="md:hidden flex items-center gap-2">
-          <PrimaryButton
-            onClick={() => setModalOpen(true)}
-            className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap text-white"
-            style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
-            onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
-            onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
-          >
-            Request Volunteers
-          </PrimaryButton>
+          {user ? (
+            <PrimaryButton
+              onClick={() => setModalOpen(true)}
+              className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap text-white"
+              style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
+              onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
+              onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
+            >
+              Request Volunteers
+            </PrimaryButton>
+          ) : (
+            <PrimaryButton
+              onClick={() => setAuthModalOpen(true)}
+              className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
+            >
+              Sign In
+            </PrimaryButton>
+          )}
           <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
         </div>
       </div>
@@ -253,6 +344,10 @@ const Header = () => {
       <RequestVolunteersModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
+      />
+      <UserAuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
       />
     </header>
   );
