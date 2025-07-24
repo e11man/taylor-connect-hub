@@ -14,6 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          is_anonymous: boolean
+          message: string
+          organization_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          is_anonymous?: boolean
+          message: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          is_anonymous?: boolean
+          message?: string
+          organization_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "chat_messages_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string
@@ -57,6 +105,87 @@ export type Database = {
             columns: ["organization_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_preferences: {
+        Row: {
+          chat_notifications: boolean
+          created_at: string
+          email_frequency: string
+          event_updates: boolean
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          chat_notifications?: boolean
+          created_at?: string
+          email_frequency?: string
+          event_updates?: boolean
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          chat_notifications?: boolean
+          created_at?: string
+          email_frequency?: string
+          event_updates?: boolean
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          chat_message_id: string | null
+          created_at: string
+          email_sent: boolean
+          event_id: string | null
+          id: string
+          notification_type: string
+          scheduled_for: string | null
+          sent_at: string | null
+          user_id: string
+        }
+        Insert: {
+          chat_message_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          event_id?: string | null
+          id?: string
+          notification_type: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          user_id: string
+        }
+        Update: {
+          chat_message_id?: string | null
+          created_at?: string
+          email_sent?: boolean
+          event_id?: string | null
+          id?: string
+          notification_type?: string
+          scheduled_for?: string | null
+          sent_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_chat_message_id_fkey"
+            columns: ["chat_message_id"]
+            isOneToOne: false
+            referencedRelation: "chat_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
             referencedColumns: ["id"]
           },
         ]

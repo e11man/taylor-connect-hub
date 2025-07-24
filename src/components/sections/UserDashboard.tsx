@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, Users, X } from "lucide-react";
+import { Calendar, MapPin, Users, X, Settings } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
+import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
 
 interface UserEvent {
   id: string;
@@ -30,6 +31,7 @@ const UserDashboard = () => {
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'events' | 'settings'>('events');
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -130,11 +132,44 @@ const UserDashboard = () => {
   return (
     <section className="bg-white section-padding">
       <div className="container-custom max-w-4xl">
-        {/* My Commitments */}
-        <div className="mb-12">
-          <h2 className="text-3xl font-montserrat font-bold mb-6 text-primary">
-            My Commitments
-          </h2>
+        {/* Tab Navigation */}
+        <div className="mb-8">
+          <h1 className="text-4xl font-montserrat font-bold mb-6 text-primary">
+            My Dashboard
+          </h1>
+          
+          <div className="flex gap-4">
+            <button
+              onClick={() => setActiveTab('events')}
+              className={`px-6 py-3 rounded-full font-semibold transition-all ${
+                activeTab === 'events' 
+                  ? 'bg-[#00AFCE] text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              My Events
+            </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`px-6 py-3 rounded-full font-semibold transition-all flex items-center gap-2 ${
+                activeTab === 'settings' 
+                  ? 'bg-[#00AFCE] text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </button>
+          </div>
+        </div>
+
+        {activeTab === 'events' ? (
+          <>
+            {/* My Commitments */}
+            <div className="mb-12">
+              <h2 className="text-3xl font-montserrat font-bold mb-6 text-primary">
+                My Commitments
+              </h2>
           
           {userEvents.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-3xl">
@@ -202,41 +237,45 @@ const UserDashboard = () => {
               ))}
             </div>
           )}
-        </div>
+            </div>
 
-        {/* My Dorm/Wing */}
-        <div className="mb-12">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-3xl font-montserrat font-bold text-primary">
-              My Dorm/Wing
-            </h2>
-            <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="border-[#00AFCE] text-[#00AFCE] hover:bg-[#00AFCE] hover:text-white"
-              >
-                Change Dorm
-              </Button>
-              <Button
-                variant="outline"
-                className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
-              >
-                Update Password
-              </Button>
+            {/* My Dorm/Wing */}
+            <div className="mb-12">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-3xl font-montserrat font-bold text-primary">
+                  My Dorm/Wing
+                </h2>
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    className="border-[#00AFCE] text-[#00AFCE] hover:bg-[#00AFCE] hover:text-white"
+                  >
+                    Change Dorm
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
+                  >
+                    Update Password
+                  </Button>
+                </div>
+              </div>
+              
+              {userProfile && (
+                <div className="bg-gray-50 rounded-2xl p-6">
+                  <p className="text-lg font-medium text-primary">
+                    {userProfile.dorm} - {userProfile.wing}
+                  </p>
+                  <p className="text-muted-foreground mt-1">
+                    {userProfile.email}
+                  </p>
+                </div>
+              )}
             </div>
-          </div>
-          
-          {userProfile && (
-            <div className="bg-gray-50 rounded-2xl p-6">
-              <p className="text-lg font-medium text-primary">
-                {userProfile.dorm} - {userProfile.wing}
-              </p>
-              <p className="text-muted-foreground mt-1">
-                {userProfile.email}
-              </p>
-            </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <NotificationPreferences />
+        )}
       </div>
     </section>
   );

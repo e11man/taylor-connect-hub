@@ -1,9 +1,10 @@
-import { Calendar, MapPin, Users, Star, ArrowRight } from "lucide-react";
+import { Calendar, MapPin, Users, Star, ArrowRight, MessageCircle } from "lucide-react";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { EventChatModal } from "@/components/chat/EventChatModal";
 
 interface Event {
   id: string;
@@ -13,6 +14,7 @@ interface Event {
   location: string;
   max_participants: number;
   image_url: string;
+  organization_id: string;
 }
 
 interface UserEvent {
@@ -23,6 +25,8 @@ const OpportunitiesSection = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -192,8 +196,19 @@ const OpportunitiesSection = () => {
                   </div>
                 </div>
 
-                {/* Action Button */}
-                <div className="mt-auto">
+                {/* Action Buttons */}
+                <div className="mt-auto space-y-3">
+                  <button
+                    onClick={() => {
+                      setSelectedEvent(event);
+                      setChatModalOpen(true);
+                    }}
+                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Chat
+                  </button>
+                  
                   {isSignedUp(event.id) ? (
                     <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-full font-semibold">
                       Signed Up ✓
@@ -215,6 +230,19 @@ const OpportunitiesSection = () => {
 
         {/* View More button removed */}
       </div>
+
+      {selectedEvent && (
+        <EventChatModal
+          isOpen={chatModalOpen}
+          onClose={() => {
+            setChatModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          eventId={selectedEvent.id}
+          eventTitle={selectedEvent.title}
+          organizationId={selectedEvent.organization_id || ''}
+        />
+      )}
     </section>
   );
 };
