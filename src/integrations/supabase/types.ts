@@ -192,34 +192,43 @@ export type Database = {
       }
       organizations: {
         Row: {
+          approved_at: string | null
+          approved_by: string | null
           contact_email: string
           created_at: string
           description: string | null
           id: string
           name: string
           phone: string | null
+          status: string
           updated_at: string
           user_id: string
           website: string | null
         }
         Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
           contact_email: string
           created_at?: string
           description?: string | null
           id?: string
           name: string
           phone?: string | null
+          status?: string
           updated_at?: string
           user_id: string
           website?: string | null
         }
         Update: {
+          approved_at?: string | null
+          approved_by?: string | null
           contact_email?: string
           created_at?: string
           description?: string | null
           id?: string
           name?: string
           phone?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
           website?: string | null
@@ -232,6 +241,7 @@ export type Database = {
           dorm: string | null
           email: string
           id: string
+          status: string
           updated_at: string
           user_id: string
           wing: string | null
@@ -241,6 +251,7 @@ export type Database = {
           dorm?: string | null
           email: string
           id?: string
+          status?: string
           updated_at?: string
           user_id: string
           wing?: string | null
@@ -250,6 +261,7 @@ export type Database = {
           dorm?: string | null
           email?: string
           id?: string
+          status?: string
           updated_at?: string
           user_id?: string
           wing?: string | null
@@ -285,15 +297,46 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_admin: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
+      is_pa: {
+        Args: { user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "admin" | "pa" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -420,6 +463,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["admin", "pa", "user"],
+    },
   },
 } as const
