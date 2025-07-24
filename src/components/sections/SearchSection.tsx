@@ -51,22 +51,30 @@ const SearchSection = () => {
             <p className="text-muted-foreground">Click on a category to filter opportunities</p>
           </div>
 
-          <div className="flex flex-wrap justify-center gap-4">
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                onClick={() => setActiveCategory(category.id)}
-                className={`
-                  px-6 py-3 rounded-2xl font-montserrat font-semibold transition-all duration-300 border-2 hover:scale-105
-                  ${activeCategory === category.id
-                    ? 'bg-[#E14F3D] text-white border-[#E14F3D] shadow-lg'
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE]'
-                  }
-                `}
-              >
-                {category.name}
-              </button>
-            ))}
+          <div className="overflow-x-auto pb-4" style={{
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none'
+          }}>
+            <style>
+              {`.overflow-x-auto::-webkit-scrollbar { display: none; }`}
+            </style>
+            <div className="flex gap-4 min-w-max px-4">
+              {categories.map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`
+                    px-6 py-3 rounded-2xl font-montserrat font-semibold transition-all duration-300 border-2 hover:scale-105 whitespace-nowrap
+                    ${activeCategory === category.id
+                      ? 'bg-[#E14F3D] text-white border-[#E14F3D] shadow-lg'
+                      : 'bg-white text-gray-700 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE]'
+                    }
+                  `}
+                >
+                  {category.name}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

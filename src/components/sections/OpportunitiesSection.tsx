@@ -131,15 +131,7 @@ const OpportunitiesSection = () => {
   return (
     <section className="bg-white section-padding">
       <div className="container-custom">
-        {/* Section Header */}
-        <div className="text-center mb-12 animate-slide-up">
-          <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-            Current Opportunities
-          </h2>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Find ways to make a meaningful difference in our community.
-          </p>
-        </div>
+
 
         {/* Opportunities Horizontal Scroll */}
         <div className="mb-12">
