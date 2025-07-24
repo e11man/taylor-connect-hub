@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
+import { getPasswordResetUrl } from '@/utils/config';
 import { Mail, ArrowLeft } from 'lucide-react';
 
 interface ForgotPasswordModalProps {
@@ -31,7 +32,7 @@ export const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProp
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/`,
+        redirectTo: getPasswordResetUrl(),
       });
 
       if (error) {

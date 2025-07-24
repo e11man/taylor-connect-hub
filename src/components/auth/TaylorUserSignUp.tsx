@@ -6,52 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { getEmailConfirmUrl } from "@/utils/config";
+import { dormAndFloorData } from "@/utils/dormData";
 
-const dormAndFloorData = {
-  "Away From Campus": ["Upland (abroad)"],
-  "Bergwall Hall": ["1st Bergwall", "2nd Bergwall", "3rd Bergwall", "4th Bergwall"],
-  "Breuninger Hall": ["1st Breuninger", "2nd Breuninger", "3rd Breuninger"],
-  "Brolund Hall": ["Residential Village Wing 6"],
-  "Campbell Hall": ["Univ Apts-Campbell Hall-1st Fl", "Univ Apts-Campbell Hall-2nd Fl"],
-  "Chiu Hall": ["Residential Village Wing 1"],
-  "Commuter": ["Married", "Single"],
-  "Corner House": ["Corner House Wing"],
-  "Delta Apts": ["Delta Wing"],
-  "English Hall": [
-    "1st North English", "1st South English", "2nd Center English",
-    "2nd North English", "2nd South English", "3rd Center English",
-    "3rd North English", "3rd South English", "English Hall - Cellar"
-  ],
-  "Flanigan Hall": ["Residential Village Wing 3"],
-  "Gerig Hall": ["2nd Gerig", "3rd Gerig", "4th Gerig"],
-  "Gygi Hall": ["Residential Village Wing 2"],
-  "Haven on 2nd": ["Second South Street", "West Spencer Avenue"],
-  "Jacobsen Hall": ["Residential Village Wing 7"],
-  "Kerlin Hall": ["Residential Village Wing 5"],
-  "Off-Campus Housing": ["Off-Campus Housing"],
-  "Olson Hall": [
-    "1st East Olson", "1st West Olson", "2nd Center Olson",
-    "2nd East Olson", "2nd West Olson", "3rd Center Olson",
-    "3rd East Olson", "3rd West Olson"
-  ],
-  "Robbins Hall": ["Residential Village Wing 4"],
-  "Sammy Morris Hall": [
-    "1st Morris Center", "1st Morris North", "1st Morris South",
-    "2nd Morris Center", "2nd Morris North", "2nd Morris South",
-    "3rd Morris Center", "3rd Morris North", "3rd Morris South",
-    "4th Morris Center", "4th Morris North", "4th Morris South"
-  ],
-  "Swallow Robin Hall": ["1st Swallow", "2nd Swallow", "3rd Swallow"],
-  "The Flats Apartments": ["Casa Wing"],
-  "Wengatz Hall": [
-    "1st East Wengatz", "1st West Wengatz", "2nd Center Wengatz",
-    "2nd East Wengatz", "2nd West Wengatz", "3rd Center Wengatz",
-    "3rd East Wengatz", "3rd West Wengatz"
-  ],
-  "Wolgemuth Hall": [
-    "Univ Apt-Wolgemuth Hall-1st Fl", "Univ Apt-Wolgemuth Hall-2nd Fl", "Univ Apt-Wolgemuth Hall-3rd Fl"
-  ]
-};
+
 
 interface TaylorUserSignUpProps {
   onClose?: () => void;
@@ -99,7 +57,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
     }
 
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      const redirectUrl = getEmailConfirmUrl('/');
       
       const { error } = await supabase.auth.signUp({
         email,
