@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { ForgotPasswordModal } from "@/components/modals/ForgotPasswordModal";
 
 const OrganizationLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -148,10 +150,7 @@ const OrganizationLogin = () => {
                   <button
                     type="button"
                     className="text-sm text-[#00AFCE] hover:text-[#00AFCE]/80 font-montserrat font-medium transition-colors duration-200"
-                    onClick={() => {
-                      // Handle forgot password
-                      alert('Forgot password functionality would be implemented here');
-                    }}
+                    onClick={() => setForgotPasswordModalOpen(true)}
                   >
                     Forgot your password?
                   </button>
@@ -184,6 +183,11 @@ const OrganizationLogin = () => {
           </div>
         </div>
       </main>
+      
+      <ForgotPasswordModal
+        isOpen={forgotPasswordModalOpen}
+        onClose={() => setForgotPasswordModalOpen(false)}
+      />
       
       <Footer />
     </div>

@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
+import { ChangeDormModal } from "@/components/modals/ChangeDormModal";
+import { UpdatePasswordModal } from "@/components/modals/UpdatePasswordModal";
 
 interface UserEvent {
   id: string;
@@ -32,6 +34,8 @@ const UserDashboard = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'events' | 'settings'>('events');
+  const [changeDormModalOpen, setChangeDormModalOpen] = useState(false);
+  const [updatePasswordModalOpen, setUpdatePasswordModalOpen] = useState(false);
   const { user, userEventsRefreshTrigger, refreshUserEvents } = useAuth();
   const { toast } = useToast();
 
@@ -251,12 +255,14 @@ const UserDashboard = () => {
                   <Button
                     variant="outline"
                     className="border-[#00AFCE] text-[#00AFCE] hover:bg-[#00AFCE] hover:text-white text-sm sm:text-base px-3 sm:px-4 py-2"
+                    onClick={() => setChangeDormModalOpen(true)}
                   >
                     Change Dorm
                   </Button>
                   <Button
                     variant="outline"
                     className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm sm:text-base px-3 sm:px-4 py-2"
+                    onClick={() => setUpdatePasswordModalOpen(true)}
                   >
                     Update Password
                   </Button>
@@ -279,6 +285,19 @@ const UserDashboard = () => {
           <NotificationPreferences />
         )}
       </div>
+
+      <ChangeDormModal
+        isOpen={changeDormModalOpen}
+        onClose={() => setChangeDormModalOpen(false)}
+        currentDorm={userProfile?.dorm}
+        currentWing={userProfile?.wing}
+        onUpdate={fetchUserData}
+      />
+
+      <UpdatePasswordModal
+        isOpen={updatePasswordModalOpen}
+        onClose={() => setUpdatePasswordModalOpen(false)}
+      />
     </section>
   );
 };
