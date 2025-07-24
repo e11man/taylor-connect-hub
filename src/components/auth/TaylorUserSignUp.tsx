@@ -12,7 +12,7 @@ const dormAndFloorData = {
   "Brolund Hall": ["Residential Village Wing 6"],
   "Campbell Hall": ["Univ Apts-Campbell Hall-1st Fl", "Univ Apts-Campbell Hall-2nd Fl"],
   "Chiu Hall": ["Residential Village Wing 1"],
-  "Commuter": ["Commuter Married", "Commuter Single"],
+  "Commuter": ["Married", "Single"],
   "Corner House": ["Corner House Wing"],
   "Delta Apts": ["Delta Wing"],
   "English Hall": [
