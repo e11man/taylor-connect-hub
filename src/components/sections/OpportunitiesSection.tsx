@@ -137,16 +137,22 @@ const OpportunitiesSection = () => {
           </p>
         </div>
 
-        {/* Opportunities Grid - Mobile Horizontal Scroll */}
+        {/* Opportunities Horizontal Scroll */}
         <div className="mb-12">
-          <div className="flex flex-nowrap gap-6 overflow-x-auto pb-4 md:pb-0 md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8">
+          <div className="flex gap-6 overflow-x-auto pb-4" style={{
+            msOverflowStyle: 'none',
+            scrollbarWidth: 'none'
+          }}>
+            <style>
+              {`.overflow-x-auto::-webkit-scrollbar { display: none; }`}
+            </style>
           {events.map((event, index) => (
             <div 
               key={event.id}
-              className="group animate-scale-in flex-shrink-0 w-56 min-w-56 md:w-auto"
+              className="group animate-scale-in flex-shrink-0 w-80 min-w-80"
               style={{ animationDelay: `${index * 0.2}s` }}
             >
-              <div className="bg-white rounded-3xl p-8 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300 h-full flex flex-col">
+              <div className="bg-white rounded-3xl p-8 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300 h-full flex flex-col min-h-[400px]">
                 {/* Title and Description */}
                 <h3 className="text-xl font-montserrat font-bold mb-3 text-primary group-hover:text-[#00AFCE] transition-all duration-300">
                   {event.title}
