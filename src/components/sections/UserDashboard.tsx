@@ -32,14 +32,14 @@ const UserDashboard = () => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'events' | 'settings'>('events');
-  const { user } = useAuth();
+  const { user, userEventsRefreshTrigger, refreshUserEvents } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
       fetchUserData();
     }
-  }, [user]);
+  }, [user, userEventsRefreshTrigger]);
 
   const fetchUserData = async () => {
     if (!user) return;
@@ -107,6 +107,8 @@ const UserDashboard = () => {
           description: `You have cancelled your signup for "${eventTitle}".`,
         });
         fetchUserData(); // Refresh the data
+        // Trigger refresh in other components (like OpportunitiesSection)
+        refreshUserEvents();
       }
     } catch (error) {
       toast({

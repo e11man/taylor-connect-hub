@@ -7,6 +7,10 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  refreshUserEvents: () => void;
+  userEventsRefreshTrigger: number;
+  refreshEvents: () => void;
+  eventsRefreshTrigger: number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -15,6 +19,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userEventsRefreshTrigger, setUserEventsRefreshTrigger] = useState(0);
+  const [eventsRefreshTrigger, setEventsRefreshTrigger] = useState(0);
 
   useEffect(() => {
     // Set up auth state listener
@@ -23,6 +29,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        // Trigger refresh when user state changes
+        if (event === 'SIGNED_IN') {
+          setUserEventsRefreshTrigger(prev => prev + 1);
+        }
       }
     );
 
@@ -43,11 +53,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshUserEvents = () => {
+    setUserEventsRefreshTrigger(prev => prev + 1);
+  };
+
+  const refreshEvents = () => {
+    setEventsRefreshTrigger(prev => prev + 1);
+  };
+
   const value = {
     user,
     session,
     loading,
     signOut,
+    refreshUserEvents,
+    userEventsRefreshTrigger,
+    refreshEvents,
+    eventsRefreshTrigger,
   };
 
   return (

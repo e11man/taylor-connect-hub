@@ -37,7 +37,7 @@ interface Organization {
 }
 
 const OrganizationDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, signOut, refreshUserEvents, refreshEvents } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -132,6 +132,9 @@ const OrganizationDashboard = () => {
         title: "Success!",
         description: "Event created successfully.",
       });
+      
+      // Trigger refresh in other components
+      refreshEvents();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -169,6 +172,9 @@ const OrganizationDashboard = () => {
         title: "Success!",
         description: "Event updated successfully.",
       });
+      
+      // Trigger refresh in other components
+      refreshEvents();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -197,6 +203,10 @@ const OrganizationDashboard = () => {
         title: "Success!",
         description: "Event deleted successfully.",
       });
+      
+      // Trigger refresh in other components (both events and user events since signups are deleted)
+      refreshEvents();
+      refreshUserEvents();
     } catch (error: any) {
       toast({
         title: "Error",
