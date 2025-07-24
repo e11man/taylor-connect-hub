@@ -148,39 +148,37 @@ export function TaylorUserSignUp() {
           <p className="text-destructive text-sm">Passwords do not match</p>
         )}
 
-        {isTaylorUser && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Residence Hall</label>
-              <Select onValueChange={setSelectedDorm} value={selectedDorm}>
-                <SelectTrigger className="w-full h-12 bg-background border-input">
-                  <SelectValue placeholder="Select Your Dorm" />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {dorms.map((dorm) => (
-                    <SelectItem key={dorm} value={dorm} className="cursor-pointer">{dorm}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Floor/Wing</label>
-              <Select onValueChange={setSelectedFloor} value={selectedFloor} disabled={!selectedDorm}>
-                <SelectTrigger className={`w-full h-12 bg-background border-input ${
-                  !selectedDorm ? 'opacity-50 cursor-not-allowed' : ''
-                }`}>
-                  <SelectValue placeholder={selectedDorm ? "Select Your Floor" : "Select dorm first"} />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {floors.map((floor) => (
-                    <SelectItem key={floor} value={floor} className="cursor-pointer">{floor}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Residence Hall</label>
+            <Select onValueChange={setSelectedDorm} value={selectedDorm}>
+              <SelectTrigger className="w-full h-12 bg-background border-input">
+                <SelectValue placeholder="Select Your Dorm" />
+              </SelectTrigger>
+              <SelectContent className="max-h-60 bg-background border-input z-50">
+                {dorms.map((dorm) => (
+                  <SelectItem key={dorm} value={dorm} className="cursor-pointer hover:bg-accent">{dorm}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-foreground">Floor/Wing</label>
+            <Select onValueChange={setSelectedFloor} value={selectedFloor} disabled={!selectedDorm}>
+              <SelectTrigger className={`w-full h-12 bg-background border-input ${
+                !selectedDorm ? 'opacity-50 cursor-not-allowed' : ''
+              }`}>
+                <SelectValue placeholder={selectedDorm ? "Select Your Floor" : "Select dorm first"} />
+              </SelectTrigger>
+              <SelectContent className="max-h-60 bg-background border-input z-50">
+                {floors.map((floor) => (
+                  <SelectItem key={floor} value={floor} className="cursor-pointer hover:bg-accent">{floor}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
 
         <Button 
           onClick={handleSignUp} 
