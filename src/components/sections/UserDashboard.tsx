@@ -135,15 +135,15 @@ const UserDashboard = () => {
     <section className="bg-white section-padding">
       <div className="container-custom max-w-4xl">
         {/* Tab Navigation */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-montserrat font-bold mb-6 text-primary">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-montserrat font-bold mb-4 sm:mb-6 text-primary">
             My Dashboard
           </h1>
           
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
             <button
               onClick={() => setActiveTab('events')}
-              className={`px-6 py-3 rounded-full font-semibold transition-all ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all text-sm sm:text-base ${
                 activeTab === 'events' 
                   ? 'bg-[#00AFCE] text-white' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -153,7 +153,7 @@ const UserDashboard = () => {
             </button>
             <button
               onClick={() => setActiveTab('settings')}
-              className={`px-6 py-3 rounded-full font-semibold transition-all flex items-center gap-2 ${
+              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-2 text-sm sm:text-base ${
                 activeTab === 'settings' 
                   ? 'bg-[#00AFCE] text-white' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -168,69 +168,69 @@ const UserDashboard = () => {
         {activeTab === 'events' ? (
           <>
             {/* My Commitments */}
-            <div className="mb-12">
-              <h2 className="text-3xl font-montserrat font-bold mb-6 text-primary">
+            <div className="mb-8 sm:mb-12">
+              <h2 className="text-xl sm:text-2xl md:text-3xl font-montserrat font-bold mb-4 sm:mb-6 text-primary">
                 My Commitments
               </h2>
           
           {userEvents.length === 0 ? (
-            <div className="text-center py-12 bg-gray-50 rounded-3xl">
-              <p className="text-muted-foreground mb-2">
+            <div className="text-center py-8 sm:py-12 bg-gray-50 rounded-2xl sm:rounded-3xl mx-2 sm:mx-0">
+              <p className="text-muted-foreground mb-2 text-sm sm:text-base px-4">
                 You haven't committed to any opportunities yet.
               </p>
-              <p className="text-muted-foreground">
+              <p className="text-muted-foreground text-sm sm:text-base px-4">
                 Browse below and join up to 2 opportunities.
               </p>
             </div>
           ) : (
-            <div className="grid gap-6 md:grid-cols-2">
+            <div className="grid gap-4 sm:gap-6 grid-cols-1 lg:grid-cols-2">
               {userEvents.map((userEvent) => (
                 <div 
                   key={userEvent.id}
-                  className="bg-white rounded-2xl p-6 border-2 border-gray-200 hover:border-[#00AFCE] transition-all duration-300"
+                  className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-gray-200 hover:border-[#00AFCE] transition-all duration-300 mx-2 sm:mx-0"
                 >
-                  <div className="flex justify-between items-start mb-4">
-                    <h3 className="text-xl font-montserrat font-bold text-primary">
+                  <div className="flex justify-between items-start mb-3 sm:mb-4">
+                    <h3 className="text-lg sm:text-xl font-montserrat font-bold text-primary pr-2 flex-1">
                       {userEvent.events.title}
                     </h3>
                     <button
                       onClick={() => handleCancelSignup(userEvent.id, userEvent.events.title)}
-                      className="p-2 text-gray-400 hover:text-[#E14F3D] transition-colors"
+                      className="p-1 sm:p-2 text-gray-400 hover:text-[#E14F3D] transition-colors flex-shrink-0"
                       title="Cancel signup"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4 sm:w-5 sm:h-5" />
                     </button>
                   </div>
                   
-                  <p className="text-muted-foreground mb-4 line-clamp-2">
+                  <p className="text-muted-foreground mb-3 sm:mb-4 line-clamp-2 text-sm sm:text-base">
                     {userEvent.events.description}
                   </p>
                   
                   <div className="space-y-2">
-                    <div className="flex items-center gap-3 text-sm">
-                      <Calendar className="w-4 h-4 text-[#00AFCE]" />
+                    <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0" />
                       <span className="font-medium text-primary">Date:</span>
-                      <span className="text-muted-foreground">
+                      <span className="text-muted-foreground truncate">
                         {new Date(userEvent.events.date).toLocaleDateString()}
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-3 text-sm">
-                      <Calendar className="w-4 h-4 text-[#00AFCE]" />
+                    <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0" />
                       <span className="font-medium text-primary">Time:</span>
-                      <span className="text-muted-foreground">
+                      <span className="text-muted-foreground truncate">
                         {new Date(userEvent.events.date).toLocaleTimeString()}
                       </span>
                     </div>
                     
-                    <div className="flex items-center gap-3 text-sm">
-                      <MapPin className="w-4 h-4 text-[#00AFCE]" />
+                    <div className="flex items-start gap-2 sm:gap-3 text-xs sm:text-sm">
+                      <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0 mt-0.5" />
                       <span className="font-medium text-primary">Location:</span>
-                      <span className="text-muted-foreground">{userEvent.events.location}</span>
+                      <span className="text-muted-foreground break-words">{userEvent.events.location}</span>
                     </div>
                   </div>
                   
-                  <div className="mt-4 pt-4 border-t border-gray-100">
+                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
                     <p className="text-xs text-muted-foreground">
                       Signed up on {new Date(userEvent.signed_up_at).toLocaleDateString()}
                     </p>
@@ -242,21 +242,21 @@ const UserDashboard = () => {
             </div>
 
             {/* My Dorm/Wing */}
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-3xl font-montserrat font-bold text-primary">
+            <div className="mb-8 sm:mb-12">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-4">
+                <h2 className="text-xl sm:text-2xl md:text-3xl font-montserrat font-bold text-primary">
                   My Dorm/Wing
                 </h2>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
                   <Button
                     variant="outline"
-                    className="border-[#00AFCE] text-[#00AFCE] hover:bg-[#00AFCE] hover:text-white"
+                    className="border-[#00AFCE] text-[#00AFCE] hover:bg-[#00AFCE] hover:text-white text-sm sm:text-base px-3 sm:px-4 py-2"
                   >
                     Change Dorm
                   </Button>
                   <Button
                     variant="outline"
-                    className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white"
+                    className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm sm:text-base px-3 sm:px-4 py-2"
                   >
                     Update Password
                   </Button>
@@ -264,11 +264,11 @@ const UserDashboard = () => {
               </div>
               
               {userProfile && (
-                <div className="bg-gray-50 rounded-2xl p-6">
-                  <p className="text-lg font-medium text-primary">
+                <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 mx-2 sm:mx-0">
+                  <p className="text-base sm:text-lg font-medium text-primary break-words">
                     {userProfile.dorm} - {userProfile.wing}
                   </p>
-                  <p className="text-muted-foreground mt-1">
+                  <p className="text-muted-foreground mt-1 text-sm sm:text-base break-all">
                     {userProfile.email}
                   </p>
                 </div>
