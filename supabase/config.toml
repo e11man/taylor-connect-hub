@@ -12,10 +12,6 @@ enabled = true
 site_url = "http://127.0.0.1:3000"
 additional_redirect_urls = ["https://gzzbjifmrwvqbkwbyvhm.supabase.co"]
 jwt_expiry = 3600
-inactivity_timeout = 0
-refresh_token_rotation_enabled = true
-secure_password_change_enabled = false
-password_min_length = 6
 
 [auth.email]
 enable_signup = true
@@ -34,7 +30,7 @@ max_client_conn = 100
 
 [realtime]
 enabled = true
-ip_version = "ipv4"
+ip_version = "IPv4"
 
 [studio]
 enabled = true
