@@ -1,27 +1,62 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Input } from "@/components/ui/input";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const OrganizationLogin = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simulate login process
-    setTimeout(() => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      // Check if this is an organization user by looking at their organization profile
+      const { data: orgData, error: orgError } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('user_id', data.user.id)
+        .single();
+
+      if (orgError || !orgData) {
+        await supabase.auth.signOut();
+        throw new Error('This account is not registered as an organization');
+      }
+
+      toast({
+        title: "Success!",
+        description: "Welcome back to your organization dashboard.",
+      });
+
+      navigate('/organization-dashboard');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to sign in. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
       setIsLoading(false);
-      // Handle login logic here
-      console.log('Login attempt:', { email, password });
-    }, 1500);
+    }
   };
 
   return (

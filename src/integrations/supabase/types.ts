@@ -23,6 +23,7 @@ export type Database = {
           image_url: string | null
           location: string | null
           max_participants: number | null
+          organization_id: string | null
           title: string
           updated_at: string
         }
@@ -34,6 +35,7 @@ export type Database = {
           image_url?: string | null
           location?: string | null
           max_participants?: number | null
+          organization_id?: string | null
           title: string
           updated_at?: string
         }
@@ -45,8 +47,53 @@ export type Database = {
           image_url?: string | null
           location?: string | null
           max_participants?: number | null
+          organization_id?: string | null
           title?: string
           updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_organization_id_fkey"
+            columns: ["organization_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      organizations: {
+        Row: {
+          contact_email: string
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+          website: string | null
+        }
+        Insert: {
+          contact_email: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          website?: string | null
+        }
+        Update: {
+          contact_email?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          website?: string | null
         }
         Relationships: []
       }

@@ -6,6 +6,8 @@ import { organizationRegisterContent } from '../content/organizationRegister';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import UserAuthModal from '@/components/modals/UserAuthModal';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const OrganizationRegister: React.FC = () => {
   const { title, subtitle, form, signInLink } = organizationRegisterContent;
@@ -24,6 +26,7 @@ const OrganizationRegister: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   const validate = () => {
     let newErrors: Record<string, string> = {};
@@ -76,15 +79,47 @@ const OrganizationRegister: React.FC = () => {
       setIsLoading(true);
       
       try {
-        // TODO: Implement actual registration logic
-        await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate API call
-        console.log('Registration data:', formData);
-        alert('Registration successful!');
-        // Handle successful registration (redirect, show success message, etc.)
-        // navigate('/organization-login');
-      } catch (error) {
-        console.error('Registration failed:', error);
-        // Handle registration error
+        const { data, error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/organization-dashboard`,
+            data: {
+              user_type: 'organization',
+              organization_name: formData.organizationName,
+              description: formData.organizationDescription,
+              website: formData.website,
+              phone: formData.phoneNumber,
+            }
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        toast({
+          title: "Registration successful!",
+          description: "Please check your email for verification, then you can sign in.",
+        });
+
+        // Reset form
+        setFormData({
+          organizationName: '',
+          contactName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          organizationDescription: '',
+          website: '',
+          phoneNumber: '',
+        });
+      } catch (error: any) {
+        toast({
+          title: "Registration failed",
+          description: error.message || "Failed to create account. Please try again.",
+          variant: "destructive",
+        });
       } finally {
         setIsLoading(false);
       }
