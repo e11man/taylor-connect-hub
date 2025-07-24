@@ -27,7 +27,7 @@ const OpportunitiesSection = () => {
   const [loading, setLoading] = useState(true);
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const { user } = useAuth();
+  const { user, refreshUserEvents, userEventsRefreshTrigger, eventsRefreshTrigger } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -35,7 +35,7 @@ const OpportunitiesSection = () => {
     if (user) {
       fetchUserEvents();
     }
-  }, [user]);
+  }, [user, userEventsRefreshTrigger, eventsRefreshTrigger]);
 
   const fetchEvents = async () => {
     try {
@@ -102,6 +102,8 @@ const OpportunitiesSection = () => {
           description: "You have successfully signed up for this event.",
         });
         fetchUserEvents();
+        // Trigger refresh in other components (like UserDashboard)
+        refreshUserEvents();
       }
     } catch (error) {
       toast({

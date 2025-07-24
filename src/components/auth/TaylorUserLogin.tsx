@@ -6,7 +6,11 @@ import { Eye, EyeOff } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-export function TaylorUserLogin() {
+interface TaylorUserLoginProps {
+  onClose?: () => void;
+}
+
+export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +35,8 @@ export function TaylorUserLogin() {
           title: "Success!",
           description: "You have been logged in successfully.",
         });
-        // User will be redirected by the auth state change
+        // Auto-close the modal after successful login
+        onClose?.();
       }
     } catch (error) {
       toast({

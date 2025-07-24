@@ -53,7 +53,11 @@ const dormAndFloorData = {
   ]
 };
 
-export function TaylorUserSignUp() {
+interface TaylorUserSignUpProps {
+  onClose?: () => void;
+}
+
+export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -120,6 +124,7 @@ export function TaylorUserSignUp() {
           title: "Success!",
           description: "Please check your email to confirm your account.",
         });
+        onClose?.();
       }
     } catch (error) {
       toast({
