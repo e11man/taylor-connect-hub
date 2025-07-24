@@ -74,8 +74,15 @@ const AdminDashboard = () => {
   }, [user]);
 
   const checkAdminAccess = async () => {
+    // Check for demo admin authentication
+    const adminAuth = localStorage.getItem('admin_authenticated');
+    if (adminAuth === 'true') {
+      setIsAdmin(true);
+      return;
+    }
+
     if (!user) {
-      navigate('/');
+      navigate('/admin');
       return;
     }
 
@@ -100,7 +107,7 @@ const AdminDashboard = () => {
       fetchAllData();
     } catch (error) {
       console.error('Error checking admin access:', error);
-      navigate('/');
+      navigate('/admin');
     }
   };
 

@@ -9,6 +9,7 @@ import About from "./pages/About";
 import OrganizationLogin from "./pages/OrganizationLogin";
 import OrganizationRegister from "./pages/OrganizationRegister";
 import OrganizationDashboard from "./pages/OrganizationDashboard";
+import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
@@ -27,7 +28,8 @@ const App = () => (
             <Route path="/organization-login" element={<OrganizationLogin />} />
             <Route path="/organization-register" element={<OrganizationRegister />} />
             <Route path="/organization-dashboard" element={<OrganizationDashboard />} />
-            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin" element={<AdminLogin />} />
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
