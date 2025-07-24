@@ -2,9 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Heart } from "lucide-react";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
+import RequestVolunteersModal from "@/components/modals/RequestVolunteersModal";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
 
   const location = useLocation();
@@ -167,6 +169,7 @@ const Header = () => {
         <PrimaryButton
           onClick={() => {
             closeMenu();
+            setModalOpen(true);
           }}
           className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
         >
@@ -218,6 +221,7 @@ const Header = () => {
             ))}
           </ul>
           <PrimaryButton
+            onClick={() => setModalOpen(true)}
             className="ml-4 shadow-sm hover:shadow-md whitespace-nowrap text-white"
             style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
             onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
@@ -230,6 +234,7 @@ const Header = () => {
         {/* Mobile: CTA + Hamburger */}
         <div className="md:hidden flex items-center gap-2">
           <PrimaryButton
+            onClick={() => setModalOpen(true)}
             className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap text-white"
             style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
             onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
@@ -244,6 +249,10 @@ const Header = () => {
         isOpen={mobileOpen}
         navLinks={NAV_LINKS}
         closeMenu={() => setMobileOpen(false)}
+      />
+      <RequestVolunteersModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
       />
     </header>
   );

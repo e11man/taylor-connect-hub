@@ -1,0 +1,72 @@
+/* Custom scrollbar styles for modals */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Modal styles */
+.auth-modal-tabs {
+  display: flex;
+  border-bottom: 1px solid #e2e8f0;
+  margin-bottom: 1rem;
+}
+
+.auth-modal-tab {
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.auth-modal-tab.active {
+  border-bottom: 2px solid #E14F3D;
+  color: #E14F3D;
+}
+
+.auth-modal-content {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.auth-feature-section {
+  margin-bottom: 1.5rem;
+}
+
+.auth-feature-title {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #1B365F;
+}
+
+.auth-feature-list {
+  padding-left: 1.5rem;
+}
+
+.auth-feature-item {
+  margin-bottom: 0.25rem;
+  position: relative;
+}
+
+.auth-feature-item:before {
+  content: '•';
+  position: absolute;
+  left: -1rem;
+  color: #00AFCE;
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f1f1f1;
+}

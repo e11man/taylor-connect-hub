@@ -1,7 +1,19 @@
+import { useState } from "react";
 import communityGarden from "@/assets/community-garden.jpg";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
+import UserAuthModal from "@/components/modals/UserAuthModal";
 
 const CallToActionSection = () => {
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+
+  const handleLoginClick = () => {
+    setIsAuthModalOpen(true);
+  };
+
+  const handleCloseAuthModal = () => {
+    setIsAuthModalOpen(false);
+  };
+
   return (
     <section className="bg-white section-padding">
       <div className="container-custom">
@@ -37,13 +49,22 @@ const CallToActionSection = () => {
               <p className="text-muted-foreground mb-6">
                 Sign in to view and manage your volunteer commitments
               </p>
-              <PrimaryButton className="bg-secondary hover:bg-secondary/90">
+              <PrimaryButton 
+                className="bg-secondary hover:bg-secondary/90"
+                onClick={handleLoginClick}
+              >
                 Log In
               </PrimaryButton>
             </div>
           </div>
         </div>
       </div>
+      
+      {/* User Authentication Modal */}
+      <UserAuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={handleCloseAuthModal} 
+      />
     </section>
   );
 };
