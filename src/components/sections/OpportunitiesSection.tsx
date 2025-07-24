@@ -153,13 +153,7 @@ const OpportunitiesSection = () => {
           </div>
         </div>
 
-        {/* View More */}
-        <div className="text-center animate-fade-in" style={{ animationDelay: '0.8s' }}>
-          <PrimaryButton size="lg" className="bg-[#E14F3D] hover:bg-[#E14F3D]/90">
-             View All Opportunities
-             <ArrowRight className="ml-2 w-5 h-5" />
-           </PrimaryButton>
-        </div>
+        {/* View More button removed */}
       </div>
     </section>
   );

@@ -70,15 +70,7 @@ const SearchSection = () => {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <div className="text-center animate-fade-in" style={{ animationDelay: '0.7s' }}>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <PrimaryButton size="lg" className="bg-[#E14F3D] hover:bg-[#E14F3D]/90">
-              <Filter className="mr-2 w-5 h-5" />
-              Advanced Filters
-            </PrimaryButton>
-          </div>
-        </div>
+
       </div>
     </section>
   );
