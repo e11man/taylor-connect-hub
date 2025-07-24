@@ -6,18 +6,48 @@ import SearchSection from "@/components/sections/SearchSection";
 import OpportunitiesSection from "@/components/sections/OpportunitiesSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import ContactSection from "@/components/sections/ContactSection";
+import UserDashboard from "@/components/sections/UserDashboard";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <p className="text-xl text-muted-foreground">Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-white">
       <Header />
       <main>
         <HeroSection />
-        <CallToActionSection />
-        <SearchSection />
-        <OpportunitiesSection />
-        <TestimonialsSection />
-        <ContactSection />
+        {user ? (
+          <>
+            <UserDashboard />
+            <div id="opportunities">
+              <OpportunitiesSection />
+            </div>
+            <div id="search">
+              <SearchSection />
+            </div>
+          </>
+        ) : (
+          <>
+            <CallToActionSection />
+            <div id="search">
+              <SearchSection />
+            </div>
+            <div id="opportunities">
+              <OpportunitiesSection />
+            </div>
+            <TestimonialsSection />
+            <ContactSection />
+          </>
+        )}
       </main>
       <Footer />
     </div>
