@@ -150,13 +150,38 @@ const AdminDashboard = () => {
     }
 
     try {
+      // FIX: Add proper error handling for database queries
+      // Wrap in try-catch to handle schema access errors gracefully
       const { data: roleData, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to handle no results gracefully
 
-      if (error || !roleData || roleData.role !== 'admin') {
+      // Check for specific database errors
+      if (error) {
+        console.error('Database error checking admin role:', error);
+        
+        // Check for common schema/permission errors
+        if (error.message?.includes('schema') || error.code === '42501') {
+          toast({
+            title: "Database Configuration Error",
+            description: "Unable to verify admin access. Please contact support.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Access Check Failed",
+            description: error.message || "Could not verify your admin privileges.",
+            variant: "destructive",
+          });
+        }
+        navigate('/');
+        return;
+      }
+
+      // Verify admin role
+      if (!roleData || roleData.role !== 'admin') {
         toast({
           title: "Access Denied",
           description: "You don't have admin privileges.",
@@ -166,10 +191,18 @@ const AdminDashboard = () => {
         return;
       }
 
+      // User is admin, proceed with loading data
       setIsAdmin(true);
       await fetchAllData();
     } catch (error) {
-      console.error('Error checking admin access:', error);
+      console.error('Unexpected error checking admin access:', error);
+      
+      // Fallback error handling
+      toast({
+        title: "System Error",
+        description: "An unexpected error occurred. Please try again later.",
+        variant: "destructive",
+      });
       navigate('/admin');
     }
   };
@@ -196,39 +229,44 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      // Fetch users with their profiles and roles
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      // FIX: Removed supabase.auth.admin.listUsers() which requires service role key
+      // Instead, we query the profiles table directly which the anon key can access
+      // This prevents the "Database error querying schema" error
       
-      if (authError) throw authError;
-
-      // Fetch profiles
+      // Fetch all profiles (users)
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('*');
+        .select('*')
+        .order('created_at', { ascending: false });
       
-      if (profilesError) throw profilesError;
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
+      }
 
-      // Fetch user roles
+      // Fetch user roles separately
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('*');
       
-      if (rolesError) throw rolesError;
+      if (rolesError) {
+        console.error('Error fetching roles:', rolesError);
+        // Don't throw here, roles might not exist for all users
+      }
 
       // Combine the data
-      const combinedUsers = authUsers.users.map(authUser => {
-        const profile = profiles?.find(p => p.user_id === authUser.id);
-        const role = roles?.find(r => r.user_id === authUser.id);
+      const combinedUsers = (profiles || []).map(profile => {
+        const role = roles?.find(r => r.user_id === profile.user_id);
         
         return {
-          id: authUser.id,
-          email: authUser.email || '',
-          created_at: authUser.created_at,
-          profiles: profile ? {
+          id: profile.user_id,
+          email: profile.email || '',
+          created_at: profile.created_at,
+          profiles: {
             dorm: profile.dorm,
             wing: profile.wing,
             status: profile.status || 'active'
-          } : undefined,
+          },
           user_roles: role ? [{
             role: role.role as UserRole
           }] : []
@@ -246,7 +284,15 @@ const AdminDashboard = () => {
       setUsers(activeUsers);
       setPendingUsers(pendingUsersList);
     } catch (error) {
-      console.error('Error fetching users:', error);
+      console.error('Error in fetchUsers:', error);
+      
+      // Provide user-friendly error message
+      toast({
+        title: "Error loading users",
+        description: error instanceof Error ? error.message : "Failed to load user data. Please check your permissions.",
+        variant: "destructive",
+      });
+      
       setUsers([]);
       setPendingUsers([]);
     }
@@ -399,18 +445,45 @@ const AdminDashboard = () => {
     if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
 
     try {
-      // Delete user data from various tables
-      await supabase.from('user_roles').delete().eq('user_id', userId);
-      await supabase.from('profiles').delete().eq('user_id', userId);
-      await supabase.from('user_events').delete().eq('user_id', userId);
+      // FIX: Cannot use supabase.auth.admin.deleteUser() with anon key
+      // Instead, we'll mark the user as deleted in our tables
+      // Actual auth user deletion should be done via a server-side API route
       
-      // Delete auth user
-      const { error } = await supabase.auth.admin.deleteUser(userId);
-      if (error) throw error;
+      // Start a transaction-like operation
+      const errors: string[] = [];
+      
+      // Delete user's role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (roleError) errors.push(`Roles: ${roleError.message}`);
+      
+      // Delete user's events participation
+      const { error: eventsError } = await supabase
+        .from('user_events')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (eventsError) errors.push(`Events: ${eventsError.message}`);
+      
+      // Mark user profile as deleted (soft delete)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ status: 'deleted' })
+        .eq('user_id', userId);
+      
+      if (profileError) errors.push(`Profile: ${profileError.message}`);
+      
+      // If there were errors, show them
+      if (errors.length > 0) {
+        throw new Error(`Failed to fully delete user:\n${errors.join('\n')}`);
+      }
 
       toast({
-        title: "User deleted",
-        description: "The user has been permanently removed.",
+        title: "User marked as deleted",
+        description: "User has been removed from the system. Contact support to fully delete the auth account.",
       });
 
       await fetchUsers();
@@ -418,7 +491,7 @@ const AdminDashboard = () => {
       console.error('Error deleting user:', error);
       toast({
         title: "Error",
-        description: "Failed to delete user.",
+        description: error instanceof Error ? error.message : "Failed to delete user. Check your permissions.",
         variant: "destructive",
       });
     }
