@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { ReactNode } from "react";
 
 interface AnimatedTextProps {
@@ -16,34 +16,51 @@ const AnimatedText: React.FC<AnimatedTextProps> = ({
   variant = "slideUp",
   as: Component = "div"
 }) => {
-  const getVariants = () => {
-    const baseTransition = { duration: 0.6, delay };
-    
+  const getVariants = (): Variants => {
     switch (variant) {
       case 'slideUp':
         return {
           hidden: { opacity: 0, y: 20 },
-          visible: { opacity: 1, y: 0, transition: { ...baseTransition, duration: 0.5 } }
+          visible: { 
+            opacity: 1, 
+            y: 0, 
+            transition: { duration: 0.5, delay } 
+          }
         };
       case 'fade':
         return {
           hidden: { opacity: 0 },
-          visible: { opacity: 1, transition: { ...baseTransition, ease: "easeOut" } }
+          visible: { 
+            opacity: 1, 
+            transition: { duration: 0.6, delay } 
+          }
         };
       case 'typewriter':
         return {
           hidden: { opacity: 0, width: 0 },
-          visible: { opacity: 1, width: "auto", transition: { ...baseTransition, duration: 0.8, ease: "easeOut" } }
+          visible: { 
+            opacity: 1, 
+            width: "auto", 
+            transition: { duration: 0.8, delay } 
+          }
         };
       case 'blur':
         return {
           hidden: { opacity: 0, filter: "blur(8px)", y: 15 },
-          visible: { opacity: 1, filter: "blur(0px)", y: 0, transition: baseTransition }
+          visible: { 
+            opacity: 1, 
+            filter: "blur(0px)", 
+            y: 0, 
+            transition: { duration: 0.6, delay } 
+          }
         };
       default:
         return {
           hidden: { opacity: 0 },
-          visible: { opacity: 1, transition: baseTransition }
+          visible: { 
+            opacity: 1, 
+            transition: { duration: 0.6, delay } 
+          }
         };
     }
   };

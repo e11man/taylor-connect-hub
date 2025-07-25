@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, Variants } from "framer-motion";
 import { ReactNode } from "react";
 
 interface AnimatedSectionProps {
@@ -16,34 +16,54 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
   duration = 0.6,
   variant = "slideUp" 
 }) => {
-  const getVariants = () => {
-    const baseTransition = { duration, delay };
-    
+  const getVariants = (): Variants => {
     switch (variant) {
       case 'slideUp':
         return {
           hidden: { opacity: 0, y: 40, scale: 0.95 },
-          visible: { opacity: 1, y: 0, scale: 1, transition: baseTransition }
+          visible: { 
+            opacity: 1, 
+            y: 0, 
+            scale: 1, 
+            transition: { duration, delay } 
+          }
         };
       case 'slideLeft':
         return {
           hidden: { opacity: 0, x: -40, scale: 0.95 },
-          visible: { opacity: 1, x: 0, scale: 1, transition: baseTransition }
+          visible: { 
+            opacity: 1, 
+            x: 0, 
+            scale: 1, 
+            transition: { duration, delay } 
+          }
         };
       case 'slideRight':
         return {
           hidden: { opacity: 0, x: 40, scale: 0.95 },
-          visible: { opacity: 1, x: 0, scale: 1, transition: baseTransition }
+          visible: { 
+            opacity: 1, 
+            x: 0, 
+            scale: 1, 
+            transition: { duration, delay } 
+          }
         };
       case 'fade':
         return {
           hidden: { opacity: 0 },
-          visible: { opacity: 1, transition: { ...baseTransition, ease: "easeOut" } }
+          visible: { 
+            opacity: 1, 
+            transition: { duration, delay } 
+          }
         };
       case 'scale':
         return {
           hidden: { opacity: 0, scale: 0.8 },
-          visible: { opacity: 1, scale: 1, transition: baseTransition }
+          visible: { 
+            opacity: 1, 
+            scale: 1, 
+            transition: { duration, delay } 
+          }
         };
       case 'stagger':
         return {
@@ -58,7 +78,10 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
       default:
         return {
           hidden: { opacity: 0 },
-          visible: { opacity: 1, transition: baseTransition }
+          visible: { 
+            opacity: 1, 
+            transition: { duration, delay } 
+          }
         };
     }
   };
