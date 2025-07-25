@@ -207,7 +207,7 @@ const Header = () => {
               }}
               className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
             >
-              Sign In / Sign Up
+              Log in
             </PrimaryButton>
             <PrimaryButton
               onClick={() => {
@@ -297,7 +297,7 @@ const Header = () => {
                   onClick={() => setAuthModalOpen(true)}
                   className="shadow-sm hover:shadow-md whitespace-nowrap"
                 >
-                  Sign In
+                  Log in
                 </PrimaryButton>
                 <PrimaryButton
                   onClick={() => setModalOpen(true)}
@@ -330,7 +330,7 @@ const Header = () => {
               onClick={() => setAuthModalOpen(true)}
               className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
             >
-              Sign In
+              Log in
             </PrimaryButton>
           )}
           <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
