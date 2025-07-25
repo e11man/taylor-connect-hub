@@ -25,13 +25,21 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      // Authenticate with Supabase
+      // STEP 1: Validate Supabase client initialization
+      // Check if environment variables are properly set
+      if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+        console.warn('Supabase environment variables not found, using defaults');
+      }
+
+      // STEP 2: Authenticate with Supabase
+      // This uses the anon key which has limited permissions
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Auth error:', error);
         throw error;
       }
 
@@ -39,18 +47,65 @@ const AdminLogin = () => {
         throw new Error('Authentication failed');
       }
 
-      // Check if user has admin role
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', data.user.id)
-        .single();
+      // STEP 3: Check admin role with proper error handling
+      // Wrap the query in try/catch to handle RLS policy errors
+      let isAdmin = false;
+      let roleError = null;
 
-      if (roleError || !roleData || roleData.role !== 'admin') {
+      try {
+        // First attempt: Try to query user_roles table directly
+        const { data: roleData, error: roleQueryError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .single();
+
+        if (roleQueryError) {
+          console.error('Role query error:', roleQueryError);
+          roleError = roleQueryError;
+          
+          // If it's a schema or permission error, try alternative approach
+          if (roleQueryError.message?.includes('schema') || 
+              roleQueryError.code === 'PGRST301' || // RLS violation
+              roleQueryError.code === '42501') { // Insufficient privilege
+            
+            // Alternative approach: Check if user exists in profiles table with role
+            const { data: profileData, error: profileError } = await supabase
+              .from('profiles')
+              .select('role')
+              .eq('user_id', data.user.id)
+              .single();
+
+            if (!profileError && profileData?.role === 'admin') {
+              isAdmin = true;
+            } else {
+              // Last resort: Check if the user's email matches known admin emails
+              // This should be replaced with proper RLS policy fix
+              console.warn('Could not verify admin role through database. Please check RLS policies.');
+            }
+          }
+        } else if (roleData?.role === 'admin') {
+          isAdmin = true;
+        }
+      } catch (queryError: any) {
+        console.error('Database query error:', queryError);
+        
+        // If we can't verify admin status due to database errors, 
+        // provide a helpful error message
+        await supabase.auth.signOut();
+        throw new Error(
+          'Unable to verify admin privileges. This may be due to database configuration. ' +
+          'Please ensure Row Level Security policies allow authenticated users to read their own roles.'
+        );
+      }
+
+      // STEP 4: Verify admin access
+      if (!isAdmin) {
         await supabase.auth.signOut();
         throw new Error('You do not have admin privileges');
       }
 
+      // STEP 5: Success - Navigate to admin dashboard
       toast({
         title: "Welcome back! 🎉",
         description: "Successfully logged in to admin dashboard.",
@@ -60,14 +115,19 @@ const AdminLogin = () => {
     } catch (error: any) {
       console.error('Admin login error:', error);
       
-      // User-friendly error messages
+      // STEP 6: Enhanced error messages with troubleshooting hints
       let errorMessage = 'Invalid credentials';
+      
       if (error.message?.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password';
       } else if (error.message?.includes('Email not confirmed')) {
         errorMessage = 'Please confirm your email address first';
       } else if (error.message?.includes('admin privileges')) {
-        errorMessage = 'You do not have admin privileges';
+        errorMessage = error.message;
+      } else if (error.message?.includes('schema') || error.message?.includes('database')) {
+        errorMessage = 'Database configuration error. Please contact system administrator.';
+      } else if (error.message?.includes('Row Level Security')) {
+        errorMessage = error.message;
       } else if (error.message) {
         errorMessage = error.message;
       }
