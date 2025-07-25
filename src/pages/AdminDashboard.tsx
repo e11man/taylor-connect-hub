@@ -108,6 +108,23 @@ const AdminDashboard = () => {
   }, [user]);
 
   const checkAdminAccess = async () => {
+    // Check for temporary admin session first
+    const tempSession = sessionStorage.getItem('admin_temp_session');
+    if (tempSession) {
+      try {
+        const session = JSON.parse(tempSession);
+        if (session.isAdmin && session.email === 'admin@taylor.edu') {
+          console.log('Using temporary admin session');
+          setIsAdmin(true);
+          fetchAllData();
+          return;
+        }
+      } catch (error) {
+        console.error('Invalid temp session:', error);
+        sessionStorage.removeItem('admin_temp_session');
+      }
+    }
+
     if (!user) {
       navigate('/admin');
       return;
@@ -140,6 +157,10 @@ const AdminDashboard = () => {
 
   const handleLogout = async () => {
     try {
+      // Clear temporary admin session
+      sessionStorage.removeItem('admin_temp_session');
+      
+      // Sign out from Supabase if user is authenticated
       await supabase.auth.signOut();
       
       toast({
