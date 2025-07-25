@@ -82,6 +82,23 @@ const AdminDashboard = () => {
     location: '',
     max_participants: ''
   });
+  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [editUser, setEditUser] = useState({
+    email: '',
+    dorm: '',
+    wing: '',
+    role: 'user' as 'admin' | 'pa' | 'user'
+  });
+  const [isEditOrgModalOpen, setIsEditOrgModalOpen] = useState(false);
+  const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
+  const [editOrg, setEditOrg] = useState({
+    name: '',
+    contact_email: '',
+    website: '',
+    phone: '',
+    description: ''
+  });
 
   useEffect(() => {
     checkAdminAccess();
@@ -465,6 +482,230 @@ const AdminDashboard = () => {
     setIsEditModalOpen(true);
   };
 
+  const handleEditUser = async () => {
+    if (!editingUser) return;
+
+    try {
+      // Update profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          email: editUser.email,
+          dorm: editUser.dorm,
+          wing: editUser.wing,
+        })
+        .eq('user_id', editingUser.id);
+
+      if (profileError) throw profileError;
+
+      // Update role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .update({ role: editUser.role })
+        .eq('user_id', editingUser.id);
+
+      if (roleError) throw roleError;
+
+      setIsEditUserModalOpen(false);
+      setEditingUser(null);
+      setEditUser({ email: '', dorm: '', wing: '', role: 'user' });
+      
+      toast({
+        title: "Success!",
+        description: "User updated successfully.",
+      });
+      
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update user.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteUser = async (userId: string, userEmail: string) => {
+    if (!confirm(`Are you sure you want to delete user "${userEmail}"? This will remove all their data and cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Delete user's events signups
+      const { error: userEventsError } = await supabase
+        .from('user_events')
+        .delete()
+        .eq('user_id', userId);
+
+      if (userEventsError) throw userEventsError;
+
+      // Delete user's chat messages
+      const { error: chatError } = await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('user_id', userId);
+
+      if (chatError) throw chatError;
+
+      // Delete user roles
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (roleError) throw roleError;
+
+      // Delete profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userId);
+
+      if (profileError) throw profileError;
+
+      // Delete from auth
+      const { error: authError } = await supabase.auth.admin.deleteUser(userId);
+      if (authError) console.warn('Auth deletion failed:', authError.message);
+
+      toast({
+        title: "Success!",
+        description: "User deleted successfully.",
+      });
+      
+      fetchUsers();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete user.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openEditUserModal = (user: User) => {
+    setEditingUser(user);
+    setEditUser({
+      email: user.email,
+      dorm: user.profiles.dorm,
+      wing: user.profiles.wing,
+      role: user.user_roles[0]?.role as 'admin' | 'pa' | 'user' || 'user'
+    });
+    setIsEditUserModalOpen(true);
+  };
+
+  const handleEditOrganization = async () => {
+    if (!editingOrg) return;
+
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          name: editOrg.name,
+          contact_email: editOrg.contact_email,
+          website: editOrg.website,
+          phone: editOrg.phone,
+          description: editOrg.description,
+        })
+        .eq('id', editingOrg.id);
+
+      if (error) throw error;
+
+      setIsEditOrgModalOpen(false);
+      setEditingOrg(null);
+      setEditOrg({ name: '', contact_email: '', website: '', phone: '', description: '' });
+      
+      toast({
+        title: "Success!",
+        description: "Organization updated successfully.",
+      });
+      
+      fetchOrganizations();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update organization.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteOrganization = async (orgId: string, orgName: string) => {
+    if (!confirm(`Are you sure you want to delete organization "${orgName}"? This will also delete all their events and cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // First get all events for this organization
+      const { data: orgEvents, error: eventsError } = await supabase
+        .from('events')
+        .select('id')
+        .eq('organization_id', orgId);
+
+      if (eventsError) throw eventsError;
+
+      // Delete all user signups for these events
+      if (orgEvents && orgEvents.length > 0) {
+        const eventIds = orgEvents.map(e => e.id);
+        
+        const { error: userEventsError } = await supabase
+          .from('user_events')
+          .delete()
+          .in('event_id', eventIds);
+
+        if (userEventsError) throw userEventsError;
+
+        // Delete all chat messages for these events
+        const { error: chatError } = await supabase
+          .from('chat_messages')
+          .delete()
+          .in('event_id', eventIds);
+
+        if (chatError) throw chatError;
+      }
+
+      // Delete all events for this organization
+      const { error: eventsDeleteError } = await supabase
+        .from('events')
+        .delete()
+        .eq('organization_id', orgId);
+
+      if (eventsDeleteError) throw eventsDeleteError;
+
+      // Finally delete the organization
+      const { error: orgError } = await supabase
+        .from('organizations')
+        .delete()
+        .eq('id', orgId);
+
+      if (orgError) throw orgError;
+
+      toast({
+        title: "Success!",
+        description: "Organization and all related data deleted successfully.",
+      });
+      
+      fetchOrganizations();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to delete organization.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const openEditOrgModal = (org: Organization) => {
+    setEditingOrg(org);
+    setEditOrg({
+      name: org.name,
+      contact_email: org.contact_email,
+      website: org.website || '',
+      phone: org.phone || '',
+      description: org.description || ''
+    });
+    setIsEditOrgModalOpen(true);
+  };
+
   const filteredUsers = users.filter(user => 
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.profiles.dorm.toLowerCase().includes(searchTerm.toLowerCase())
@@ -567,32 +808,95 @@ const AdminDashboard = () => {
                       className="max-w-sm"
                     />
                     
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Dorm</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {filteredUsers.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.profiles.dorm} - {user.profiles.wing}</TableCell>
-                            <TableCell>
+                    {/* Desktop Table View */}
+                    <div className="hidden lg:block">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Email</TableHead>
+                            <TableHead>Dorm</TableHead>
+                            <TableHead>Role</TableHead>
+                            <TableHead>Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredUsers.map((user) => (
+                            <TableRow key={user.id}>
+                              <TableCell>{user.email}</TableCell>
+                              <TableCell>{user.profiles.dorm} - {user.profiles.wing}</TableCell>
+                              <TableCell>
+                                <Badge variant={user.user_roles[0]?.role === 'admin' ? 'destructive' : 'secondary'}>
+                                  {user.user_roles[0]?.role || 'user'}
+                                </Badge>
+                              </TableCell>
+                              <TableCell className="space-x-2">
+                                <Select
+                                  value={user.user_roles[0]?.role || 'user'}
+                                  onValueChange={(value: 'admin' | 'pa' | 'user') => handleUserRoleChange(user.id, value)}
+                                >
+                                  <SelectTrigger className="w-24">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="user">User</SelectItem>
+                                    <SelectItem value="pa">PA</SelectItem>
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openEditUserModal(user)}
+                                >
+                                  <Edit className="w-4 h-4 mr-1" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => resetUserPassword(user.id, user.email)}
+                                >
+                                  Reset Password
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => handleDeleteUser(user.id, user.email)}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-1" />
+                                  Delete
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Mobile Card View */}
+                    <div className="lg:hidden space-y-4">
+                      {filteredUsers.map((user) => (
+                        <Card key={user.id} className="p-4">
+                          <div className="space-y-3">
+                            <div>
+                              <h3 className="font-semibold text-lg">{user.email}</h3>
+                              <p className="text-sm text-muted-foreground">{user.profiles.dorm} - {user.profiles.wing}</p>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm font-medium">Role:</span>
                               <Badge variant={user.user_roles[0]?.role === 'admin' ? 'destructive' : 'secondary'}>
                                 {user.user_roles[0]?.role || 'user'}
                               </Badge>
-                            </TableCell>
-                            <TableCell className="space-x-2">
+                            </div>
+
+                            <div className="space-y-2">
                               <Select
                                 value={user.user_roles[0]?.role || 'user'}
                                 onValueChange={(value: 'admin' | 'pa' | 'user') => handleUserRoleChange(user.id, value)}
                               >
-                                <SelectTrigger className="w-24">
-                                  <SelectValue />
+                                <SelectTrigger className="w-full">
+                                  <SelectValue placeholder="Change Role" />
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value="user">User</SelectItem>
@@ -600,25 +904,41 @@ const AdminDashboard = () => {
                                   <SelectItem value="admin">Admin</SelectItem>
                                 </SelectContent>
                               </Select>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => resetUserPassword(user.id, user.email)}
-                              >
-                                Reset Password
-                              </Button>
+                              
+                              <div className="grid grid-cols-2 gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => openEditUserModal(user)}
+                                  className="w-full justify-start"
+                                >
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => resetUserPassword(user.id, user.email)}
+                                  className="w-full justify-start text-xs"
+                                >
+                                  Reset Password
+                                </Button>
+                              </div>
+                              
                               <Button
                                 size="sm"
                                 variant="destructive"
-                                onClick={() => handleUserStatusChange(user.id, 'blocked')}
+                                onClick={() => handleDeleteUser(user.id, user.email)}
+                                className="w-full justify-start"
                               >
-                                Block
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete User
                               </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
+                            </div>
+                          </div>
+                        </Card>
+                      ))}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -632,41 +952,80 @@ const AdminDashboard = () => {
                   <CardDescription>Users who registered without a @taylor.edu email</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Registration Date</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredPendingUsers.map((user) => (
-                        <TableRow key={user.id}>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
-                          <TableCell className="space-x-2">
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Registration Date</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {filteredPendingUsers.map((user) => (
+                          <TableRow key={user.id}>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell className="space-x-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handleUserStatusChange(user.id, 'active')}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                <Check className="w-4 h-4 mr-1" />
+                                Approve
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleUserStatusChange(user.id, 'blocked')}
+                              >
+                                <X className="w-4 h-4 mr-1" />
+                                Reject
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="lg:hidden space-y-4">
+                    {filteredPendingUsers.map((user) => (
+                      <Card key={user.id} className="p-4">
+                        <div className="space-y-3">
+                          <div>
+                            <h3 className="font-semibold text-lg">{user.email}</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Registered: {new Date(user.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+
+                          <div className="flex gap-2">
                             <Button
                               size="sm"
                               onClick={() => handleUserStatusChange(user.id, 'active')}
-                              className="bg-green-600 hover:bg-green-700"
+                              className="bg-green-600 hover:bg-green-700 flex-1 justify-start"
                             >
-                              <Check className="w-4 h-4 mr-1" />
+                              <Check className="w-4 h-4 mr-2" />
                               Approve
                             </Button>
                             <Button
                               size="sm"
                               variant="destructive"
                               onClick={() => handleUserStatusChange(user.id, 'blocked')}
+                              className="flex-1 justify-start"
                             >
-                              <X className="w-4 h-4 mr-1" />
+                              <X className="w-4 h-4 mr-2" />
                               Reject
                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -679,43 +1038,96 @@ const AdminDashboard = () => {
                   <CardDescription>Manage approved organizations</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Website</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {organizations.map((org) => (
-                        <TableRow key={org.id}>
-                          <TableCell className="font-medium">{org.name}</TableCell>
-                          <TableCell>{org.contact_email}</TableCell>
-                          <TableCell>{org.website || 'N/A'}</TableCell>
-                          <TableCell>
-                            <Badge className="bg-green-100 text-green-800">Approved</Badge>
-                          </TableCell>
-                          <TableCell className="space-x-2">
-                            <Button size="sm" variant="outline">
-                              <Edit className="w-4 h-4 mr-1" />
+                  {/* Desktop Table View */}
+                  <div className="hidden lg:block">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Website</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {organizations.map((org) => (
+                          <TableRow key={org.id}>
+                            <TableCell className="font-medium">{org.name}</TableCell>
+                            <TableCell>{org.contact_email}</TableCell>
+                            <TableCell>{org.website || 'N/A'}</TableCell>
+                            <TableCell>
+                              <Badge className="bg-green-100 text-green-800">Approved</Badge>
+                            </TableCell>
+                            <TableCell className="space-x-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => openEditOrgModal(org)}
+                              >
+                                <Edit className="w-4 h-4 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleDeleteOrganization(org.id, org.name)}
+                              >
+                                <Trash2 className="w-4 h-4 mr-1" />
+                                Delete
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+
+                  {/* Mobile Card View */}
+                  <div className="lg:hidden space-y-4">
+                    {organizations.map((org) => (
+                      <Card key={org.id} className="p-4">
+                        <div className="space-y-3">
+                          <div>
+                            <h3 className="font-semibold text-lg">{org.name}</h3>
+                            <p className="text-sm text-muted-foreground">{org.contact_email}</p>
+                          </div>
+                          
+                          <div className="space-y-2 text-sm">
+                            <div>
+                              <span className="font-medium">Website:</span>
+                              <span className="text-muted-foreground ml-2">{org.website || 'N/A'}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">Status:</span>
+                              <Badge className="bg-green-100 text-green-800">Approved</Badge>
+                            </div>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              onClick={() => openEditOrgModal(org)}
+                              className="flex-1 justify-start"
+                            >
+                              <Edit className="w-4 h-4 mr-2" />
                               Edit
                             </Button>
                             <Button
                               size="sm"
                               variant="destructive"
-                              onClick={() => handleOrganizationApproval(org.id, 'rejected')}
+                              onClick={() => handleDeleteOrganization(org.id, org.name)}
+                              className="flex-1 justify-start"
                             >
-                              <Trash2 className="w-4 h-4 mr-1" />
-                              Revoke
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
                             </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -1052,6 +1464,148 @@ const AdminDashboard = () => {
                 Update Opportunity
               </PrimaryButton>
               <SecondaryButton onClick={() => setIsEditModalOpen(false)}>
+                Cancel
+              </SecondaryButton>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Modal */}
+      <Dialog open={isEditUserModalOpen} onOpenChange={setIsEditUserModalOpen}>
+        <DialogContent className="sm:max-w-md w-full mx-4">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user information and permissions.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-user-email">Email*</Label>
+              <Input
+                id="edit-user-email"
+                value={editUser.email}
+                onChange={(e) => setEditUser({...editUser, email: e.target.value})}
+                placeholder="user@example.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user-dorm">Dorm*</Label>
+              <Input
+                id="edit-user-dorm"
+                value={editUser.dorm}
+                onChange={(e) => setEditUser({...editUser, dorm: e.target.value})}
+                placeholder="Dorm name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user-wing">Wing*</Label>
+              <Input
+                id="edit-user-wing"
+                value={editUser.wing}
+                onChange={(e) => setEditUser({...editUser, wing: e.target.value})}
+                placeholder="Wing"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-user-role">Role*</Label>
+              <Select
+                value={editUser.role}
+                onValueChange={(value: 'admin' | 'pa' | 'user') => setEditUser({...editUser, role: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="pa">PA</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2 pt-4">
+              <PrimaryButton 
+                onClick={handleEditUser}
+                disabled={!editUser.email || !editUser.dorm || !editUser.wing}
+                className="flex-1"
+              >
+                Update User
+              </PrimaryButton>
+              <SecondaryButton onClick={() => setIsEditUserModalOpen(false)}>
+                Cancel
+              </SecondaryButton>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Organization Modal */}
+      <Dialog open={isEditOrgModalOpen} onOpenChange={setIsEditOrgModalOpen}>
+        <DialogContent className="sm:max-w-md w-full mx-4">
+          <DialogHeader>
+            <DialogTitle>Edit Organization</DialogTitle>
+            <DialogDescription>
+              Update organization information.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="edit-org-name">Organization Name*</Label>
+              <Input
+                id="edit-org-name"
+                value={editOrg.name}
+                onChange={(e) => setEditOrg({...editOrg, name: e.target.value})}
+                placeholder="Organization name"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-org-email">Contact Email*</Label>
+              <Input
+                id="edit-org-email"
+                type="email"
+                value={editOrg.contact_email}
+                onChange={(e) => setEditOrg({...editOrg, contact_email: e.target.value})}
+                placeholder="contact@organization.org"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-org-phone">Phone</Label>
+              <Input
+                id="edit-org-phone"
+                value={editOrg.phone}
+                onChange={(e) => setEditOrg({...editOrg, phone: e.target.value})}
+                placeholder="Phone number"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-org-website">Website</Label>
+              <Input
+                id="edit-org-website"
+                value={editOrg.website}
+                onChange={(e) => setEditOrg({...editOrg, website: e.target.value})}
+                placeholder="https://website.com"
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit-org-description">Description*</Label>
+              <Textarea
+                id="edit-org-description"
+                value={editOrg.description}
+                onChange={(e) => setEditOrg({...editOrg, description: e.target.value})}
+                placeholder="Organization description"
+                rows={3}
+              />
+            </div>
+            <div className="flex gap-2 pt-4">
+              <PrimaryButton 
+                onClick={handleEditOrganization}
+                disabled={!editOrg.name || !editOrg.contact_email || !editOrg.description}
+                className="flex-1"
+              >
+                Update Organization
+              </PrimaryButton>
+              <SecondaryButton onClick={() => setIsEditOrgModalOpen(false)}>
                 Cancel
               </SecondaryButton>
             </div>
