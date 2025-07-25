@@ -203,6 +203,12 @@ const AdminDashboard = () => {
         const enrichedUsers = profilesData?.map(profile => {
           const roles = rolesData?.filter(r => r.user_id === profile.user_id) || [];
           
+          // Normalize status - treat null, undefined, empty string, or 'NULL' as 'active'
+          let normalizedStatus = profile.status;
+          if (!normalizedStatus || normalizedStatus === '' || normalizedStatus === 'NULL' || normalizedStatus === 'null') {
+            normalizedStatus = 'active';
+          }
+          
           return {
             id: profile.user_id,
             email: profile.email || '',
@@ -210,14 +216,25 @@ const AdminDashboard = () => {
             profiles: {
               dorm: profile.dorm || '',
               wing: profile.wing || '',
-              status: profile.status || 'active'
+              status: normalizedStatus
             },
             user_roles: roles.map(r => ({ role: r.role }))
           };
         }) || [];
 
-        setUsers(enrichedUsers.filter(user => user.profiles.status === 'active'));
-        setPendingUsers(enrichedUsers.filter(user => user.profiles.status === 'pending'));
+        // More inclusive filtering - show users that are 'active' or don't have a status set
+        const activeUsers = enrichedUsers.filter(user => 
+          user.profiles.status === 'active' || 
+          !user.profiles.status || 
+          user.profiles.status === '' ||
+          user.profiles.status === 'NULL' ||
+          user.profiles.status === 'null'
+        );
+        
+        const pendingUsers = enrichedUsers.filter(user => user.profiles.status === 'pending');
+
+        setUsers(activeUsers);
+        setPendingUsers(pendingUsers);
         return;
       }
 
@@ -240,6 +257,12 @@ const AdminDashboard = () => {
         const profile = profilesData?.find(p => p.user_id === authUser.id);
         const roles = rolesData?.filter(r => r.user_id === authUser.id) || [];
         
+        // Normalize status - treat null, undefined, empty string, or 'NULL' as 'active'
+        let normalizedStatus = profile?.status;
+        if (!normalizedStatus || normalizedStatus === '' || normalizedStatus === 'NULL' || normalizedStatus === 'null') {
+          normalizedStatus = 'active';
+        }
+        
         return {
           id: authUser.id,
           email: authUser.email || '',
@@ -247,14 +270,25 @@ const AdminDashboard = () => {
           profiles: {
             dorm: profile?.dorm || '',
             wing: profile?.wing || '',
-            status: profile?.status || 'active'
+            status: normalizedStatus
           },
           user_roles: roles.map(r => ({ role: r.role }))
         };
       }).filter(user => user.profiles);
 
-      setUsers(enrichedUsers.filter(user => user.profiles.status === 'active'));
-      setPendingUsers(enrichedUsers.filter(user => user.profiles.status === 'pending'));
+      // More inclusive filtering - show users that are 'active' or don't have a status set
+      const activeUsers = enrichedUsers.filter(user => 
+        user.profiles.status === 'active' || 
+        !user.profiles.status || 
+        user.profiles.status === '' ||
+        user.profiles.status === 'NULL' ||
+        user.profiles.status === 'null'
+      );
+      
+      const pendingUsers = enrichedUsers.filter(user => user.profiles.status === 'pending');
+
+      setUsers(activeUsers);
+      setPendingUsers(pendingUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       // Set empty arrays as fallback
