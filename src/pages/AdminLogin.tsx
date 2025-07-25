@@ -56,7 +56,21 @@ const AdminLogin = () => {
 
       navigate('/admin/dashboard');
     } catch (error: any) {
-      setError(error.message || 'Invalid admin credentials');
+      console.error('Admin login error:', error);
+      
+      // Enhanced error messages
+      let errorMessage = 'Invalid admin credentials';
+      if (error.message.includes('Invalid login credentials')) {
+        errorMessage = 'Invalid email or password';
+      } else if (error.message.includes('Email not confirmed')) {
+        errorMessage = 'Please confirm your email address';
+      } else if (error.message.includes('admin privileges')) {
+        errorMessage = 'You do not have admin privileges';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
