@@ -32,6 +32,7 @@ interface User {
   user_roles: {
     role: string;
   }[];
+  event_count?: number;
 }
 
 interface Organization {

@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
+import GroupSignupModal from "@/components/modals/GroupSignupModal";
 
 interface Event {
   id: string;
@@ -26,14 +27,19 @@ const OpportunitiesSection = () => {
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [groupSignupModalOpen, setGroupSignupModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [userRole, setUserRole] = useState<string | null>(null);
+  const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
   const { user, refreshUserEvents, userEventsRefreshTrigger, eventsRefreshTrigger } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     fetchEvents();
+    fetchEventSignupCounts();
     if (user) {
       fetchUserEvents();
+      fetchUserRole();
     }
   }, [user, userEventsRefreshTrigger, eventsRefreshTrigger]);
 
@@ -75,11 +81,61 @@ const OpportunitiesSection = () => {
     }
   };
 
+  const fetchUserRole = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (error) {
+        console.error('Error fetching user role:', error);
+      } else {
+        setUserRole(data?.role || null);
+      }
+    } catch (error) {
+      console.error('Error fetching user role:', error);
+    }
+  };
+
+  const fetchEventSignupCounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_events')
+        .select('event_id');
+
+      if (error) {
+        console.error('Error fetching signup counts:', error);
+      } else {
+        const counts = data?.reduce((acc: Record<string, number>, curr) => {
+          acc[curr.event_id] = (acc[curr.event_id] || 0) + 1;
+          return acc;
+        }, {}) || {};
+        setEventSignupCounts(counts);
+      }
+    } catch (error) {
+      console.error('Error fetching signup counts:', error);
+    }
+  };
+
   const handleSignUp = async (eventId: string) => {
     if (!user) {
       toast({
         title: "Login Required",
         description: "Please log in to sign up for events.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Check if user already has 2 commitments
+    if (userEvents.length >= 2) {
+      toast({
+        title: "Maximum commitments reached",
+        description: "You can only sign up for 2 opportunities at a time.",
         variant: "destructive",
       });
       return;
@@ -102,6 +158,7 @@ const OpportunitiesSection = () => {
           description: "You have successfully signed up for this event.",
         });
         fetchUserEvents();
+        fetchEventSignupCounts();
         // Trigger refresh in other components (like UserDashboard)
         refreshUserEvents();
       }
@@ -116,6 +173,17 @@ const OpportunitiesSection = () => {
 
   const isSignedUp = (eventId: string) => {
     return userEvents.some(userEvent => userEvent.event_id === eventId);
+  };
+
+  const handleGroupSignup = (event: Event) => {
+    setSelectedEvent(event);
+    setGroupSignupModalOpen(true);
+  };
+
+  const handleGroupSignupSuccess = () => {
+    fetchUserEvents();
+    fetchEventSignupCounts();
+    refreshUserEvents();
   };
 
   if (loading) {
@@ -185,8 +253,10 @@ const OpportunitiesSection = () => {
 
                   <div className="flex items-center gap-3 text-sm">
                     <Users className="w-4 h-4 text-[#00AFCE]" />
-                    <span className="font-medium text-primary">Max Participants:</span>
-                    <span className="text-muted-foreground">{event.max_participants}</span>
+                    <span className="font-medium text-primary">Participants:</span>
+                    <span className="text-muted-foreground">
+                      {eventSignupCounts[event.id] || 0} / {event.max_participants}
+                    </span>
                   </div>
                 </div>
 
@@ -204,6 +274,16 @@ const OpportunitiesSection = () => {
                       Chat
                     </button>
                   )}
+
+                  {user && userRole === 'pa' && !isSignedUp(event.id) && (
+                    <button
+                      onClick={() => handleGroupSignup(event)}
+                      className="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <Users className="w-4 h-4" />
+                      Group
+                    </button>
+                  )}
                   
                   {isSignedUp(event.id) ? (
                     <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-full font-semibold">
@@ -213,8 +293,9 @@ const OpportunitiesSection = () => {
                     <PrimaryButton 
                       onClick={() => handleSignUp(event.id)}
                       className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90"
+                      disabled={userEvents.length >= 2 && userRole !== 'pa'}
                     >
-                      Sign Up
+                      {userEvents.length >= 2 && userRole !== 'pa' ? 'Max Reached' : 'Sign Up'}
                     </PrimaryButton>
                   )}
                 </div>
@@ -237,6 +318,21 @@ const OpportunitiesSection = () => {
           eventId={selectedEvent.id}
           eventTitle={selectedEvent.title}
           organizationId={selectedEvent.organization_id || ''}
+        />
+      )}
+
+      {selectedEvent && (
+        <GroupSignupModal
+          isOpen={groupSignupModalOpen}
+          onClose={() => {
+            setGroupSignupModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          eventId={selectedEvent.id}
+          eventTitle={selectedEvent.title}
+          maxParticipants={selectedEvent.max_participants}
+          currentSignups={eventSignupCounts[selectedEvent.id] || 0}
+          onSignupSuccess={handleGroupSignupSuccess}
         />
       )}
     </section>

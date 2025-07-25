@@ -21,8 +21,7 @@ const cardVariants = {
       y: 0,
       scale: 1,
       transition: {
-        duration: 0.5,
-        ease: [0.25, 0.46, 0.45, 0.94],
+        duration: 0.5
       }
     }
   }
@@ -33,8 +32,7 @@ const hoverVariants = {
     scale: 1.02,
     y: -8,
     transition: {
-      duration: 0.3,
-      ease: "easeOut"
+      duration: 0.3
     }
   },
   lift: {
@@ -42,8 +40,7 @@ const hoverVariants = {
     y: -12,
     rotateY: 5,
     transition: {
-      duration: 0.3,
-      ease: "easeOut"
+      duration: 0.3
     }
   },
   tilt: {
@@ -51,8 +48,7 @@ const hoverVariants = {
     rotateZ: 2,
     y: -6,
     transition: {
-      duration: 0.3,
-      ease: "easeOut"
+      duration: 0.3
     }
   },
   glow: {
@@ -60,8 +56,7 @@ const hoverVariants = {
     y: -8,
     filter: "brightness(1.1)",
     transition: {
-      duration: 0.3,
-      ease: "easeOut"
+      duration: 0.3
     }
   }
 };
