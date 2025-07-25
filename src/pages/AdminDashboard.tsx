@@ -106,6 +106,14 @@ const AdminDashboard = () => {
   }, [user]);
 
   const checkAdminAccess = async () => {
+    // Check for demo admin authentication
+    const adminAuth = localStorage.getItem('admin_authenticated');
+    if (adminAuth === 'true') {
+      setIsAdmin(true);
+      fetchAllData(); // Fix: Call fetchAllData for demo authentication
+      return;
+    }
+
     if (!user) {
       navigate('/admin');
       return;
@@ -138,8 +146,13 @@ const AdminDashboard = () => {
 
   const handleLogout = async () => {
     try {
-      // Sign out from Supabase
-      await supabase.auth.signOut();
+      // Clear localStorage demo auth
+      localStorage.removeItem('admin_authenticated');
+      
+      // Sign out from Supabase if user is authenticated
+      if (user) {
+        await supabase.auth.signOut();
+      }
       
       toast({
         title: "Logged out",
@@ -170,45 +183,80 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      // First fetch profiles
+      const { data, error } = await supabase.auth.admin.listUsers();
+      
+      if (error) {
+        // If admin.listUsers fails (likely due to RLS), fallback to just getting profiles
+        console.warn('Admin listUsers failed, using fallback method:', error.message);
+        
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('user_id, email, dorm, wing, status');
+
+        const { data: rolesData, error: rolesError } = await supabase
+          .from('user_roles')
+          .select('user_id, role');
+
+        if (profilesError) throw profilesError;
+        if (rolesError) throw rolesError;
+
+        const enrichedUsers = profilesData?.map(profile => {
+          const roles = rolesData?.filter(r => r.user_id === profile.user_id) || [];
+          
+          return {
+            id: profile.user_id,
+            email: profile.email || '',
+            created_at: new Date().toISOString(),
+            profiles: {
+              dorm: profile.dorm || '',
+              wing: profile.wing || '',
+              status: profile.status || 'active'
+            },
+            user_roles: roles.map(r => ({ role: r.role }))
+          };
+        }) || [];
+
+        setUsers(enrichedUsers.filter(user => user.profiles.status === 'active'));
+        setPendingUsers(enrichedUsers.filter(user => user.profiles.status === 'pending'));
+        return;
+      }
+
+      const userIds = data.users.map(u => u.id);
+      
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*');
+        .select('user_id, email, dorm, wing, status')
+        .in('user_id', userIds);
 
-      if (profilesError) throw profilesError;
-
-      // Then fetch user roles separately
       const { data: rolesData, error: rolesError } = await supabase
         .from('user_roles')
-        .select('user_id, role');
+        .select('user_id, role')
+        .in('user_id', userIds);
 
+      if (profilesError) throw profilesError;
       if (rolesError) throw rolesError;
 
-      const enrichedUsers = profilesData?.map(profile => {
-        const userRole = rolesData?.find(role => role.user_id === profile.user_id);
+      const enrichedUsers = data.users.map(authUser => {
+        const profile = profilesData?.find(p => p.user_id === authUser.id);
+        const roles = rolesData?.filter(r => r.user_id === authUser.id) || [];
         
         return {
-          id: profile.user_id,
-          email: profile.email,
-          created_at: profile.created_at,
+          id: authUser.id,
+          email: authUser.email || '',
+          created_at: authUser.created_at,
           profiles: {
-            dorm: profile.dorm || '',
-            wing: profile.wing || '',
-            status: profile.status
+            dorm: profile?.dorm || '',
+            wing: profile?.wing || '',
+            status: profile?.status || 'active'
           },
-          user_roles: [{ role: userRole?.role || 'user' }]
+          user_roles: roles.map(r => ({ role: r.role }))
         };
-      }) || [];
+      }).filter(user => user.profiles);
 
       setUsers(enrichedUsers.filter(user => user.profiles.status === 'active'));
       setPendingUsers(enrichedUsers.filter(user => user.profiles.status === 'pending'));
     } catch (error) {
       console.error('Error fetching users:', error);
-      toast({
-        title: "Error",
-        description: "Failed to fetch users. Please check your admin permissions.",
-        variant: "destructive",
-      });
       // Set empty arrays as fallback
       setUsers([]);
       setPendingUsers([]);
