@@ -5,9 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Shield } from 'lucide-react';
+import { Shield, Lock, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
 
 const AdminLogin = () => {
   const [email, setEmail] = useState('');
@@ -23,34 +25,7 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      console.log('Attempting admin login for:', email);
-      
-      // TEMPORARY BYPASS: While auth schema issues persist, implement secure admin bypass
-      // This will be removed once auth schema is fixed
-      if (email === 'admin@taylor.edu' && password === 'admin123') {
-        console.log('Using temporary admin bypass due to auth schema issues');
-        
-        // Create a temporary session token for admin access
-        const adminSession = {
-          isAdmin: true,
-          email: 'admin@taylor.edu',
-          userId: '4861f88b-cc32-430c-9496-7647fea17c98',
-          timestamp: Date.now()
-        };
-        
-        // Store in sessionStorage (more secure than localStorage)
-        sessionStorage.setItem('admin_temp_session', JSON.stringify(adminSession));
-        
-        toast({
-          title: "Admin Access Granted",
-          description: "Temporary admin access due to auth system issues.",
-        });
-        
-        navigate('/admin/dashboard');
-        return;
-      }
-      
-      // For other emails, try normal authentication
+      // Authenticate with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -63,8 +38,6 @@ const AdminLogin = () => {
       if (!data.user) {
         throw new Error('Authentication failed');
       }
-
-      console.log('Authentication successful for user:', data.user.id);
 
       // Check if user has admin role
       const { data: roleData, error: roleError } = await supabase
@@ -79,44 +52,22 @@ const AdminLogin = () => {
       }
 
       toast({
-        title: "Success!",
-        description: "Welcome to the admin dashboard.",
+        title: "Welcome back! 🎉",
+        description: "Successfully logged in to admin dashboard.",
       });
 
       navigate('/admin/dashboard');
     } catch (error: any) {
       console.error('Admin login error:', error);
       
-      // Enhanced error messages
-      let errorMessage = 'Invalid admin credentials';
-      if (error.message.includes('Invalid login credentials')) {
+      // User-friendly error messages
+      let errorMessage = 'Invalid credentials';
+      if (error.message?.includes('Invalid login credentials')) {
         errorMessage = 'Invalid email or password';
-      } else if (error.message.includes('Email not confirmed')) {
-        errorMessage = 'Please confirm your email address';
-      } else if (error.message.includes('admin privileges')) {
+      } else if (error.message?.includes('Email not confirmed')) {
+        errorMessage = 'Please confirm your email address first';
+      } else if (error.message?.includes('admin privileges')) {
         errorMessage = 'You do not have admin privileges';
-      } else if (error.message.includes('schema') || error.message.includes('Database')) {
-        errorMessage = 'Authentication system temporarily unavailable. Using secure bypass.';
-        
-        // If it's the admin credentials with auth issues, use bypass
-        if (email === 'admin@taylor.edu' && password === 'admin123') {
-          const adminSession = {
-            isAdmin: true,
-            email: 'admin@taylor.edu',
-            userId: '4861f88b-cc32-430c-9496-7647fea17c98',
-            timestamp: Date.now()
-          };
-          
-          sessionStorage.setItem('admin_temp_session', JSON.stringify(adminSession));
-          
-          toast({
-            title: "Admin Access Granted",
-            description: "Using temporary bypass for admin access.",
-          });
-          
-          navigate('/admin/dashboard');
-          return;
-        }
       } else if (error.message) {
         errorMessage = error.message;
       }
@@ -128,57 +79,91 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 w-12 h-12 bg-primary rounded-full flex items-center justify-center">
-            <Shield className="w-6 h-6 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-2xl font-bold">Admin Console</CardTitle>
-          <p className="text-muted-foreground">Sign in to access the admin dashboard</p>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleLogin} className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter admin email"
-                required
-              />
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] to-white">
+      <Header />
+      
+      <div className="flex items-center justify-center min-h-[80vh] px-4 py-12">
+        <Card className="w-full max-w-md shadow-lg">
+          <CardHeader className="text-center space-y-4">
+            <div className="mx-auto w-16 h-16 bg-[#00AFCE] rounded-full flex items-center justify-center">
+              <Shield className="w-8 h-8 text-white" />
             </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter admin password"
-                required
-              />
+            <div>
+              <CardTitle className="text-2xl font-bold text-gray-900">Admin Console</CardTitle>
+              <p className="text-muted-foreground mt-2">Sign in to access the admin dashboard</p>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full" 
-              disabled={loading}
-            >
-              {loading ? 'Signing in...' : 'Sign In'}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              
+              <div className="space-y-2">
+                <Label htmlFor="email" className="flex items-center gap-2">
+                  <Mail className="w-4 h-4" />
+                  Email
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@example.com"
+                  required
+                  className="h-12"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password" className="flex items-center gap-2">
+                  <Lock className="w-4 h-4" />
+                  Password
+                </Label>
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="h-12"
+                />
+              </div>
+              
+              <Button 
+                type="submit" 
+                className="w-full h-12 bg-[#00AFCE] hover:bg-[#0099B8] text-white font-semibold" 
+                disabled={loading}
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    Signing in...
+                  </div>
+                ) : (
+                  'Sign In to Admin Console'
+                )}
+              </Button>
+              
+              <div className="text-center pt-4">
+                <Button
+                  type="button"
+                  variant="link"
+                  onClick={() => navigate('/')}
+                  className="text-sm text-muted-foreground hover:text-[#00AFCE]"
+                >
+                  Back to Home
+                </Button>
+              </div>
+            </form>
+          </CardContent>
+        </Card>
+      </div>
+      
+      <Footer />
     </div>
   );
 };

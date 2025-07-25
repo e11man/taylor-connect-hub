@@ -1,6 +1,31 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Users, Building2, Calendar, Shield, UserCheck, UserX, Check, X, Edit, Trash2, MessageCircle, MapPin } from "lucide-react";
+import { 
+  Users, 
+  Building2, 
+  Calendar, 
+  Shield, 
+  UserCheck, 
+  Check, 
+  X, 
+  Edit2, 
+  Trash2, 
+  Mail,
+  Phone,
+  Globe,
+  MapPin,
+  Clock,
+  UserPlus,
+  Building,
+  CalendarDays,
+  Search,
+  Filter,
+  ChevronRight,
+  AlertCircle,
+  CheckCircle2,
+  Sparkles,
+  Heart
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -13,39 +38,42 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { EventChatModal } from "@/components/chat/EventChatModal";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
-import SecondaryButton from "@/components/buttons/SecondaryButton";
-import { dormAndFloorData } from "@/utils/dormData";
+import { format } from "date-fns";
+import { Database } from "@/integrations/supabase/types";
+
+type UserRole = Database["public"]["Enums"]["user_role"];
 
 interface User {
   id: string;
   email: string;
   created_at: string;
-  profiles: {
-    dorm: string;
-    wing: string;
+  profiles?: {
+    dorm: string | null;
+    wing: string | null;
     status: string;
-    role?: string;
   };
-  user_roles: {
-    role: string;
+  user_roles?: {
+    role: UserRole;
   }[];
-  event_count?: number;
 }
 
 interface Organization {
   id: string;
   name: string;
-  description: string;
+  description: string | null;
   website: string | null;
   phone: string | null;
   contact_email: string;
   status: string;
   created_at: string;
+  approved_at: string | null;
+  approved_by: string | null;
 }
 
 interface Event {
@@ -56,9 +84,12 @@ interface Event {
   location: string | null;
   max_participants: number | null;
   organization_id: string | null;
-  organizations: {
+  created_at: string;
+  updated_at: string;
+  organizations?: {
     name: string;
   };
+  participants?: number;
 }
 
 const AdminDashboard = () => {
@@ -66,6 +97,7 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
+  // State management
   const [users, setUsers] = useState<User[]>([]);
   const [pendingUsers, setPendingUsers] = useState<User[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -73,58 +105,45 @@ const AdminDashboard = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [chatModalOpen, setChatModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [editEvent, setEditEvent] = useState({
-    title: '',
-    description: '',
-    date: '',
-    location: '',
-    max_participants: ''
-  });
-  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("users");
+  
+  // Search and filter states
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [orgSearchTerm, setOrgSearchTerm] = useState("");
+  const [eventSearchTerm, setEventSearchTerm] = useState("");
+  
+  // Edit modals
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [editUser, setEditUser] = useState({
-    email: '',
-    dorm: '',
-    wing: '',
-    role: 'user' as 'admin' | 'pa' | 'user'
-  });
-  const [isEditOrgModalOpen, setIsEditOrgModalOpen] = useState(false);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
-  const [editOrg, setEditOrg] = useState({
-    name: '',
-    contact_email: '',
-    website: '',
-    phone: '',
-    description: ''
+  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  
+  // Stats for dashboard
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    pendingApprovals: 0,
+    activeOrgs: 0,
+    upcomingEvents: 0
   });
 
   useEffect(() => {
     checkAdminAccess();
   }, [user]);
 
-  const checkAdminAccess = async () => {
-    // Check for temporary admin session first
-    const tempSession = sessionStorage.getItem('admin_temp_session');
-    if (tempSession) {
-      try {
-        const session = JSON.parse(tempSession);
-        if (session.isAdmin && session.email === 'admin@taylor.edu') {
-          console.log('Using temporary admin session');
-          setIsAdmin(true);
-          fetchAllData();
-          return;
-        }
-      } catch (error) {
-        console.error('Invalid temp session:', error);
-        sessionStorage.removeItem('admin_temp_session');
-      }
+  useEffect(() => {
+    if (isAdmin) {
+      const updateStats = () => {
+        setStats({
+          totalUsers: users.length,
+          pendingApprovals: pendingUsers.length + pendingOrganizations.length,
+          activeOrgs: organizations.length,
+          upcomingEvents: events.filter(e => new Date(e.date) >= new Date()).length
+        });
+      };
+      updateStats();
     }
+  }, [users, pendingUsers, organizations, pendingOrganizations, events, isAdmin]);
 
+  const checkAdminAccess = async () => {
     if (!user) {
       navigate('/admin');
       return;
@@ -148,29 +167,9 @@ const AdminDashboard = () => {
       }
 
       setIsAdmin(true);
-      fetchAllData();
+      await fetchAllData();
     } catch (error) {
       console.error('Error checking admin access:', error);
-      navigate('/admin');
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      // Clear temporary admin session
-      sessionStorage.removeItem('admin_temp_session');
-      
-      // Sign out from Supabase if user is authenticated
-      await supabase.auth.signOut();
-      
-      toast({
-        title: "Logged out",
-        description: "You have been successfully logged out.",
-      });
-      
-      navigate('/admin');
-    } catch (error) {
-      console.error('Error logging out:', error);
       navigate('/admin');
     }
   };
@@ -185,6 +184,11 @@ const AdminDashboard = () => {
       ]);
     } catch (error) {
       console.error('Error fetching data:', error);
+      toast({
+        title: "Error loading data",
+        description: "Some data could not be loaded. Please refresh the page.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
@@ -192,74 +196,55 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
-      console.log('=== Fetching Users ===');
+      // Fetch users with their profiles and roles
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
       
-      // Fetch both profiles and user_roles separately for better reliability
-      console.log('Fetching profiles data...');
-      const { data: profilesData, error: profilesError } = await supabase
+      if (authError) throw authError;
+
+      // Fetch profiles
+      const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, email, dorm, wing, status, created_at');
+        .select('*');
       
-      console.log('Fetching user roles data...');
-      const { data: rolesData, error: rolesError } = await supabase
+      if (profilesError) throw profilesError;
+
+      // Fetch user roles
+      const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
-        .select('user_id, role');
+        .select('*');
+      
+      if (rolesError) throw rolesError;
 
-      if (profilesError) {
-        console.error('Profiles query failed:', profilesError);
-        throw profilesError;
-      }
-
-      if (rolesError) {
-        console.warn('User roles query failed, will use default role:', rolesError);
-      }
-
-      console.log(`Found ${profilesData?.length || 0} profiles and ${rolesData?.length || 0} role records`);
-
-      const enrichedUsers = profilesData?.map(profile => {
-        // Normalize status - treat null, undefined, empty string, or 'NULL' as 'active'
-        let normalizedStatus = profile.status;
-        if (!normalizedStatus || normalizedStatus === '' || normalizedStatus === 'NULL' || normalizedStatus === 'null') {
-          normalizedStatus = 'active';
-        }
-        
-        // Get role from user_roles lookup
-        let userRole = 'user';
-        if (rolesData) {
-          const roleRecord = rolesData.find(r => r.user_id === profile.user_id);
-          userRole = roleRecord?.role || 'user';
-        }
+      // Combine the data
+      const combinedUsers = authUsers.users.map(authUser => {
+        const profile = profiles?.find(p => p.user_id === authUser.id);
+        const role = roles?.find(r => r.user_id === authUser.id);
         
         return {
-          id: profile.user_id,
-          email: profile.email || '',
-          created_at: profile.created_at || new Date().toISOString(),
-          profiles: {
-            dorm: profile.dorm || '',
-            wing: profile.wing || '',
-            status: normalizedStatus,
-            role: userRole
-          },
-          user_roles: [{ role: userRole }]
+          id: authUser.id,
+          email: authUser.email || '',
+          created_at: authUser.created_at,
+          profiles: profile ? {
+            dorm: profile.dorm,
+            wing: profile.wing,
+            status: profile.status || 'active'
+          } : undefined,
+          user_roles: role ? [{
+            role: role.role as UserRole
+          }] : []
         };
-      }) || [];
-
-      // Filter users by status
-      const activeUsers = enrichedUsers.filter(user => {
-        const status = user.profiles.status;
-        return status === 'active' || 
-               !status || 
-               status === '' ||
-               status === 'NULL' ||
-               status === 'null';
       });
-      
-      const pendingUsers = enrichedUsers.filter(user => user.profiles.status === 'pending');
 
-      console.log(`Processed ${activeUsers.length} active users and ${pendingUsers.length} pending users`);
-      
+      // Separate active and pending users
+      const activeUsers = combinedUsers.filter(u => 
+        !u.profiles || u.profiles.status === 'active'
+      );
+      const pendingUsersList = combinedUsers.filter(u => 
+        u.profiles?.status === 'pending'
+      );
+
       setUsers(activeUsers);
-      setPendingUsers(pendingUsers);
+      setPendingUsers(pendingUsersList);
     } catch (error) {
       console.error('Error fetching users:', error);
       setUsers([]);
@@ -269,39 +254,18 @@ const AdminDashboard = () => {
 
   const fetchOrganizations = async () => {
     try {
-      console.log('=== Fetching Organizations ===');
-      
       const { data, error } = await supabase
         .from('organizations')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Organizations query failed:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log(`Found ${data?.length || 0} total organizations`);
-      
-      if (data) {
-        data.forEach(org => {
-          console.log(`Organization: ${org.name} - Status: ${org.status}`);
-        });
-      }
+      const approved = data?.filter(org => org.status === 'approved') || [];
+      const pending = data?.filter(org => org.status === 'pending') || [];
 
-      // Filter organizations by status with better normalization
-      const approvedOrgs = data?.filter(org => {
-        const status = org.status;
-        return status === 'approved' || 
-               (!status || status === '' || status === 'NULL' || status === 'null');
-      }) || [];
-      
-      const pendingOrgs = data?.filter(org => org.status === 'pending') || [];
-      
-      console.log(`Processed ${approvedOrgs.length} approved organizations and ${pendingOrgs.length} pending organizations`);
-      
-      setOrganizations(approvedOrgs);
-      setPendingOrganizations(pendingOrgs);
+      setOrganizations(approved);
+      setPendingOrganizations(pending);
     } catch (error) {
       console.error('Error fetching organizations:', error);
       setOrganizations([]);
@@ -311,162 +275,357 @@ const AdminDashboard = () => {
 
   const fetchEvents = async () => {
     try {
-      console.log('=== Fetching Events ===');
-      
       const { data, error } = await supabase
         .from('events')
         .select(`
           *,
-          organizations (name)
+          organizations (name),
+          user_events (count)
         `)
-        .order('date', { ascending: false });
+        .order('date', { ascending: true });
 
-      if (error) {
-        console.error('Events query failed:', error);
-        throw error;
-      }
+      if (error) throw error;
 
-      console.log(`Found ${data?.length || 0} total events`);
-      
-      if (data) {
-        data.forEach(event => {
-          console.log(`Event: ${event.title} - Organization: ${event.organizations?.name || 'No Organization'} - Date: ${event.date}`);
-        });
-      }
-      
-      setEvents(data || []);
+      // Add participant count
+      const eventsWithParticipants = data?.map(event => ({
+        ...event,
+        participants: event.user_events?.[0]?.count || 0
+      })) || [];
+
+      setEvents(eventsWithParticipants);
     } catch (error) {
       console.error('Error fetching events:', error);
       setEvents([]);
     }
   };
 
-  const handleUserRoleChange = async (userId: string, newRole: 'admin' | 'pa' | 'user') => {
+  const handleLogout = async () => {
     try {
-      console.log(`=== ROLE UPDATE DEBUG ===`);
-      console.log(`Attempting to update user ${userId} role to ${newRole}`);
-      console.log(`Current user (admin):`, user?.id);
-      
-      // Validate inputs
-      if (!userId || !newRole) {
-        throw new Error('User ID and role are required');
-      }
-      
-      if (!['admin', 'pa', 'user'].includes(newRole)) {
-        throw new Error('Invalid role specified');
-      }
-
-      // Check if user exists in profiles table first
-      const { data: userProfile, error: profileCheckError } = await supabase
-        .from('profiles')
-        .select('user_id, email')
-        .eq('user_id', userId)
-        .single();
-
-      if (profileCheckError || !userProfile) {
-        throw new Error('User profile not found');
-      }
-
-      console.log('User profile found:', userProfile.email);
-
-      // Update the user_roles table with upsert to handle both updates and inserts
-      const { error: roleUpdateError } = await supabase
-        .from('user_roles')
-        .upsert(
-          { user_id: userId, role: newRole },
-          { onConflict: 'user_id' }
-        );
-
-      if (roleUpdateError) {
-        console.error('Role update failed:', roleUpdateError);
-        throw new Error(`Failed to update role: ${roleUpdateError.message}`);
-      }
-
-      console.log(`✓ Successfully updated user ${userId} role to ${newRole}`);
-
-      // Update local state to reflect the changes
-      setUsers(prevUsers => 
-        prevUsers.map(u => 
-          u.id === userId 
-            ? {
-                ...u,
-                profiles: { ...u.profiles, role: newRole },
-                user_roles: [{ role: newRole }]
-              }
-            : u
-        )
-      );
-
-      setPendingUsers(prevUsers => 
-        prevUsers.map(u => 
-          u.id === userId 
-            ? {
-                ...u,
-                profiles: { ...u.profiles, role: newRole },
-                user_roles: [{ role: newRole }]
-              }
-            : u
-        )
-      );
-
+      await supabase.auth.signOut();
       toast({
-        title: "Success!",
-        description: `User role updated to ${newRole}`,
+        title: "Logged out successfully",
+        description: "Come back soon! 👋",
       });
-
-    } catch (error: any) {
-      console.error('Role change error:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update user role.",
-        variant: "destructive",
-      });
+      navigate('/');
+    } catch (error) {
+      console.error('Error logging out:', error);
+      navigate('/');
     }
   };
 
-  const resetUserPassword = async (userId: string, userEmail: string) => {
-    if (!confirm(`Are you sure you want to reset the password for "${userEmail}"? This will set their password to a temporary value.`)) {
-      return;
-    }
-
+  // User management functions
+  const approveUser = async (userId: string) => {
     try {
-      const { error } = await supabase.auth.admin.updateUserById(userId, {
-        password: 'TempPassword123!'
-      });
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'active' })
+        .eq('user_id', userId);
 
       if (error) throw error;
 
       toast({
-        title: "Success!",
-        description: `Password reset for ${userEmail}. New temporary password: TempPassword123!`,
+        title: "User approved! 🎉",
+        description: "The user can now access the platform.",
       });
-    } catch (error: any) {
+
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error approving user:', error);
       toast({
         title: "Error",
-        description: error.message || "Failed to reset password.",
+        description: "Failed to approve user.",
         variant: "destructive",
       });
     }
   };
 
+  const rejectUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to reject this user?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'rejected' })
+        .eq('user_id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "User rejected",
+        description: "The user has been denied access.",
+      });
+
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error rejecting user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject user.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateUserRole = async (userId: string, newRole: UserRole) => {
+    try {
+      const { error } = await supabase
+        .from('user_roles')
+        .upsert({ 
+          user_id: userId, 
+          role: newRole 
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Role updated! ✨",
+        description: `User role changed to ${newRole}.`,
+      });
+
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error updating role:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update user role.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteUser = async (userId: string) => {
+    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+
+    try {
+      // Delete user data from various tables
+      await supabase.from('user_roles').delete().eq('user_id', userId);
+      await supabase.from('profiles').delete().eq('user_id', userId);
+      await supabase.from('user_events').delete().eq('user_id', userId);
+      
+      // Delete auth user
+      const { error } = await supabase.auth.admin.deleteUser(userId);
+      if (error) throw error;
+
+      toast({
+        title: "User deleted",
+        description: "The user has been permanently removed.",
+      });
+
+      await fetchUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete user.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Organization management functions
+  const approveOrganization = async (orgId: string) => {
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ 
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: user?.id
+        })
+        .eq('id', orgId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Organization approved! 🎊",
+        description: "They can now create events.",
+      });
+
+      await fetchOrganizations();
+    } catch (error) {
+      console.error('Error approving organization:', error);
+      toast({
+        title: "Error",
+        description: "Failed to approve organization.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const rejectOrganization = async (orgId: string) => {
+    if (!confirm("Are you sure you want to reject this organization?")) return;
+
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ status: 'rejected' })
+        .eq('id', orgId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Organization rejected",
+        description: "The organization has been denied.",
+      });
+
+      await fetchOrganizations();
+    } catch (error) {
+      console.error('Error rejecting organization:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject organization.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const updateOrganization = async (orgId: string, updates: Partial<Organization>) => {
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update(updates)
+        .eq('id', orgId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Organization updated! 💫",
+        description: "Changes saved successfully.",
+      });
+
+      await fetchOrganizations();
+      setEditingOrg(null);
+    } catch (error) {
+      console.error('Error updating organization:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update organization.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteOrganization = async (orgId: string) => {
+    if (!confirm("Are you sure? This will also delete all events by this organization.")) return;
+
+    try {
+      // Delete related events first
+      await supabase.from('events').delete().eq('organization_id', orgId);
+      
+      // Delete organization
+      const { error } = await supabase
+        .from('organizations')
+        .delete()
+        .eq('id', orgId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Organization deleted",
+        description: "The organization and its events have been removed.",
+      });
+
+      await fetchOrganizations();
+    } catch (error) {
+      console.error('Error deleting organization:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete organization.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Event management functions
+  const updateEvent = async (eventId: string, updates: Partial<Event>) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update(updates)
+        .eq('id', eventId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Event updated! 🎯",
+        description: "Changes saved successfully.",
+      });
+
+      await fetchEvents();
+      setEditingEvent(null);
+    } catch (error) {
+      console.error('Error updating event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update event.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const deleteEvent = async (eventId: string) => {
+    if (!confirm("Are you sure you want to delete this event?")) return;
+
+    try {
+      // Delete related data first
+      await supabase.from('user_events').delete().eq('event_id', eventId);
+      await supabase.from('chat_messages').delete().eq('event_id', eventId);
+      
+      // Delete event
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Event deleted",
+        description: "The event has been removed.",
+      });
+
+      await fetchEvents();
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete event.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Filter functions
   const filteredUsers = users.filter(user => 
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.profiles.dorm.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+    user.profiles?.dorm?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
+    user.profiles?.wing?.toLowerCase().includes(userSearchTerm.toLowerCase())
   );
 
-  const filteredPendingUsers = pendingUsers.filter(user =>
-    user.email.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOrganizations = organizations.filter(org =>
+    org.name.toLowerCase().includes(orgSearchTerm.toLowerCase()) ||
+    org.contact_email.toLowerCase().includes(orgSearchTerm.toLowerCase())
   );
 
-  if (isLoading || !isAdmin) {
+  const filteredEvents = events.filter(event =>
+    event.title.toLowerCase().includes(eventSearchTerm.toLowerCase()) ||
+    event.location?.toLowerCase().includes(eventSearchTerm.toLowerCase()) ||
+    event.organizations?.name.toLowerCase().includes(eventSearchTerm.toLowerCase())
+  );
+
+  if (isLoading) {
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] to-white">
         <Header />
-        <div className="section-padding">
-          <div className="container-custom">
-            <div className="flex items-center justify-center py-20">
-              <div className="w-8 h-8 border-4 border-[#00AFCE] border-t-transparent rounded-full animate-spin"></div>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="text-center space-y-4">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-[#00AFCE] border-t-transparent rounded-full animate-spin mx-auto"></div>
+              <Sparkles className="w-6 h-6 text-[#00AFCE] absolute top-0 right-0 animate-pulse" />
             </div>
+            <p className="text-muted-foreground animate-pulse">Loading admin dashboard...</p>
           </div>
         </div>
         <Footer />
@@ -475,60 +634,103 @@ const AdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] to-white">
       <Header />
       
       <main className="section-padding">
         <div className="container-custom">
-          <div className="mb-6 md:mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-montserrat font-bold text-primary mb-1 md:mb-2">
-                Admin Console
-              </h1>
-              <p className="text-sm md:text-lg text-muted-foreground font-montserrat">
-                Manage users, organizations, and opportunities
-              </p>
-            </div>
-            <div className="flex gap-2 self-end sm:self-auto">
+          {/* Header Section */}
+          <div className="mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                  Admin Console
+                  <Shield className="w-8 h-8 text-[#00AFCE]" />
+                </h1>
+                <p className="text-lg text-muted-foreground">
+                  Manage your community with love 💙
+                </p>
+              </div>
               <Button 
                 onClick={handleLogout}
                 variant="outline"
-                className="flex items-center gap-2"
-                size="sm"
+                className="group hover:border-red-500 transition-all"
               >
-                <Shield className="w-4 h-4" />
-                <span className="hidden sm:inline">Logout</span>
-                <span className="sm:hidden">Exit</span>
+                <Shield className="w-4 h-4 mr-2 group-hover:text-red-500 transition-colors" />
+                Exit Admin
               </Button>
+            </div>
+
+            {/* Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("users")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Total Users</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
+                    </div>
+                    <Users className="w-8 h-8 text-[#00AFCE]" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("pending")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Pending</p>
+                      <p className="text-2xl font-bold text-orange-600">{stats.pendingApprovals}</p>
+                    </div>
+                    <Clock className="w-8 h-8 text-orange-500" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("orgs")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Active Orgs</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.activeOrgs}</p>
+                    </div>
+                    <Building2 className="w-8 h-8 text-[#00AFCE]" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("events")}>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Events</p>
+                      <p className="text-2xl font-bold text-gray-900">{stats.upcomingEvents}</p>
+                    </div>
+                    <Calendar className="w-8 h-8 text-[#00AFCE]" />
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
 
-          <Tabs defaultValue="users" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-5">
-              <TabsTrigger value="users" className="flex items-center gap-1 text-xs lg:text-sm">
-                <Users className="w-3 h-3 lg:w-4 lg:h-4" />
-                <span className="hidden sm:inline">Users ({users.length})</span>
-                <span className="sm:hidden">Users</span>
+          {/* Main Content Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-white shadow-sm">
+              <TabsTrigger value="users" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
+                <Users className="w-4 h-4 mr-2" />
+                Users
               </TabsTrigger>
-              <TabsTrigger value="pending-users" className="flex items-center gap-1 text-xs lg:text-sm">
-                <UserCheck className="w-3 h-3 lg:w-4 lg:h-4" />
-                <span className="hidden sm:inline">Pending ({pendingUsers.length})</span>
-                <span className="sm:hidden">Pending</span>
+              <TabsTrigger value="pending" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
+                <UserCheck className="w-4 h-4 mr-2" />
+                Pending
               </TabsTrigger>
-              <TabsTrigger value="organizations" className="flex items-center gap-1 text-xs lg:text-sm">
-                <Building2 className="w-3 h-3 lg:w-4 lg:h-4" />
-                <span className="hidden sm:inline">Organizations ({organizations.length})</span>
-                <span className="sm:hidden">Orgs</span>
+              <TabsTrigger value="orgs" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
+                <Building2 className="w-4 h-4 mr-2" />
+                Orgs
               </TabsTrigger>
-              <TabsTrigger value="pending-orgs" className="flex items-center gap-1 text-xs lg:text-sm">
-                <Building2 className="w-3 h-3 lg:w-4 lg:h-4" />
-                <span className="hidden lg:inline">Pending Orgs ({pendingOrganizations.length})</span>
-                <span className="lg:hidden">P. Orgs</span>
-              </TabsTrigger>
-              <TabsTrigger value="opportunities" className="flex items-center gap-1 text-xs lg:text-sm">
-                <Calendar className="w-3 h-3 lg:w-4 lg:h-4" />
-                <span className="hidden sm:inline">Opportunities ({events.length})</span>
-                <span className="sm:hidden">Events</span>
+              <TabsTrigger value="events" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
+                <Calendar className="w-4 h-4 mr-2" />
+                Events
               </TabsTrigger>
             </TabsList>
 
@@ -536,116 +738,101 @@ const AdminDashboard = () => {
             <TabsContent value="users" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>User Management</CardTitle>
-                  <CardDescription>Manage active users, roles, and permissions</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="w-5 h-5" />
+                    User Management
+                  </CardTitle>
+                  <CardDescription>
+                    Manage active users, roles, and permissions
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <Input
-                      placeholder="Search users by email or dorm..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="max-w-sm"
-                    />
-                    
-                    {/* Desktop Table View */}
-                    <div className="hidden lg:block">
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Email</TableHead>
-                            <TableHead>Dorm</TableHead>
-                            <TableHead>Role</TableHead>
-                            <TableHead>Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {filteredUsers.map((user) => (
-                            <TableRow key={user.id}>
-                              <TableCell>{user.email}</TableCell>
-                              <TableCell>{user.profiles.dorm} - {user.profiles.wing}</TableCell>
-                              <TableCell>
-                                <Badge variant={user.profiles.role === 'admin' ? 'destructive' : 'secondary'}>
-                                  {user.profiles.role || 'user'}
-                                </Badge>
-                              </TableCell>
-                              <TableCell className="space-x-2">
-                                <Select
-                                  value={user.profiles.role || 'user'}
-                                  onValueChange={(value: 'admin' | 'pa' | 'user') => handleUserRoleChange(user.id, value)}
-                                >
-                                  <SelectTrigger className="w-24">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    <SelectItem value="user">User</SelectItem>
-                                    <SelectItem value="pa">PA</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                  </SelectContent>
-                                </Select>
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => resetUserPassword(user.id, user.email)}
-                                >
-                                  Reset Password
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                    <div className="flex gap-4 items-center">
+                      <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="Search by email, dorm, or wing..."
+                          value={userSearchTerm}
+                          onChange={(e) => setUserSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Badge variant="secondary" className="px-3 py-1">
+                        {filteredUsers.length} users
+                      </Badge>
                     </div>
 
-                    {/* Mobile Card View */}
-                    <div className="lg:hidden space-y-4">
-                      {filteredUsers.map((user) => (
-                        <Card key={user.id} className="p-4">
-                          <div className="space-y-3">
-                            <div>
-                              <h3 className="font-semibold text-lg">{user.email}</h3>
-                              <p className="text-sm text-muted-foreground">{user.profiles.dorm} - {user.profiles.wing}</p>
-                            </div>
-                            
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium">Role:</span>
-                              <Badge variant={user.profiles.role === 'admin' ? 'destructive' : 'secondary'}>
-                                {user.profiles.role || 'user'}
-                              </Badge>
-                            </div>
-
-                            <div className="space-y-2">
-                              <Select
-                                value={user.profiles.role || 'user'}
-                                onValueChange={(value: 'admin' | 'pa' | 'user') => handleUserRoleChange(user.id, value)}
-                              >
-                                <SelectTrigger className="w-full">
-                                  <SelectValue placeholder="Change Role" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="user">User</SelectItem>
-                                  <SelectItem value="pa">PA</SelectItem>
-                                  <SelectItem value="admin">Admin</SelectItem>
-                                </SelectContent>
-                              </Select>
-                              
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => resetUserPassword(user.id, user.email)}
-                                className="w-full"
-                              >
-                                Reset Password
-                              </Button>
-                            </div>
-                          </div>
-                        </Card>
-                      ))}
-                    </div>
-
-                    {filteredUsers.length === 0 && (
-                      <div className="text-center py-8 text-muted-foreground">
-                        No users found matching your search.
+                    {filteredUsers.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500 text-lg mb-2">No users found</p>
+                        <p className="text-gray-400 text-sm">
+                          {userSearchTerm ? "Try adjusting your search" : "Users will appear here once they sign up"}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {filteredUsers.map((user) => (
+                          <Card key={user.id} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                  <Avatar>
+                                    <AvatarFallback className="bg-[#00AFCE] text-white">
+                                      {user.email.charAt(0).toUpperCase()}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                  <div>
+                                    <p className="font-semibold">{user.email}</p>
+                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                      {user.profiles?.dorm && (
+                                        <span className="flex items-center gap-1">
+                                          <Building className="w-3 h-3" />
+                                          {user.profiles.dorm} {user.profiles.wing && `- ${user.profiles.wing}`}
+                                        </span>
+                                      )}
+                                      <span className="flex items-center gap-1">
+                                        <Clock className="w-3 h-3" />
+                                        Joined {format(new Date(user.created_at), 'MMM d, yyyy')}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Select
+                                    value={user.user_roles?.[0]?.role || 'user'}
+                                    onValueChange={(value: UserRole) => updateUserRole(user.id, value)}
+                                  >
+                                    <SelectTrigger className="w-32">
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="user">User</SelectItem>
+                                      <SelectItem value="pa">PA</SelectItem>
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => setEditingUser(user)}
+                                  >
+                                    <Edit2 className="w-4 h-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={() => deleteUser(user.id)}
+                                    className="hover:text-red-600"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -653,57 +840,505 @@ const AdminDashboard = () => {
               </Card>
             </TabsContent>
 
-            {/* Simple message for other tabs - user can implement these as needed */}
-            <TabsContent value="pending-users">
+            {/* Pending Tab */}
+            <TabsContent value="pending" className="space-y-6">
+              <div className="space-y-6">
+                {/* Pending Users */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <UserPlus className="w-5 h-5" />
+                      Pending User Approvals
+                    </CardTitle>
+                    <CardDescription>
+                      Review and approve new user registrations
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {pendingUsers.length === 0 ? (
+                      <div className="text-center py-12">
+                        <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                        <p className="text-gray-500 text-lg mb-2">All caught up!</p>
+                        <p className="text-gray-400 text-sm">No pending user approvals</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {pendingUsers.map((user) => (
+                          <Card key={user.id} className="border-orange-200 bg-orange-50">
+                            <CardContent className="p-6">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-semibold">{user.email}</p>
+                                  <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                                    {user.profiles?.dorm && (
+                                      <span className="flex items-center gap-1">
+                                        <Building className="w-3 h-3" />
+                                        {user.profiles.dorm} {user.profiles.wing && `- ${user.profiles.wing}`}
+                                      </span>
+                                    )}
+                                    <span className="flex items-center gap-1">
+                                      <Clock className="w-3 h-3" />
+                                      Applied {format(new Date(user.created_at), 'MMM d, yyyy')}
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2">
+                                  <Button
+                                    size="sm"
+                                    onClick={() => approveUser(user.id)}
+                                    className="bg-green-600 hover:bg-green-700"
+                                  >
+                                    <Check className="w-4 h-4 mr-1" />
+                                    Approve
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => rejectUser(user.id)}
+                                    className="hover:bg-red-50 hover:text-red-600 hover:border-red-600"
+                                  >
+                                    <X className="w-4 h-4 mr-1" />
+                                    Reject
+                                  </Button>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+
+                {/* Pending Organizations */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <Building className="w-5 h-5" />
+                      Pending Organization Approvals
+                    </CardTitle>
+                    <CardDescription>
+                      Review and approve new organization registrations
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    {pendingOrganizations.length === 0 ? (
+                      <div className="text-center py-12">
+                        <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
+                        <p className="text-gray-500 text-lg mb-2">All caught up!</p>
+                        <p className="text-gray-400 text-sm">No pending organization approvals</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {pendingOrganizations.map((org) => (
+                          <Card key={org.id} className="border-orange-200 bg-orange-50">
+                            <CardContent className="p-6">
+                              <div className="space-y-4">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <h3 className="font-semibold text-lg">{org.name}</h3>
+                                    <p className="text-sm text-gray-600 mt-1">{org.description}</p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      onClick={() => approveOrganization(org.id)}
+                                      className="bg-green-600 hover:bg-green-700"
+                                    >
+                                      <Check className="w-4 h-4 mr-1" />
+                                      Approve
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => rejectOrganization(org.id)}
+                                      className="hover:bg-red-50 hover:text-red-600 hover:border-red-600"
+                                    >
+                                      <X className="w-4 h-4 mr-1" />
+                                      Reject
+                                    </Button>
+                                  </div>
+                                </div>
+                                <Separator />
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <Mail className="w-4 h-4 text-gray-400" />
+                                    <span>{org.contact_email}</span>
+                                  </div>
+                                  {org.phone && (
+                                    <div className="flex items-center gap-2">
+                                      <Phone className="w-4 h-4 text-gray-400" />
+                                      <span>{org.phone}</span>
+                                    </div>
+                                  )}
+                                  {org.website && (
+                                    <div className="flex items-center gap-2">
+                                      <Globe className="w-4 h-4 text-gray-400" />
+                                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                        Website
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* Organizations Tab */}
+            <TabsContent value="orgs" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Pending Users</CardTitle>
-                  <CardDescription>Users awaiting approval</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5" />
+                    Organization Management
+                  </CardTitle>
+                  <CardDescription>
+                    View and manage registered organizations
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>Pending users functionality - implement as needed</p>
+                  <div className="space-y-4">
+                    <div className="flex gap-4 items-center">
+                      <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="Search organizations..."
+                          value={orgSearchTerm}
+                          onChange={(e) => setOrgSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Badge variant="secondary" className="px-3 py-1">
+                        {filteredOrganizations.length} organizations
+                      </Badge>
+                    </div>
+
+                    {filteredOrganizations.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500 text-lg mb-2">No organizations found</p>
+                        <p className="text-gray-400 text-sm">
+                          {orgSearchTerm ? "Try adjusting your search" : "Approved organizations will appear here"}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {filteredOrganizations.map((org) => (
+                          <Card key={org.id} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                              <div className="space-y-4">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-lg">{org.name}</h3>
+                                    <p className="text-sm text-gray-600 mt-1">{org.description}</p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setEditingOrg(org)}
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => deleteOrganization(org.id)}
+                                      className="hover:text-red-600"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <Mail className="w-4 h-4 text-gray-400" />
+                                    <span>{org.contact_email}</span>
+                                  </div>
+                                  {org.phone && (
+                                    <div className="flex items-center gap-2">
+                                      <Phone className="w-4 h-4 text-gray-400" />
+                                      <span>{org.phone}</span>
+                                    </div>
+                                  )}
+                                  {org.website && (
+                                    <div className="flex items-center gap-2">
+                                      <Globe className="w-4 h-4 text-gray-400" />
+                                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                        Website
+                                      </a>
+                                    </div>
+                                  )}
+                                </div>
+                                {org.approved_at && (
+                                  <div className="text-xs text-gray-500">
+                                    Approved on {format(new Date(org.approved_at), 'MMM d, yyyy')}
+                                  </div>
+                                )}
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="organizations">
+            {/* Events Tab */}
+            <TabsContent value="events" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Organizations</CardTitle>
-                  <CardDescription>Manage approved organizations</CardDescription>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Event Management
+                  </CardTitle>
+                  <CardDescription>
+                    View and manage upcoming events
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p>Organizations management - implement as needed</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                  <div className="space-y-4">
+                    <div className="flex gap-4 items-center">
+                      <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                        <Input
+                          placeholder="Search events..."
+                          value={eventSearchTerm}
+                          onChange={(e) => setEventSearchTerm(e.target.value)}
+                          className="pl-10"
+                        />
+                      </div>
+                      <Badge variant="secondary" className="px-3 py-1">
+                        {filteredEvents.length} events
+                      </Badge>
+                    </div>
 
-            <TabsContent value="pending-orgs">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Pending Organizations</CardTitle>
-                  <CardDescription>Organizations awaiting approval</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>Pending organizations - implement as needed</p>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="opportunities">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Opportunities</CardTitle>
-                  <CardDescription>Manage volunteer opportunities</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <p>Events management - implement as needed</p>
+                    {filteredEvents.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-500 text-lg mb-2">No events found</p>
+                        <p className="text-gray-400 text-sm">
+                          {eventSearchTerm ? "Try adjusting your search" : "Events will appear here once created"}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {filteredEvents.map((event) => (
+                          <Card key={event.id} className="hover:shadow-md transition-shadow">
+                            <CardContent className="p-6">
+                              <div className="space-y-4">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h3 className="font-semibold text-lg">{event.title}</h3>
+                                    <p className="text-sm text-gray-600 mt-1">{event.description}</p>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setEditingEvent(event)}
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => deleteEvent(event.id)}
+                                      className="hover:text-red-600"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                  <div className="flex items-center gap-2">
+                                    <CalendarDays className="w-4 h-4 text-gray-400" />
+                                    <span>{format(new Date(event.date), 'MMM d, yyyy')}</span>
+                                  </div>
+                                  {event.location && (
+                                    <div className="flex items-center gap-2">
+                                      <MapPin className="w-4 h-4 text-gray-400" />
+                                      <span>{event.location}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-2">
+                                    <Building2 className="w-4 h-4 text-gray-400" />
+                                    <span>{event.organizations?.name || 'No organization'}</span>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-4 text-sm">
+                                  <Badge variant="secondary">
+                                    {event.participants || 0} / {event.max_participants || '∞'} participants
+                                  </Badge>
+                                  {new Date(event.date) < new Date() && (
+                                    <Badge variant="destructive">Past Event</Badge>
+                                  )}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
           </Tabs>
         </div>
       </main>
+
+      {/* Edit User Dialog */}
+      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user information
+            </DialogDescription>
+          </DialogHeader>
+          {editingUser && (
+            <div className="space-y-4">
+              <div>
+                <Label>Email</Label>
+                <Input value={editingUser.email} disabled />
+              </div>
+              <div>
+                <Label>Role</Label>
+                <Select
+                  value={editingUser.user_roles?.[0]?.role || 'user'}
+                  onValueChange={(value: UserRole) => {
+                    updateUserRole(editingUser.id, value);
+                    setEditingUser(null);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User</SelectItem>
+                    <SelectItem value="pa">PA</SelectItem>
+                    <SelectItem value="admin">Admin</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Organization Dialog */}
+      <Dialog open={!!editingOrg} onOpenChange={() => setEditingOrg(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Organization</DialogTitle>
+            <DialogDescription>
+              Update organization information
+            </DialogDescription>
+          </DialogHeader>
+          {editingOrg && (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              updateOrganization(editingOrg.id, {
+                name: formData.get('name') as string,
+                description: formData.get('description') as string,
+                contact_email: formData.get('contact_email') as string,
+                phone: formData.get('phone') as string,
+                website: formData.get('website') as string,
+              });
+            }} className="space-y-4">
+              <div>
+                <Label htmlFor="name">Organization Name</Label>
+                <Input id="name" name="name" defaultValue={editingOrg.name} required />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" defaultValue={editingOrg.description || ''} />
+              </div>
+              <div>
+                <Label htmlFor="contact_email">Contact Email</Label>
+                <Input id="contact_email" name="contact_email" type="email" defaultValue={editingOrg.contact_email} required />
+              </div>
+              <div>
+                <Label htmlFor="phone">Phone</Label>
+                <Input id="phone" name="phone" defaultValue={editingOrg.phone || ''} />
+              </div>
+              <div>
+                <Label htmlFor="website">Website</Label>
+                <Input id="website" name="website" defaultValue={editingOrg.website || ''} />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditingOrg(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Event Dialog */}
+      <Dialog open={!!editingEvent} onOpenChange={() => setEditingEvent(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Event</DialogTitle>
+            <DialogDescription>
+              Update event information
+            </DialogDescription>
+          </DialogHeader>
+          {editingEvent && (
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              updateEvent(editingEvent.id, {
+                title: formData.get('title') as string,
+                description: formData.get('description') as string,
+                date: formData.get('date') as string,
+                location: formData.get('location') as string,
+                max_participants: parseInt(formData.get('max_participants') as string) || null,
+              });
+            }} className="space-y-4">
+              <div>
+                <Label htmlFor="title">Event Title</Label>
+                <Input id="title" name="title" defaultValue={editingEvent.title} required />
+              </div>
+              <div>
+                <Label htmlFor="description">Description</Label>
+                <Textarea id="description" name="description" defaultValue={editingEvent.description || ''} />
+              </div>
+              <div>
+                <Label htmlFor="date">Date</Label>
+                <Input id="date" name="date" type="datetime-local" defaultValue={editingEvent.date} required />
+              </div>
+              <div>
+                <Label htmlFor="location">Location</Label>
+                <Input id="location" name="location" defaultValue={editingEvent.location || ''} />
+              </div>
+              <div>
+                <Label htmlFor="max_participants">Max Participants</Label>
+                <Input id="max_participants" name="max_participants" type="number" defaultValue={editingEvent.max_participants || ''} />
+              </div>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditingEvent(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          )}
+        </DialogContent>
+      </Dialog>
       
       <Footer />
     </div>
