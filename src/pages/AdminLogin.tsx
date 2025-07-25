@@ -23,7 +23,7 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      // First try Supabase authentication
+      // Authenticate with Supabase
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -31,6 +31,10 @@ const AdminLogin = () => {
 
       if (error) {
         throw error;
+      }
+
+      if (!data.user) {
+        throw new Error('Authentication failed');
       }
 
       // Check if user has admin role
@@ -52,17 +56,7 @@ const AdminLogin = () => {
 
       navigate('/admin/dashboard');
     } catch (error: any) {
-      // Fallback to demo credentials for development
-      if (email === 'admin@taylor.edu' && password === 'admin123') {
-        localStorage.setItem('admin_authenticated', 'true');
-        toast({
-          title: "Demo Login",
-          description: "Logged in with demo credentials.",
-        });
-        navigate('/admin/dashboard');
-      } else {
-        setError(error.message || 'Invalid admin credentials');
-      }
+      setError(error.message || 'Invalid admin credentials');
     } finally {
       setLoading(false);
     }
@@ -118,11 +112,6 @@ const AdminLogin = () => {
               {loading ? 'Signing in...' : 'Sign In'}
             </Button>
           </form>
-          
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            <p>Demo credentials for testing:</p>
-            <p>Email: admin@taylor.edu | Password: admin123</p>
-          </div>
         </CardContent>
       </Card>
     </div>
