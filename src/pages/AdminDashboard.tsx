@@ -19,6 +19,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
+import { dormAndFloorData } from "@/utils/dormData";
 
 interface User {
   id: string;
@@ -28,6 +29,7 @@ interface User {
     dorm: string;
     wing: string;
     status: string;
+    role?: string;
   };
   user_roles: {
     role: string;
@@ -39,8 +41,8 @@ interface Organization {
   id: string;
   name: string;
   description: string;
-  website: string;
-  phone: string;
+  website: string | null;
+  phone: string | null;
   contact_email: string;
   status: string;
   created_at: string;
@@ -49,11 +51,11 @@ interface Organization {
 interface Event {
   id: string;
   title: string;
-  description: string;
+  description: string | null;
   date: string;
-  location: string;
-  max_participants: number;
-  organization_id: string;
+  location: string | null;
+  max_participants: number | null;
+  organization_id: string | null;
   organizations: {
     name: string;
   };
@@ -166,6 +168,97 @@ const AdminDashboard = () => {
     }
   };
 
+  // Test function to verify Supabase integration
+  const testSupabaseIntegration = async () => {
+    try {
+      console.log('=== Testing Supabase Integration ===');
+      
+      // Test 1: Check if profiles table exists and is accessible
+      console.log('Test 1: Checking profiles table...');
+      const { data: profilesTest, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, email, dorm, wing, status')
+        .limit(1);
+      
+      if (profilesError) {
+        console.error('Profiles table test failed:', profilesError);
+      } else {
+        console.log('✓ Profiles table accessible');
+      }
+      
+      // Test 2: Check if user_roles table exists and is accessible
+      console.log('Test 2: Checking user_roles table...');
+      const { data: rolesTest, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role')
+        .limit(1);
+      
+      if (rolesError) {
+        console.error('User_roles table test failed:', rolesError);
+      } else {
+        console.log('✓ User_roles table accessible');
+      }
+      
+      // Test 3: Check if profiles table has role column
+      console.log('Test 3: Checking if profiles has role column...');
+      const { data: profilesRoleTest, error: profilesRoleError } = await supabase
+        .from('profiles')
+        .select('user_id, role')
+        .limit(1);
+      
+      if (profilesRoleError) {
+        if (profilesRoleError.message.includes('role') || profilesRoleError.message.includes('column')) {
+          console.log('✓ Profiles table does not have role column (expected, will use user_roles)');
+        } else {
+          console.error('Unexpected error testing profiles role column:', profilesRoleError);
+        }
+      } else {
+        console.log('✓ Profiles table has role column');
+      }
+      
+      // Test 4: Check organizations table
+      console.log('Test 4: Checking organizations table...');
+      const { data: orgsTest, error: orgsError } = await supabase
+        .from('organizations')
+        .select('id, name, status')
+        .limit(1);
+      
+      if (orgsError) {
+        console.error('Organizations table test failed:', orgsError);
+      } else {
+        console.log('✓ Organizations table accessible');
+      }
+      
+      // Test 5: Check events table
+      console.log('Test 5: Checking events table...');
+      const { data: eventsTest, error: eventsError } = await supabase
+        .from('events')
+        .select('id, title, date')
+        .limit(1);
+      
+      if (eventsError) {
+        console.error('Events table test failed:', eventsError);
+      } else {
+        console.log('✓ Events table accessible');
+      }
+      
+      console.log('=== Supabase Integration Test Complete ===');
+      
+      toast({
+        title: "Database Test Complete",
+        description: "Check console for detailed results",
+      });
+      
+    } catch (error) {
+      console.error('Supabase integration test failed:', error);
+      toast({
+        title: "Database Test Failed",
+        description: "Check console for error details",
+        variant: "destructive",
+      });
+    }
+  };
+
   const fetchAllData = async () => {
     setIsLoading(true);
     try {
@@ -183,6 +276,8 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log('=== Fetching Users ===');
+      
       // Check if using demo admin authentication
       const isDemo = localStorage.getItem('admin_authenticated') === 'true';
       
@@ -222,104 +317,70 @@ const AdminDashboard = () => {
         return;
       }
 
-                    // Try to query profiles with role field, fallback if it doesn't exist
-       let profilesData, rolesData;
-       let profilesError, rolesError;
+      // Always fetch both profiles and user_roles separately for better reliability
+      console.log('Fetching profiles data...');
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, email, dorm, wing, status, created_at');
+      
+      console.log('Fetching user roles data...');
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
 
-       try {
-         // First try to get profiles with role field
-         const profilesResult = await supabase
-           .from('profiles')
-           .select('user_id, email, dorm, wing, status, role');
-         
-         profilesData = profilesResult.data;
-         profilesError = profilesResult.error;
-       } catch (error) {
-         console.warn('Role column not found in profiles, using fallback approach');
-         
-         // Fallback: query profiles without role and get roles separately
-         const profilesResult = await supabase
-           .from('profiles')
-           .select('user_id, email, dorm, wing, status');
-         
-         const rolesResult = await supabase
-           .from('user_roles')
-           .select('user_id, role');
-         
-         profilesData = profilesResult.data;
-         profilesError = profilesResult.error;
-         rolesData = rolesResult.data;
-         rolesError = rolesResult.error;
-       }
+      if (profilesError) {
+        console.error('Profiles query failed:', profilesError);
+        throw profilesError;
+      }
 
-       if (profilesError) {
-         console.error('Profiles query failed:', profilesError);
-         if (isDemo) {
-           // Fallback demo data
-           const mockUsers = [
-             {
-               id: 'demo-user-1',
-               email: 'demo@taylor.edu',
-               created_at: new Date().toISOString(),
-               profiles: {
-                 dorm: 'Demo Dorm',
-                 wing: 'Demo Wing',
-                 status: 'active',
-                 role: 'user'
-               },
-               user_roles: [{ role: 'user' }]
-             }
-           ];
-           setUsers(mockUsers);
-           setPendingUsers([]);
-           return;
-         }
-         throw profilesError;
-       }
+      if (rolesError) {
+        console.warn('User roles query failed, will use default role:', rolesError);
+      }
 
-       if (rolesError) throw rolesError;
+      console.log(`Found ${profilesData?.length || 0} profiles and ${rolesData?.length || 0} role records`);
 
-       const enrichedUsers = profilesData?.map(profile => {
-         // Normalize status - treat null, undefined, empty string, or 'NULL' as 'active'
-         let normalizedStatus = profile.status;
-         if (!normalizedStatus || normalizedStatus === '' || normalizedStatus === 'NULL' || normalizedStatus === 'null') {
-           normalizedStatus = 'active';
-         }
-         
-         // Get role from profile or fallback to user_roles lookup
-         let userRole = 'user';
-         if (profile.role) {
-           userRole = profile.role;
-         } else if (rolesData) {
-           const roleRecord = rolesData.find(r => r.user_id === profile.user_id);
-           userRole = roleRecord?.role || 'user';
-         }
-         
-         return {
-           id: profile.user_id,
-           email: profile.email || '',
-           created_at: new Date().toISOString(),
-           profiles: {
-             dorm: profile.dorm || '',
-             wing: profile.wing || '',
-             status: normalizedStatus,
-             role: userRole
-           },
-           user_roles: [{ role: userRole }]
-         };
-       }) || [];
+      const enrichedUsers = profilesData?.map(profile => {
+        // Normalize status - treat null, undefined, empty string, or 'NULL' as 'active'
+        let normalizedStatus = profile.status;
+        if (!normalizedStatus || normalizedStatus === '' || normalizedStatus === 'NULL' || normalizedStatus === 'null') {
+          normalizedStatus = 'active';
+        }
+        
+        // Get role from user_roles lookup
+        let userRole = 'user';
+        if (rolesData) {
+          const roleRecord = rolesData.find(r => r.user_id === profile.user_id);
+          userRole = roleRecord?.role || 'user';
+        }
+        
+        return {
+          id: profile.user_id,
+          email: profile.email || '',
+          created_at: profile.created_at || new Date().toISOString(),
+          profiles: {
+            dorm: profile.dorm || '',
+            wing: profile.wing || '',
+            status: normalizedStatus,
+            role: userRole
+          },
+          user_roles: [{ role: userRole }]
+        };
+      }) || [];
 
       // Filter users by status
-      const activeUsers = enrichedUsers.filter(user => 
-        user.profiles.status === 'active' || 
-        !user.profiles.status || 
-        user.profiles.status === '' ||
-        user.profiles.status === 'NULL' ||
-        user.profiles.status === 'null'
-      );
+      const activeUsers = enrichedUsers.filter(user => {
+        const status = user.profiles.status;
+        return status === 'active' || 
+               !status || 
+               status === '' ||
+               status === 'NULL' ||
+               status === 'null';
+      });
       
       const pendingUsers = enrichedUsers.filter(user => user.profiles.status === 'pending');
 
+      console.log(`Processed ${activeUsers.length} active users and ${pendingUsers.length} pending users`);
+      
       setUsers(activeUsers);
       setPendingUsers(pendingUsers);
     } catch (error) {
@@ -336,7 +397,8 @@ const AdminDashboard = () => {
             profiles: {
               dorm: 'Demo Dorm',
               wing: 'Demo Wing', 
-              status: 'active'
+              status: 'active',
+              role: 'user'
             },
             user_roles: [{ role: 'user' }]
           }
@@ -353,6 +415,8 @@ const AdminDashboard = () => {
 
   const fetchOrganizations = async () => {
     try {
+      console.log('=== Fetching Organizations ===');
+      
       const { data, error } = await supabase
         .from('organizations')
         .select('*')
@@ -368,9 +432,11 @@ const AdminDashboard = () => {
               id: 'demo-org-1',
               name: 'Demo Organization',
               description: 'A demo organization for testing',
+              website: null,
+              phone: null,
+              contact_email: 'demo@organization.com',
               status: 'approved',
-              created_at: new Date().toISOString(),
-              contact_email: 'demo@organization.com'
+              created_at: new Date().toISOString()
             }
           ];
           setOrganizations(mockOrganizations);
@@ -380,8 +446,27 @@ const AdminDashboard = () => {
         throw error;
       }
 
-      setOrganizations(data?.filter(org => org.status === 'approved') || []);
-      setPendingOrganizations(data?.filter(org => org.status === 'pending') || []);
+      console.log(`Found ${data?.length || 0} total organizations`);
+      
+      if (data) {
+        data.forEach(org => {
+          console.log(`Organization: ${org.name} - Status: ${org.status}`);
+        });
+      }
+
+      // Filter organizations by status with better normalization
+      const approvedOrgs = data?.filter(org => {
+        const status = org.status;
+        return status === 'approved' || 
+               (!status || status === '' || status === 'NULL' || status === 'null');
+      }) || [];
+      
+      const pendingOrgs = data?.filter(org => org.status === 'pending') || [];
+      
+      console.log(`Processed ${approvedOrgs.length} approved organizations and ${pendingOrgs.length} pending organizations`);
+      
+      setOrganizations(approvedOrgs);
+      setPendingOrganizations(pendingOrgs);
     } catch (error) {
       console.error('Error fetching organizations:', error);
       setOrganizations([]);
@@ -391,6 +476,8 @@ const AdminDashboard = () => {
 
   const fetchEvents = async () => {
     try {
+      console.log('=== Fetching Events ===');
+      
       const { data, error } = await supabase
         .from('events')
         .select(`
@@ -411,7 +498,8 @@ const AdminDashboard = () => {
               description: 'A demo event for testing the admin console',
               date: new Date().toISOString(),
               location: 'Demo Location',
-              created_at: new Date().toISOString(),
+              max_participants: null,
+              organization_id: null,
               organizations: { name: 'Demo Organization' }
             }
           ];
@@ -419,6 +507,14 @@ const AdminDashboard = () => {
           return;
         }
         throw error;
+      }
+      
+      console.log(`Found ${data?.length || 0} total events`);
+      
+      if (data) {
+        data.forEach(event => {
+          console.log(`Event: ${event.title} - Organization: ${event.organizations?.name || 'No Organization'} - Date: ${event.date}`);
+        });
       }
       
       setEvents(data || []);
@@ -430,35 +526,243 @@ const AdminDashboard = () => {
 
   const handleUserRoleChange = async (userId: string, newRole: 'admin' | 'pa' | 'user') => {
     try {
-      // Try to update role in profiles table first (if role column exists)
-      let { error } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('user_id', userId);
+      console.log(`=== ROLE UPDATE DEBUG ===`);
+      console.log(`Attempting to update user ${userId} role to ${newRole}`);
+      console.log(`Current user (admin):`, user?.id);
+      console.log(`Is demo admin:`, localStorage.getItem('admin_authenticated') === 'true');
+      
+      // Validate inputs
+      if (!userId || !newRole) {
+        throw new Error('User ID and role are required');
+      }
+      
+      if (!['admin', 'pa', 'user'].includes(newRole)) {
+        throw new Error('Invalid role specified');
+      }
 
-      // If updating profiles fails (role column doesn't exist), update user_roles table
-      if (error && error.message.includes('role')) {
-        console.warn('Role column not found in profiles, updating user_roles table instead');
-        const { error: roleError } = await supabase
+      // For demo authentication, we still need to update the actual database
+      // The issue is RLS policies require authenticated user, so we'll use direct updates
+      const isDemo = localStorage.getItem('admin_authenticated') === 'true';
+      if (isDemo && !user) {
+        console.log('Demo mode: Attempting direct database update');
+        
+        try {
+           // Try to update the profiles table directly (this should work with the new schema)
+           const { error: profileUpdateError } = await supabase
+             .from('profiles')
+             .update({ role: newRole })
+             .eq('user_id', userId);
+
+           if (profileUpdateError) {
+             console.error('Profile update failed in demo mode:', profileUpdateError);
+             
+             // Try updating user_roles table as fallback
+             const { error: roleUpdateError } = await supabase
+               .from('user_roles')
+               .update({ role: newRole })
+               .eq('user_id', userId);
+
+             if (roleUpdateError) {
+               console.error('user_roles update also failed:', roleUpdateError);
+               
+               // Final fallback to local state update
+               setUsers(prevUsers => 
+                 prevUsers.map(u => 
+                   u.id === userId 
+                     ? {
+                         ...u,
+                         profiles: { ...u.profiles, role: newRole },
+                         user_roles: [{ role: newRole }]
+                       }
+                     : u
+                 )
+               );
+               
+               toast({
+                 title: "Demo Mode - Local Update Only",
+                 description: `Role updated locally to ${newRole}. Database RLS policies prevent updates.`,
+                 variant: "destructive"
+               });
+               return;
+             }
+           }
+
+           // Also try to sync user_roles table if profiles update succeeded
+           if (!profileUpdateError) {
+             const { error: roleUpdateError } = await supabase
+               .from('user_roles')
+               .upsert({ user_id: userId, role: newRole }, { onConflict: 'user_id' });
+
+             if (roleUpdateError) {
+               console.warn('user_roles sync failed, but profiles updated:', roleUpdateError);
+             }
+           }
+
+           // Update local state to reflect database changes
+           setUsers(prevUsers => 
+             prevUsers.map(u => 
+               u.id === userId 
+                 ? {
+                     ...u,
+                     profiles: { ...u.profiles, role: newRole },
+                     user_roles: [{ role: newRole }]
+                   }
+                 : u
+             )
+           );
+           
+           toast({
+             title: "Success (Demo Mode)",
+             description: `User role updated to ${newRole} in database`,
+           });
+           
+           return;
+         } catch (error) {
+           console.error('Demo mode database update failed:', error);
+           // Fallback to local update
+           setUsers(prevUsers => 
+             prevUsers.map(u => 
+               u.id === userId 
+                 ? {
+                     ...u,
+                     profiles: { ...u.profiles, role: newRole },
+                     user_roles: [{ role: newRole }]
+                   }
+                 : u
+             )
+           );
+           
+           toast({
+             title: "Demo Mode - Local Update Only",
+             description: `Role updated locally to ${newRole}. Database access restricted.`,
+             variant: "destructive"
+           });
+           return;
+         }
+      }
+
+      // Check if user exists in profiles table first
+      const { data: userProfile, error: profileCheckError } = await supabase
+        .from('profiles')
+        .select('user_id, email')
+        .eq('user_id', userId)
+        .single();
+
+      if (profileCheckError) {
+        console.error('User profile not found:', profileCheckError);
+        throw new Error('User not found in system');
+      }
+
+      console.log('User profile found:', userProfile.email);
+
+      // First, ensure the user has a role entry in user_roles table
+      const { data: existingRole, error: checkError } = await supabase
+        .from('user_roles')
+        .select('id, role')
+        .eq('user_id', userId)
+        .single();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking existing role:', checkError);
+        throw checkError;
+      }
+
+      console.log('Existing role:', existingRole?.role || 'none');
+
+      // Update or insert into user_roles table
+      if (existingRole) {
+        console.log('Updating existing role...');
+        const { error: updateRoleError } = await supabase
           .from('user_roles')
+          .update({ 
+            role: newRole,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', userId);
+        
+        if (updateRoleError) {
+          console.error('Failed to update role:', updateRoleError);
+          console.error('Update error details:', {
+            message: updateRoleError.message,
+            details: updateRoleError.details,
+            hint: updateRoleError.hint,
+            code: updateRoleError.code
+          });
+          throw updateRoleError;
+        }
+        console.log('Role updated successfully in user_roles table');
+      } else {
+        console.log('Creating new role entry...');
+        const { error: insertRoleError } = await supabase
+          .from('user_roles')
+          .insert({ 
+            user_id: userId, 
+            role: newRole,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        
+        if (insertRoleError) {
+          console.error('Failed to insert role:', insertRoleError);
+          console.error('Insert error details:', {
+            message: insertRoleError.message,
+            details: insertRoleError.details,
+            hint: insertRoleError.hint,
+            code: insertRoleError.code
+          });
+          throw insertRoleError;
+        }
+        console.log('Role created successfully in user_roles table');
+      }
+
+      // Try to update role in profiles table as well (for optimization)
+      try {
+        console.log('Attempting to update role in profiles table...');
+        const { error: profileError } = await supabase
+          .from('profiles')
           .update({ role: newRole })
           .eq('user_id', userId);
         
-        if (roleError) throw roleError;
-      } else if (error) {
-        throw error;
+        if (profileError) {
+          // If profiles update fails due to schema issues, that's okay - user_roles is the source of truth
+          if (profileError.message.includes('role') || profileError.message.includes('schema') || profileError.message.includes('column')) {
+            console.warn('Profiles table does not have role column, using user_roles as source of truth');
+          } else {
+            console.warn('Profiles table update failed:', profileError.message);
+          }
+        } else {
+          console.log('Role updated successfully in profiles table');
+        }
+      } catch (profileUpdateError) {
+        console.warn('Profiles table role update failed, but user_roles was updated successfully:', profileUpdateError);
       }
+
+      // Verify the update was successful
+      const { data: verifyRole, error: verifyError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .single();
+
+      if (verifyError || !verifyRole || verifyRole.role !== newRole) {
+        console.error('Role update verification failed:', verifyError);
+        throw new Error('Role update could not be verified');
+      }
+
+      console.log('Role update verified successfully');
 
       toast({
         title: "Success",
         description: `User role updated to ${newRole}`,
       });
 
-      fetchUsers();
+      // Refresh the user list to show updated roles
+      await fetchUsers();
     } catch (error: any) {
+      console.error('Role update error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || 'Failed to update user role',
         variant: "destructive",
       });
     }
@@ -466,23 +770,42 @@ const AdminDashboard = () => {
 
   const handleUserStatusChange = async (userId: string, status: string) => {
     try {
+      console.log(`Updating user ${userId} status to ${status}`);
+      
+      // Validate inputs
+      if (!userId || !status) {
+        throw new Error('User ID and status are required');
+      }
+      
+      if (!['active', 'pending', 'blocked'].includes(status)) {
+        throw new Error('Invalid status specified');
+      }
+
       const { error } = await supabase
         .from('profiles')
-        .update({ status })
+        .update({ 
+          status,
+          updated_at: new Date().toISOString()
+        })
         .eq('user_id', userId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Status update failed:', error);
+        throw error;
+      }
 
+      console.log('User status updated successfully');
       toast({
         title: "Success",
-        description: `User ${status === 'active' ? 'approved' : 'blocked'}`,
+        description: `User ${status === 'active' ? 'approved' : status === 'blocked' ? 'blocked' : 'set to pending'}`,
       });
 
-      fetchUsers();
+      await fetchUsers();
     } catch (error: any) {
+      console.error('Status update error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || 'Failed to update user status',
         variant: "destructive",
       });
     }
@@ -518,21 +841,33 @@ const AdminDashboard = () => {
 
   const resetUserPassword = async (userId: string, email: string) => {
     try {
+      console.log(`Resetting password for user: ${email}`);
+      
+      // Validate email
+      if (!email || !email.includes('@')) {
+        throw new Error('Valid email is required for password reset');
+      }
+
       const { error } = await supabase.auth.admin.generateLink({
         type: 'recovery',
         email: email,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Password reset failed:', error);
+        throw error;
+      }
 
+      console.log('Password reset email sent successfully');
       toast({
         title: "Success",
         description: "Password reset email sent",
       });
     } catch (error: any) {
+      console.error('Password reset error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || 'Failed to send password reset email',
         variant: "destructive",
       });
     }
@@ -639,25 +974,38 @@ const AdminDashboard = () => {
     if (!editingUser) return;
 
     try {
+      console.log(`Updating user ${editingUser.id}:`, editUser);
+      
+      // Validate inputs
+      if (!editUser.email || !editUser.email.includes('@')) {
+        throw new Error('Valid email is required');
+      }
+      
+      if (!editUser.dorm || !editUser.wing) {
+        throw new Error('Dorm and wing are required');
+      }
+
       // Update profile
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          email: editUser.email,
-          dorm: editUser.dorm,
-          wing: editUser.wing,
+          email: editUser.email.trim(),
+          dorm: editUser.dorm.trim(),
+          wing: editUser.wing.trim(),
         })
         .eq('user_id', editingUser.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile update failed:', profileError);
+        throw profileError;
+      }
+      
+      console.log('Profile updated successfully');
 
-      // Update role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .update({ role: editUser.role })
-        .eq('user_id', editingUser.id);
-
-      if (roleError) throw roleError;
+      // Update role using the robust role change function
+      if (editUser.role !== editingUser.profiles.role) {
+        await handleUserRoleChange(editingUser.id, editUser.role);
+      }
 
       setIsEditUserModalOpen(false);
       setEditingUser(null);
@@ -668,8 +1016,10 @@ const AdminDashboard = () => {
         description: "User updated successfully.",
       });
       
-      fetchUsers();
+      // Refresh users to show changes
+      await fetchUsers();
     } catch (error: any) {
+      console.error('User edit error:', error);
       toast({
         title: "Error",
         description: error.message || "Failed to update user.",
@@ -899,16 +1249,28 @@ const AdminDashboard = () => {
                 Manage users, organizations, and opportunities
               </p>
             </div>
-            <Button 
-              onClick={handleLogout}
-              variant="outline"
-              className="flex items-center gap-2 self-end sm:self-auto"
-              size="sm"
-            >
-              <Shield className="w-4 h-4" />
-              <span className="hidden sm:inline">Logout</span>
-              <span className="sm:hidden">Exit</span>
-            </Button>
+            <div className="flex gap-2 self-end sm:self-auto">
+              <Button 
+                onClick={testSupabaseIntegration}
+                variant="outline"
+                className="flex items-center gap-2"
+                size="sm"
+              >
+                <Shield className="w-4 h-4" />
+                <span className="hidden sm:inline">Test DB</span>
+                <span className="sm:hidden">Test</span>
+              </Button>
+              <Button 
+                onClick={handleLogout}
+                variant="outline"
+                className="flex items-center gap-2"
+                size="sm"
+              >
+                <Shield className="w-4 h-4" />
+                <span className="hidden sm:inline">Logout</span>
+                <span className="sm:hidden">Exit</span>
+              </Button>
+            </div>
           </div>
 
           <Tabs defaultValue="users" className="space-y-6">
@@ -1645,21 +2007,40 @@ const AdminDashboard = () => {
             </div>
             <div>
               <Label htmlFor="edit-user-dorm">Dorm*</Label>
-              <Input
-                id="edit-user-dorm"
+              <Select
                 value={editUser.dorm}
-                onChange={(e) => setEditUser({...editUser, dorm: e.target.value})}
-                placeholder="Dorm name"
-              />
+                onValueChange={(value) => setEditUser({...editUser, dorm: value, wing: ''})} // Reset wing when dorm changes
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Dorm" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {Object.keys(dormAndFloorData).map((dorm) => (
+                    <SelectItem key={dorm} value={dorm}>
+                      {dorm}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
-              <Label htmlFor="edit-user-wing">Wing*</Label>
-              <Input
-                id="edit-user-wing"
+              <Label htmlFor="edit-user-wing">Wing/Floor*</Label>
+              <Select
                 value={editUser.wing}
-                onChange={(e) => setEditUser({...editUser, wing: e.target.value})}
-                placeholder="Wing"
-              />
+                onValueChange={(value) => setEditUser({...editUser, wing: value})}
+                disabled={!editUser.dorm}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder={editUser.dorm ? "Select Wing/Floor" : "Select dorm first"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {editUser.dorm && dormAndFloorData[editUser.dorm as keyof typeof dormAndFloorData]?.map((wing) => (
+                    <SelectItem key={wing} value={wing}>
+                      {wing}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="edit-user-role">Role*</Label>
