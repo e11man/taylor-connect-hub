@@ -17,8 +17,7 @@ const HeroSection = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
-      y: 0,
-      transition: { duration: 0.4, ease: "easeOut" }
+      y: 0
     }
   };
 
@@ -34,7 +33,7 @@ const HeroSection = () => {
                   className="block"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
+                  transition={{ duration: 0.5, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
                   viewport={{ once: false }}
                 >
                   Connect.
@@ -43,7 +42,7 @@ const HeroSection = () => {
                   className="block text-secondary"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
+                  transition={{ duration: 0.5, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
                   viewport={{ once: false }}
                 >
                   Volunteer.
@@ -52,7 +51,7 @@ const HeroSection = () => {
                   className="block"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.5 }}
+                  transition={{ duration: 0.5, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                   viewport={{ once: false }}
                 >
                   Make a Difference.
@@ -82,7 +81,10 @@ const HeroSection = () => {
                 }
               }}
             >
-              <motion.div variants={buttonVariants}>
+              <motion.div 
+                variants={buttonVariants}
+                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+              >
                 <PrimaryButton 
                   size="lg" 
                   className="bg-accent hover:bg-accent/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
@@ -90,7 +92,10 @@ const HeroSection = () => {
                   Get Started <ArrowRight className="ml-2 w-5 h-5" />
                 </PrimaryButton>
               </motion.div>
-              <motion.div variants={buttonVariants}>
+              <motion.div 
+                variants={buttonVariants}
+                transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.1 }}
+              >
                 <SecondaryButton 
                   size="lg" 
                   variant="outline" 
@@ -104,7 +109,7 @@ const HeroSection = () => {
 
           {/* Stats Section */}
           <AnimatedSection variant="stagger" delay={0.8}>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 max-w-5xl mx-auto">
+            <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-6 lg:gap-8 max-w-4xl mx-auto">
               {stats.map((stat, index) => (
                 <AnimatedCard 
                   key={stat.label}
@@ -113,24 +118,24 @@ const HeroSection = () => {
                   variant="lift"
                   className="group relative w-full"
                 >
-                  <div className="bg-white border border-gray-200 rounded-2xl p-6 lg:p-8 xl:p-10 text-center transition-all duration-500 hover:shadow-xl overflow-hidden h-full min-h-[200px] md:min-h-[220px] lg:min-h-[240px] flex flex-col justify-center">
+                  <div className="bg-white border border-gray-200 rounded-xl md:rounded-2xl p-3 md:p-6 lg:p-8 text-center transition-all duration-500 hover:shadow-xl overflow-hidden h-full min-h-[120px] md:min-h-[180px] lg:min-h-[200px] flex flex-col justify-center">
                     <motion.div 
-                      className="relative flex justify-center mb-4 lg:mb-6"
+                      className="relative flex justify-center mb-2 md:mb-4 lg:mb-6"
                       whileHover={{ scale: 1.1, rotateY: 10 }}
                       transition={{ duration: 0.3 }}
                     >
-                      <div className="w-12 h-12 lg:w-16 lg:h-16 bg-[#00AFCE] rounded-2xl flex items-center justify-center shadow-md">
-                        <stat.icon className="w-6 h-6 lg:w-8 lg:h-8 text-white" />
+                      <div className="w-8 h-8 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-[#00AFCE] rounded-lg md:rounded-2xl flex items-center justify-center shadow-md">
+                        <stat.icon className="w-4 h-4 md:w-6 md:h-6 lg:w-8 lg:h-8 text-white" />
                       </div>
                     </motion.div>
                     <motion.div 
-                      className="relative text-3xl md:text-4xl lg:text-5xl font-montserrat font-black mb-2 lg:mb-3 text-secondary"
+                      className="relative text-xl md:text-3xl lg:text-4xl xl:text-5xl font-montserrat font-black mb-1 md:mb-2 lg:mb-3 text-secondary"
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.2 }}
                     >
                       {stat.value}
                     </motion.div>
-                    <div className="relative text-sm md:text-base lg:text-lg text-gray-600 font-montserrat font-semibold tracking-wide leading-tight">
+                    <div className="relative text-xs md:text-sm lg:text-base xl:text-lg text-gray-600 font-montserrat font-semibold tracking-wide leading-tight">
                       {stat.label}
                     </div>
                   </div>

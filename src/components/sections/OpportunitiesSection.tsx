@@ -1,6 +1,6 @@
-import { Calendar, MapPin, Users, Star, ArrowRight, MessageCircle } from "lucide-react";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { useState, useEffect } from "react";
+import { Calendar, MapPin, Users, MessageCircle } from "lucide-react";
+import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -192,16 +192,18 @@ const OpportunitiesSection = () => {
 
                 {/* Action Buttons */}
                 <div className="mt-auto space-y-3">
-                  <button
-                    onClick={() => {
-                      setSelectedEvent(event);
-                      setChatModalOpen(true);
-                    }}
-                    className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
-                  >
-                    <MessageCircle className="w-4 h-4" />
-                    Chat
-                  </button>
+                  {user && isSignedUp(event.id) && (
+                    <button
+                      onClick={() => {
+                        setSelectedEvent(event);
+                        setChatModalOpen(true);
+                      }}
+                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Chat
+                    </button>
+                  )}
                   
                   {isSignedUp(event.id) ? (
                     <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-full font-semibold">
