@@ -9,110 +9,59 @@ interface AnimatedSectionProps {
   variant?: "slideUp" | "slideLeft" | "slideRight" | "fade" | "scale" | "stagger";
 }
 
-const variants = {
-  slideUp: {
-    hidden: { 
-      opacity: 0, 
-      y: 40,
-      scale: 0.95 
-    },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        duration: 0.6
-      }
-    }
-  },
-  slideLeft: {
-    hidden: { 
-      opacity: 0, 
-      x: -40,
-      scale: 0.95 
-    },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        duration: 0.6
-      }
-    }
-  },
-  slideRight: {
-    hidden: { 
-      opacity: 0, 
-      x: 40,
-      scale: 0.95 
-    },
-    visible: { 
-      opacity: 1, 
-      x: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        duration: 0.6
-      }
-    }
-  },
-  fade: {
-    hidden: { 
-      opacity: 0,
-    },
-    visible: { 
-      opacity: 1,
-      transition: {
-        duration: 0.7,
-        ease: "easeOut",
-      }
-    }
-  },
-  scale: {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.8,
-    },
-    visible: { 
-      opacity: 1, 
-      scale: 1,
-      transition: {
-        duration: 0.5,
-        duration: 0.5
-      }
-    }
-  },
-  stagger: {
-    hidden: {},
-    visible: {
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.1,
-      }
-    }
-  }
-};
-
 const AnimatedSection: React.FC<AnimatedSectionProps> = ({ 
   children, 
   className = "", 
   delay = 0, 
-  duration,
+  duration = 0.6,
   variant = "slideUp" 
 }) => {
-  const motionVariant = { ...variants[variant] };
-  
-  // Apply custom duration if provided
-  if (duration && motionVariant.visible?.transition) {
-    motionVariant.visible.transition.duration = duration;
-  }
-  
-  // Apply custom delay if provided
-  if (delay > 0 && motionVariant.visible?.transition) {
-    motionVariant.visible.transition.delay = delay;
-  }
+  const getVariants = () => {
+    const baseTransition = { duration, delay };
+    
+    switch (variant) {
+      case 'slideUp':
+        return {
+          hidden: { opacity: 0, y: 40, scale: 0.95 },
+          visible: { opacity: 1, y: 0, scale: 1, transition: baseTransition }
+        };
+      case 'slideLeft':
+        return {
+          hidden: { opacity: 0, x: -40, scale: 0.95 },
+          visible: { opacity: 1, x: 0, scale: 1, transition: baseTransition }
+        };
+      case 'slideRight':
+        return {
+          hidden: { opacity: 0, x: 40, scale: 0.95 },
+          visible: { opacity: 1, x: 0, scale: 1, transition: baseTransition }
+        };
+      case 'fade':
+        return {
+          hidden: { opacity: 0 },
+          visible: { opacity: 1, transition: { ...baseTransition, ease: "easeOut" } }
+        };
+      case 'scale':
+        return {
+          hidden: { opacity: 0, scale: 0.8 },
+          visible: { opacity: 1, scale: 1, transition: baseTransition }
+        };
+      case 'stagger':
+        return {
+          hidden: {},
+          visible: {
+            transition: {
+              staggerChildren: 0.1,
+              delayChildren: delay
+            }
+          }
+        };
+      default:
+        return {
+          hidden: { opacity: 0 },
+          visible: { opacity: 1, transition: baseTransition }
+        };
+    }
+  };
 
   return (
     <motion.div
@@ -120,11 +69,11 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
       initial="hidden"
       whileInView="visible"
       viewport={{ 
-        once: false, // This ensures animations trigger every time
-        amount: 0.2, // Trigger when 20% of element is visible
-        margin: "-30px" // Start animation 30px before element comes into view
+        once: false,
+        amount: 0.2,
+        margin: "-30px"
       }}
-      variants={motionVariant}
+      variants={getVariants()}
     >
       {children}
     </motion.div>
