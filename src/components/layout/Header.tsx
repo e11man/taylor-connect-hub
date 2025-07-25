@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Heart, LogOut, User } from "lucide-react";
+import { LogOut, User } from "lucide-react";
+import logo from "@/assets/logo.svg";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import RequestVolunteersModal from "@/components/modals/RequestVolunteersModal";
 import UserAuthModal from "@/components/modals/UserAuthModal";
@@ -138,10 +139,9 @@ const Header = () => {
           onClick={closeMenu}
           tabIndex={isOpen ? 0 : -1}
         >
-          <div className="w-10 h-10 rounded-lg flex items-center justify-center" style={{backgroundColor: '#00AFCE'}}>
-            <Heart className="w-6 h-6 text-white" />
-          </div>
+          <img src={logo} alt="Community Connect Logo" className="h-12 w-auto" />
           <span className="text-lg font-montserrat">Community Connect</span>
+          
         </Link>
         {/* Nav links */}
         <ul className="flex flex-col gap-3 mb-10">
@@ -236,9 +236,7 @@ const Header = () => {
       <div className="max-w-screen-xl mx-auto flex items-center justify-between h-16 px-4 md:px-8">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 font-bold text-gray-900 text-lg md:text-xl tracking-tight">
-          <div className="w-9 h-9 rounded-lg flex items-center justify-center" style={{backgroundColor: '#00AFCE'}}>
-            <Heart className="w-5 h-5 text-white" />
-          </div>
+          <img src={logo} alt="Community Connect Logo" className="w-12 h-12 rounded-lg object-contain" />
           <span className="hidden sm:inline text-base md:text-xl font-montserrat">Community Connect</span>
         </Link>
 
