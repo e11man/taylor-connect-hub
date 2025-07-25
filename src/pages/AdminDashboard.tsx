@@ -222,56 +222,92 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Simplified approach: Query profiles table directly (now contains role information)
-      const { data: profilesData, error: profilesError } = await supabase
-        .from('profiles')
-        .select('user_id, email, dorm, wing, status, role');
+                    // Try to query profiles with role field, fallback if it doesn't exist
+       let profilesData, rolesData;
+       let profilesError, rolesError;
 
-      if (profilesError) {
-        console.error('Profiles query failed:', profilesError);
-        if (isDemo) {
-          // Fallback demo data
-          const mockUsers = [
-            {
-              id: 'demo-user-1',
-              email: 'demo@taylor.edu',
-              created_at: new Date().toISOString(),
-              profiles: {
-                dorm: 'Demo Dorm',
-                wing: 'Demo Wing',
-                status: 'active',
-                role: 'user'
-              },
-              user_roles: [{ role: 'user' }]
-            }
-          ];
-          setUsers(mockUsers);
-          setPendingUsers([]);
-          return;
-        }
-        throw profilesError;
-      }
+       try {
+         // First try to get profiles with role field
+         const profilesResult = await supabase
+           .from('profiles')
+           .select('user_id, email, dorm, wing, status, role');
+         
+         profilesData = profilesResult.data;
+         profilesError = profilesResult.error;
+       } catch (error) {
+         console.warn('Role column not found in profiles, using fallback approach');
+         
+         // Fallback: query profiles without role and get roles separately
+         const profilesResult = await supabase
+           .from('profiles')
+           .select('user_id, email, dorm, wing, status');
+         
+         const rolesResult = await supabase
+           .from('user_roles')
+           .select('user_id, role');
+         
+         profilesData = profilesResult.data;
+         profilesError = profilesResult.error;
+         rolesData = rolesResult.data;
+         rolesError = rolesResult.error;
+       }
 
-      const enrichedUsers = profilesData?.map(profile => {
-        // Normalize status - treat null, undefined, empty string, or 'NULL' as 'active'
-        let normalizedStatus = profile.status;
-        if (!normalizedStatus || normalizedStatus === '' || normalizedStatus === 'NULL' || normalizedStatus === 'null') {
-          normalizedStatus = 'active';
-        }
-        
-        return {
-          id: profile.user_id,
-          email: profile.email || '',
-          created_at: new Date().toISOString(),
-          profiles: {
-            dorm: profile.dorm || '',
-            wing: profile.wing || '',
-            status: normalizedStatus,
-            role: profile.role || 'user'
-          },
-          user_roles: [{ role: profile.role || 'user' }]
-        };
-      }) || [];
+       if (profilesError) {
+         console.error('Profiles query failed:', profilesError);
+         if (isDemo) {
+           // Fallback demo data
+           const mockUsers = [
+             {
+               id: 'demo-user-1',
+               email: 'demo@taylor.edu',
+               created_at: new Date().toISOString(),
+               profiles: {
+                 dorm: 'Demo Dorm',
+                 wing: 'Demo Wing',
+                 status: 'active',
+                 role: 'user'
+               },
+               user_roles: [{ role: 'user' }]
+             }
+           ];
+           setUsers(mockUsers);
+           setPendingUsers([]);
+           return;
+         }
+         throw profilesError;
+       }
+
+       if (rolesError) throw rolesError;
+
+       const enrichedUsers = profilesData?.map(profile => {
+         // Normalize status - treat null, undefined, empty string, or 'NULL' as 'active'
+         let normalizedStatus = profile.status;
+         if (!normalizedStatus || normalizedStatus === '' || normalizedStatus === 'NULL' || normalizedStatus === 'null') {
+           normalizedStatus = 'active';
+         }
+         
+         // Get role from profile or fallback to user_roles lookup
+         let userRole = 'user';
+         if (profile.role) {
+           userRole = profile.role;
+         } else if (rolesData) {
+           const roleRecord = rolesData.find(r => r.user_id === profile.user_id);
+           userRole = roleRecord?.role || 'user';
+         }
+         
+         return {
+           id: profile.user_id,
+           email: profile.email || '',
+           created_at: new Date().toISOString(),
+           profiles: {
+             dorm: profile.dorm || '',
+             wing: profile.wing || '',
+             status: normalizedStatus,
+             role: userRole
+           },
+           user_roles: [{ role: userRole }]
+         };
+       }) || [];
 
       // Filter users by status
       const activeUsers = enrichedUsers.filter(user => 
@@ -394,13 +430,24 @@ const AdminDashboard = () => {
 
   const handleUserRoleChange = async (userId: string, newRole: 'admin' | 'pa' | 'user') => {
     try {
-      // Update role in profiles table - triggers will sync with user_roles table
-      const { error } = await supabase
+      // Try to update role in profiles table first (if role column exists)
+      let { error } = await supabase
         .from('profiles')
         .update({ role: newRole })
         .eq('user_id', userId);
 
-      if (error) throw error;
+      // If updating profiles fails (role column doesn't exist), update user_roles table
+      if (error && error.message.includes('role')) {
+        console.warn('Role column not found in profiles, updating user_roles table instead');
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .update({ role: newRole })
+          .eq('user_id', userId);
+        
+        if (roleError) throw roleError;
+      } else if (error) {
+        throw error;
+      }
 
       toast({
         title: "Success",
