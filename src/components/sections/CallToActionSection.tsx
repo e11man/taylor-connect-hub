@@ -23,7 +23,7 @@ const CallToActionSection = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           
           {/* Image */}
-          <AnimatedSection variant="slideLeft" delay={0.2}>
+          <AnimatedSection variant="slideLeft" delay={0.1}>
             <motion.div 
               className="relative rounded-2xl overflow-hidden shadow-lg"
               whileHover={{ 
@@ -39,28 +39,28 @@ const CallToActionSection = () => {
                 className="w-full h-auto object-cover"
                 initial={{ scale: 1.1 }}
                 whileInView={{ scale: 1 }}
-                transition={{ duration: 1.2, ease: "easeOut" }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
                 viewport={{ once: false }}
               />
               <motion.div 
                 className="absolute inset-0 bg-primary/10"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.3 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
                 viewport={{ once: false }}
               />
             </motion.div>
           </AnimatedSection>
 
           {/* Content */}
-          <AnimatedSection variant="slideRight" delay={0.4}>
-            <AnimatedText variant="slideUp" delay={0.6}>
+          <AnimatedSection variant="slideRight" delay={0.2}>
+            <AnimatedText variant="slideUp" delay={0.3}>
               <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
                 Join Our Community
               </h2>
             </AnimatedText>
             
-            <AnimatedText variant="fade" delay={0.8}>
+            <AnimatedText variant="fade" delay={0.4}>
               <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
                 Be part of something bigger. Connect with like-minded volunteers 
                 and make a meaningful impact in your local community.
@@ -76,8 +76,8 @@ const CallToActionSection = () => {
                 y: 0, 
                 scale: 1,
                 transition: { 
-                  duration: 0.7, 
-                  delay: 1.0,
+                  duration: 0.5, 
+                  delay: 0.5,
                   ease: [0.25, 0.46, 0.45, 0.94]
                 }
               }}
@@ -93,7 +93,7 @@ const CallToActionSection = () => {
                 whileInView={{ 
                   opacity: 1, 
                   x: 0,
-                  transition: { duration: 0.6, delay: 1.2 }
+                  transition: { duration: 0.4, delay: 0.6 }
                 }}
                 viewport={{ once: false }}
               >
@@ -106,7 +106,7 @@ const CallToActionSection = () => {
                 whileInView={{ 
                   opacity: 1, 
                   x: 0,
-                  transition: { duration: 0.6, delay: 1.4 }
+                  transition: { duration: 0.4, delay: 0.7 }
                 }}
                 viewport={{ once: false }}
               >
@@ -118,7 +118,7 @@ const CallToActionSection = () => {
                 whileInView={{ 
                   opacity: 1, 
                   y: 0,
-                  transition: { duration: 0.6, delay: 1.6 }
+                  transition: { duration: 0.4, delay: 0.8 }
                 }}
                 viewport={{ once: false }}
               >

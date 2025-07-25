@@ -13,7 +13,7 @@ const variants = {
   slideUp: {
     hidden: { 
       opacity: 0, 
-      y: 60,
+      y: 40,
       scale: 0.95 
     },
     visible: { 
@@ -21,7 +21,7 @@ const variants = {
       y: 0,
       scale: 1,
       transition: {
-        duration: 0.8,
+        duration: 0.6,
         ease: [0.25, 0.46, 0.45, 0.94],
       }
     }
@@ -29,7 +29,7 @@ const variants = {
   slideLeft: {
     hidden: { 
       opacity: 0, 
-      x: -60,
+      x: -40,
       scale: 0.95 
     },
     visible: { 
@@ -37,7 +37,7 @@ const variants = {
       x: 0,
       scale: 1,
       transition: {
-        duration: 0.8,
+        duration: 0.6,
         ease: [0.25, 0.46, 0.45, 0.94],
       }
     }
@@ -45,7 +45,7 @@ const variants = {
   slideRight: {
     hidden: { 
       opacity: 0, 
-      x: 60,
+      x: 40,
       scale: 0.95 
     },
     visible: { 
@@ -53,7 +53,7 @@ const variants = {
       x: 0,
       scale: 1,
       transition: {
-        duration: 0.8,
+        duration: 0.6,
         ease: [0.25, 0.46, 0.45, 0.94],
       }
     }
@@ -65,7 +65,7 @@ const variants = {
     visible: { 
       opacity: 1,
       transition: {
-        duration: 1.0,
+        duration: 0.7,
         ease: "easeOut",
       }
     }
@@ -79,7 +79,7 @@ const variants = {
       opacity: 1, 
       scale: 1,
       transition: {
-        duration: 0.7,
+        duration: 0.5,
         ease: [0.25, 0.46, 0.45, 0.94],
       }
     }
@@ -88,8 +88,8 @@ const variants = {
     hidden: {},
     visible: {
       transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2,
+        staggerChildren: 0.1,
+        delayChildren: 0.1,
       }
     }
   }
@@ -122,7 +122,7 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
       viewport={{ 
         once: false, // This ensures animations trigger every time
         amount: 0.2, // Trigger when 20% of element is visible
-        margin: "-50px" // Start animation 50px before element comes into view
+        margin: "-30px" // Start animation 30px before element comes into view
       }}
       variants={motionVariant}
     >

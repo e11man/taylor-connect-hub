@@ -39,7 +39,7 @@ const TestimonialsSection = () => {
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
+      transition: { duration: 0.4, ease: "easeOut" }
     }
   };
 
@@ -47,15 +47,15 @@ const TestimonialsSection = () => {
     <section className="bg-white section-padding">
       <div className="container-custom">
         {/* Section Header */}
-        <AnimatedSection variant="slideUp" delay={0.2}>
+        <AnimatedSection variant="slideUp" delay={0.1}>
           <div className="text-center mb-12">
-            <AnimatedText variant="blur" delay={0.4}>
+            <AnimatedText variant="blur" delay={0.2}>
               <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
                 Stories of Impact
               </h2>
             </AnimatedText>
             
-            <AnimatedText variant="fade" delay={0.6}>
+            <AnimatedText variant="fade" delay={0.3}>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                 Discover how Community Connect is bringing people together and making a difference in our community.
               </p>
@@ -64,14 +64,14 @@ const TestimonialsSection = () => {
         </AnimatedSection>
 
         {/* Testimonials Grid */}
-        <AnimatedSection variant="stagger" delay={0.8}>
+        <AnimatedSection variant="stagger" delay={0.4}>
           <div className="mb-12">
             <div className="flex flex-nowrap gap-6 overflow-x-auto pb-4 md:pb-0 md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-8">
               {testimonials.map((testimonial, index) => (
                 <AnimatedCard
                   key={testimonial.id}
                   index={index}
-                  delay={0.2}
+                  delay={0.1}
                   variant="lift"
                   className="flex-shrink-0 w-80 min-w-80 md:w-auto"
                 >
@@ -110,7 +110,7 @@ const TestimonialsSection = () => {
                       initial={{ opacity: 0 }}
                       whileInView={{ 
                         opacity: 1,
-                        transition: { duration: 0.6, delay: 0.2 }
+                        transition: { duration: 0.4, delay: 0.1 }
                       }}
                       viewport={{ once: false }}
                     >
@@ -124,7 +124,7 @@ const TestimonialsSection = () => {
                       whileInView={{ 
                         opacity: 1, 
                         x: 0,
-                        transition: { duration: 0.6, delay: 0.4 }
+                        transition: { duration: 0.4, delay: 0.2 }
                       }}
                       viewport={{ once: false }}
                     >
@@ -162,7 +162,7 @@ const TestimonialsSection = () => {
         </AnimatedSection>
 
         {/* Call to Action */}
-        <AnimatedSection variant="scale" delay={1.2}>
+        <AnimatedSection variant="scale" delay={0.6}>
           <motion.div 
             className="bg-white border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300 rounded-3xl max-w-2xl mx-auto text-center p-8"
             whileHover={{ 
@@ -171,13 +171,13 @@ const TestimonialsSection = () => {
               transition: { duration: 0.3 }
             }}
           >
-            <AnimatedText variant="slideUp" delay={1.4}>
+            <AnimatedText variant="slideUp" delay={0.7}>
               <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-4 text-primary">
                 Ready to Make Your Impact?
               </h3>
             </AnimatedText>
             
-            <AnimatedText variant="fade" delay={1.6}>
+            <AnimatedText variant="fade" delay={0.8}>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
                 Join our community of volunteers and start making a difference today.
               </p>
@@ -191,8 +191,8 @@ const TestimonialsSection = () => {
               variants={{
                 visible: {
                   transition: {
-                    staggerChildren: 0.2,
-                    delayChildren: 1.8
+                    staggerChildren: 0.1,
+                    delayChildren: 0.9
                   }
                 }
               }}

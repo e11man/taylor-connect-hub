@@ -13,7 +13,7 @@ const Footer = () => {
 
   return (
     <footer className="bg-white border-t border-gray-200">
-      <AnimatedSection variant="fade" delay={0.2}>
+      <AnimatedSection variant="fade" delay={0.1}>
         <div className="container-custom py-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             {/* Brand */}
@@ -46,8 +46,8 @@ const Footer = () => {
                     opacity: 1, 
                     y: 0,
                     transition: { 
-                      duration: 0.5, 
-                      delay: index * 0.1 + 0.3 
+                      duration: 0.3, 
+                      delay: index * 0.05 + 0.2 
                     }
                   }}
                   viewport={{ once: false }}
@@ -63,7 +63,7 @@ const Footer = () => {
               initial={{ opacity: 0 }}
               whileInView={{ 
                 opacity: 1,
-                transition: { duration: 0.6, delay: 0.8 }
+                transition: { duration: 0.4, delay: 0.4 }
               }}
               viewport={{ once: false }}
             >
@@ -78,7 +78,7 @@ const Footer = () => {
             whileInView={{ 
               opacity: 1, 
               y: 0,
-              transition: { duration: 0.6, delay: 1.0 }
+              transition: { duration: 0.4, delay: 0.5 }
             }}
             viewport={{ once: false }}
           >

@@ -13,7 +13,7 @@ const cardVariants = {
   default: {
     hidden: { 
       opacity: 0, 
-      y: 40,
+      y: 30,
       scale: 0.9 
     },
     visible: { 
@@ -21,7 +21,7 @@ const cardVariants = {
       y: 0,
       scale: 1,
       transition: {
-        duration: 0.6,
+        duration: 0.5,
         ease: [0.25, 0.46, 0.45, 0.94],
       }
     }
@@ -73,7 +73,7 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
   index = 0,
   variant = "default" 
 }) => {
-  const cardDelay = delay + (index * 0.1);
+  const cardDelay = delay + (index * 0.05);
 
   return (
     <motion.div
@@ -84,7 +84,7 @@ const AnimatedCard: React.FC<AnimatedCardProps> = ({
       viewport={{ 
         once: false,
         amount: 0.3,
-        margin: "-30px"
+        margin: "-20px"
       }}
       variants={{
         ...cardVariants.default,

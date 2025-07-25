@@ -11,7 +11,7 @@ const AboutHeroSection = () => {
     visible: { 
       opacity: 1, 
       y: 0,
-      transition: { duration: 0.6, ease: "easeOut" }
+      transition: { duration: 0.4, ease: "easeOut" }
     }
   };
 
@@ -20,14 +20,14 @@ const AboutHeroSection = () => {
       <div className="container-custom">
         <div className="text-center max-w-4xl mx-auto">
           {/* Main Hero Content */}
-          <AnimatedSection variant="fade" delay={0.2}>
-            <AnimatedText variant="blur" delay={0.4}>
+          <AnimatedSection variant="fade" delay={0.1}>
+            <AnimatedText variant="blur" delay={0.2}>
               <h1 className="text-5xl md:text-7xl font-montserrat font-bold mb-6 leading-tight text-primary">
                 <motion.span 
                   className="block"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.6 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
                   viewport={{ once: false }}
                 >
                   Make the
@@ -36,7 +36,7 @@ const AboutHeroSection = () => {
                   className="block text-secondary"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.8 }}
+                  transition={{ duration: 0.5, delay: 0.4 }}
                   viewport={{ once: false }}
                 >
                   Connection
@@ -44,7 +44,7 @@ const AboutHeroSection = () => {
               </h1>
             </AnimatedText>
             
-            <AnimatedText variant="slideUp" delay={1.0}>
+            <AnimatedText variant="slideUp" delay={0.5}>
               <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed text-muted-foreground">
                 Connect with meaningful opportunities that create lasting impact in Upland.
               </p>
@@ -59,8 +59,8 @@ const AboutHeroSection = () => {
               variants={{
                 visible: {
                   transition: {
-                    staggerChildren: 0.2,
-                    delayChildren: 1.2
+                    staggerChildren: 0.1,
+                    delayChildren: 0.6
                   }
                 }
               }}

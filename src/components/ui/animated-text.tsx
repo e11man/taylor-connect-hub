@@ -13,13 +13,13 @@ const textVariants = {
   slideUp: {
     hidden: { 
       opacity: 0, 
-      y: 30,
+      y: 20,
     },
     visible: { 
       opacity: 1, 
       y: 0,
       transition: {
-        duration: 0.7,
+        duration: 0.5,
         ease: [0.25, 0.46, 0.45, 0.94],
       }
     }
@@ -31,7 +31,7 @@ const textVariants = {
     visible: { 
       opacity: 1,
       transition: {
-        duration: 0.8,
+        duration: 0.6,
         ease: "easeOut",
       }
     }
@@ -45,7 +45,7 @@ const textVariants = {
       opacity: 1,
       width: "auto",
       transition: {
-        duration: 1.2,
+        duration: 0.8,
         ease: "easeOut",
       }
     }
@@ -54,14 +54,14 @@ const textVariants = {
     hidden: { 
       opacity: 0,
       filter: "blur(8px)",
-      y: 20
+      y: 15
     },
     visible: { 
       opacity: 1,
       filter: "blur(0px)",
       y: 0,
       transition: {
-        duration: 0.9,
+        duration: 0.6,
         ease: [0.25, 0.46, 0.45, 0.94],
       }
     }
@@ -90,7 +90,7 @@ const AnimatedText: React.FC<AnimatedTextProps> = ({
       viewport={{ 
         once: false,
         amount: 0.3,
-        margin: "-30px"
+        margin: "-20px"
       }}
       variants={motionVariant}
     >
