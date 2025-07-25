@@ -187,8 +187,7 @@ const AdminDashboard = () => {
       const isDemo = localStorage.getItem('admin_authenticated') === 'true';
       
       if (isDemo && !user) {
-        // For demo authentication, create mock users based on the profiles we can see in the database
-        // Since RLS policies block direct access, we'll create representative demo data
+        // For demo authentication, create mock users
         console.log('Using demo authentication - creating mock user data');
         
         const mockUsers = [
@@ -199,7 +198,8 @@ const AdminDashboard = () => {
             profiles: {
               dorm: 'Bergwall Hall',
               wing: '3rd Bergwall',
-              status: 'active'
+              status: 'active',
+              role: 'user'
             },
             user_roles: [{ role: 'user' }]
           },
@@ -210,7 +210,8 @@ const AdminDashboard = () => {
             profiles: {
               dorm: 'NULL',
               wing: 'NULL',
-              status: 'active'
+              status: 'active',
+              role: 'admin'
             },
             user_roles: [{ role: 'admin' }]
           }
@@ -221,149 +222,58 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Try admin.listUsers for real authentication
-      const { data, error } = await supabase.auth.admin.listUsers();
-      
-      if (error) {
-        // If admin.listUsers fails, try direct profile queries (for real admin users)
-        console.warn('Admin listUsers failed, using fallback method:', error.message);
-        
-        try {
-          const { data: profilesData, error: profilesError } = await supabase
-            .from('profiles')
-            .select('user_id, email, dorm, wing, status');
-
-          const { data: rolesData, error: rolesError } = await supabase
-            .from('user_roles')
-            .select('user_id, role');
-
-          if (profilesError) {
-            console.error('Profiles query failed:', profilesError);
-            // If this fails due to RLS, fall back to demo data for demo users
-            if (isDemo) {
-              const mockUsers = [
-                {
-                  id: 'demo-user-1',
-                  email: 'student@taylor.edu',
-                  created_at: new Date().toISOString(),
-                  profiles: {
-                    dorm: 'Demo Dorm',
-                    wing: 'Demo Wing',
-                    status: 'active'
-                  },
-                  user_roles: [{ role: 'user' }]
-                }
-              ];
-              setUsers(mockUsers);
-              setPendingUsers([]);
-              return;
-            }
-            throw profilesError;
-          }
-
-          if (rolesError) throw rolesError;
-
-          const enrichedUsers = profilesData?.map(profile => {
-            const roles = rolesData?.filter(r => r.user_id === profile.user_id) || [];
-            
-            // Normalize status - treat null, undefined, empty string, or 'NULL' as 'active'
-            let normalizedStatus = profile.status;
-            if (!normalizedStatus || normalizedStatus === '' || normalizedStatus === 'NULL' || normalizedStatus === 'null') {
-              normalizedStatus = 'active';
-            }
-            
-            return {
-              id: profile.user_id,
-              email: profile.email || '',
-              created_at: new Date().toISOString(),
-              profiles: {
-                dorm: profile.dorm || '',
-                wing: profile.wing || '',
-                status: normalizedStatus
-              },
-              user_roles: roles.map(r => ({ role: r.role }))
-            };
-          }) || [];
-
-          // More inclusive filtering - show users that are 'active' or don't have a status set
-          const activeUsers = enrichedUsers.filter(user => 
-            user.profiles.status === 'active' || 
-            !user.profiles.status || 
-            user.profiles.status === '' ||
-            user.profiles.status === 'NULL' ||
-            user.profiles.status === 'null'
-          );
-          
-          const pendingUsers = enrichedUsers.filter(user => user.profiles.status === 'pending');
-
-          setUsers(activeUsers);
-          setPendingUsers(pendingUsers);
-          return;
-        } catch (fallbackError) {
-          console.error('Fallback query also failed:', fallbackError);
-          if (isDemo) {
-            // Provide demo data if all else fails
-            const mockUsers = [
-              {
-                id: 'demo-user-1',
-                email: 'demo@taylor.edu',
-                created_at: new Date().toISOString(),
-                profiles: {
-                  dorm: 'Demo Dorm',
-                  wing: 'Demo Wing',
-                  status: 'active'
-                },
-                user_roles: [{ role: 'user' }]
-              }
-            ];
-            setUsers(mockUsers);
-            setPendingUsers([]);
-            return;
-          }
-          throw fallbackError;
-        }
-      }
-
-      // Success path with admin.listUsers
-      const userIds = data.users.map(u => u.id);
-      
+      // Simplified approach: Query profiles table directly (now contains role information)
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('user_id, email, dorm, wing, status')
-        .in('user_id', userIds);
+        .select('user_id, email, dorm, wing, status, role');
 
-      const { data: rolesData, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('user_id, role')
-        .in('user_id', userIds);
+      if (profilesError) {
+        console.error('Profiles query failed:', profilesError);
+        if (isDemo) {
+          // Fallback demo data
+          const mockUsers = [
+            {
+              id: 'demo-user-1',
+              email: 'demo@taylor.edu',
+              created_at: new Date().toISOString(),
+              profiles: {
+                dorm: 'Demo Dorm',
+                wing: 'Demo Wing',
+                status: 'active',
+                role: 'user'
+              },
+              user_roles: [{ role: 'user' }]
+            }
+          ];
+          setUsers(mockUsers);
+          setPendingUsers([]);
+          return;
+        }
+        throw profilesError;
+      }
 
-      if (profilesError) throw profilesError;
-      if (rolesError) throw rolesError;
-
-      const enrichedUsers = data.users.map(authUser => {
-        const profile = profilesData?.find(p => p.user_id === authUser.id);
-        const roles = rolesData?.filter(r => r.user_id === authUser.id) || [];
-        
+      const enrichedUsers = profilesData?.map(profile => {
         // Normalize status - treat null, undefined, empty string, or 'NULL' as 'active'
-        let normalizedStatus = profile?.status;
+        let normalizedStatus = profile.status;
         if (!normalizedStatus || normalizedStatus === '' || normalizedStatus === 'NULL' || normalizedStatus === 'null') {
           normalizedStatus = 'active';
         }
         
         return {
-          id: authUser.id,
-          email: authUser.email || '',
-          created_at: authUser.created_at,
+          id: profile.user_id,
+          email: profile.email || '',
+          created_at: new Date().toISOString(),
           profiles: {
-            dorm: profile?.dorm || '',
-            wing: profile?.wing || '',
-            status: normalizedStatus
+            dorm: profile.dorm || '',
+            wing: profile.wing || '',
+            status: normalizedStatus,
+            role: profile.role || 'user'
           },
-          user_roles: roles.map(r => ({ role: r.role }))
+          user_roles: [{ role: profile.role || 'user' }]
         };
-      }).filter(user => user.profiles);
+      }) || [];
 
-      // More inclusive filtering - show users that are 'active' or don't have a status set
+      // Filter users by status
       const activeUsers = enrichedUsers.filter(user => 
         user.profiles.status === 'active' || 
         !user.profiles.status || 
@@ -484,8 +394,9 @@ const AdminDashboard = () => {
 
   const handleUserRoleChange = async (userId: string, newRole: 'admin' | 'pa' | 'user') => {
     try {
+      // Update role in profiles table - triggers will sync with user_roles table
       const { error } = await supabase
-        .from('user_roles')
+        .from('profiles')
         .update({ role: newRole })
         .eq('user_id', userId);
 
@@ -783,7 +694,7 @@ const AdminDashboard = () => {
       email: user.email,
       dorm: user.profiles.dorm,
       wing: user.profiles.wing,
-      role: user.user_roles[0]?.role as 'admin' | 'pa' | 'user' || 'user'
+              role: user.profiles.role as 'admin' | 'pa' | 'user' || 'user'
     });
     setIsEditUserModalOpen(true);
   };
@@ -1020,13 +931,13 @@ const AdminDashboard = () => {
                               <TableCell>{user.email}</TableCell>
                               <TableCell>{user.profiles.dorm} - {user.profiles.wing}</TableCell>
                               <TableCell>
-                                <Badge variant={user.user_roles[0]?.role === 'admin' ? 'destructive' : 'secondary'}>
-                                  {user.user_roles[0]?.role || 'user'}
+                                <Badge variant={user.profiles.role === 'admin' ? 'destructive' : 'secondary'}>
+                                  {user.profiles.role || 'user'}
                                 </Badge>
                               </TableCell>
                               <TableCell className="space-x-2">
                                 <Select
-                                  value={user.user_roles[0]?.role || 'user'}
+                                  value={user.profiles.role || 'user'}
                                   onValueChange={(value: 'admin' | 'pa' | 'user') => handleUserRoleChange(user.id, value)}
                                 >
                                   <SelectTrigger className="w-24">
@@ -1080,14 +991,14 @@ const AdminDashboard = () => {
                             
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-medium">Role:</span>
-                              <Badge variant={user.user_roles[0]?.role === 'admin' ? 'destructive' : 'secondary'}>
-                                {user.user_roles[0]?.role || 'user'}
+                              <Badge variant={user.profiles.role === 'admin' ? 'destructive' : 'secondary'}>
+                                {user.profiles.role || 'user'}
                               </Badge>
                             </div>
 
                             <div className="space-y-2">
                               <Select
-                                value={user.user_roles[0]?.role || 'user'}
+                                value={user.profiles.role || 'user'}
                                 onValueChange={(value: 'admin' | 'pa' | 'user') => handleUserRoleChange(user.id, value)}
                               >
                                 <SelectTrigger className="w-full">
