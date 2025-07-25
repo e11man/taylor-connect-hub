@@ -241,7 +241,6 @@ export type Database = {
           dorm: string | null
           email: string
           id: string
-          role?: Database["public"]["Enums"]["user_role"]
           status: string
           updated_at: string
           user_id: string
@@ -252,7 +251,6 @@ export type Database = {
           dorm?: string | null
           email: string
           id?: string
-          role?: Database["public"]["Enums"]["user_role"]
           status?: string
           updated_at?: string
           user_id: string
@@ -263,7 +261,6 @@ export type Database = {
           dorm?: string | null
           email?: string
           id?: string
-          role?: Database["public"]["Enums"]["user_role"]
           status?: string
           updated_at?: string
           user_id?: string
@@ -329,6 +326,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_is_admin: {
+        Args: Record<PropertyKey, never>
+        Returns: boolean
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean

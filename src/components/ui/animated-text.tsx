@@ -28,12 +28,12 @@ const AnimatedText: React.FC<AnimatedTextProps> = ({
       case 'fade':
         return {
           hidden: { opacity: 0 },
-          visible: { opacity: 1, transition: { ...baseTransition, ease: [0.4, 0, 0.2, 1] } }
+          visible: { opacity: 1, transition: baseTransition }
         };
       case 'typewriter':
         return {
           hidden: { opacity: 0, width: 0 },
-          visible: { opacity: 1, width: "auto", transition: { ...baseTransition, duration: 0.8, ease: [0.4, 0, 0.2, 1] } }
+          visible: { opacity: 1, width: "auto", transition: { ...baseTransition, duration: 0.8 } }
         };
       case 'blur':
         return {

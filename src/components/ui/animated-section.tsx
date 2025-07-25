@@ -38,7 +38,7 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
       case 'fade':
         return {
           hidden: { opacity: 0 },
-          visible: { opacity: 1, transition: { ...baseTransition, ease: [0.4, 0, 0.2, 1] } }
+          visible: { opacity: 1, transition: baseTransition }
         };
       case 'scale':
         return {
