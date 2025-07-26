@@ -152,17 +152,17 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] to-white">
+    <div className="min-h-screen bg-gradient-to-br from-background to-muted">
       <Header />
       
       <div className="flex items-center justify-center min-h-[80vh] px-4 py-12">
-        <Card className="w-full max-w-md shadow-lg">
+        <Card className="w-full max-w-md shadow-lg border-border">
           <CardHeader className="text-center space-y-4">
-            <div className="mx-auto w-16 h-16 bg-[#00AFCE] rounded-full flex items-center justify-center">
-              <Shield className="w-8 h-8 text-white" />
+            <div className="mx-auto w-16 h-16 bg-secondary rounded-full flex items-center justify-center">
+              <Shield className="w-8 h-8 text-secondary-foreground" />
             </div>
             <div>
-              <CardTitle className="text-2xl font-bold text-gray-900">Admin Console</CardTitle>
+              <CardTitle className="text-2xl font-bold text-foreground">Admin Console</CardTitle>
               <p className="text-muted-foreground mt-2">Sign in to access the admin dashboard</p>
             </div>
           </CardHeader>
@@ -208,7 +208,7 @@ const AdminLogin = () => {
               
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-[#00AFCE] hover:bg-[#0099B8] text-white font-semibold" 
+                className="w-full h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold" 
                 disabled={loading}
               >
                 {loading ? (
@@ -222,11 +222,11 @@ const AdminLogin = () => {
               </Button>
               
               <div className="text-center pt-4">
-                <Button
+                  <Button
                   type="button"
                   variant="link"
                   onClick={() => navigate('/')}
-                  className="text-sm text-muted-foreground hover:text-[#00AFCE]"
+                  className="text-sm text-muted-foreground hover:text-secondary"
                 >
                   Back to Home
                 </Button>

@@ -44,7 +44,8 @@ const App = () => (
               <Route path="/organization-login" element={<OrganizationLogin />} />
               <Route path="/organization-register" element={<OrganizationRegister />} />
               <Route path="/organization-dashboard" element={<OrganizationDashboard />} />
-              <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/admin" element={<AdminLogin />} />
+              <Route path="/admin/login" element={<AdminLogin />} />
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/test" element={<TestDatabase />} />
               <Route path="/reset-password" element={<ResetPassword />} />
