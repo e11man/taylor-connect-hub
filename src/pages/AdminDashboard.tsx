@@ -57,6 +57,7 @@ interface User {
     dorm: string | null;
     wing: string | null;
     status: string;
+    profile_id?: string; // Added for profile_id
   };
   user_roles?: {
     role: UserRole;
@@ -106,6 +107,7 @@ const AdminDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [activeTab, setActiveTab] = useState("users");
+  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
   
   // Search and filter states
   const [userSearchTerm, setUserSearchTerm] = useState("");
@@ -234,6 +236,8 @@ const AdminDashboard = () => {
 
   const fetchUsers = async () => {
     try {
+      console.log('Starting fetchUsers...');
+      
       // FIX: Removed supabase.auth.admin.listUsers() which requires service role key
       // Instead, we query the profiles table directly which the anon key can access
       // This prevents the "Database error querying schema" error
@@ -244,6 +248,8 @@ const AdminDashboard = () => {
         .select('*')
         .order('created_at', { ascending: false });
       
+      console.log('Profiles query result:', { profiles, profilesError });
+      
       if (profilesError) {
         console.error('Error fetching profiles:', profilesError);
         throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
@@ -253,6 +259,8 @@ const AdminDashboard = () => {
       const { data: roles, error: rolesError } = await supabase
         .from('user_roles')
         .select('*');
+      
+      console.log('Roles query result:', { roles, rolesError });
       
       if (rolesError) {
         console.error('Error fetching roles:', rolesError);
@@ -270,13 +278,16 @@ const AdminDashboard = () => {
           profiles: {
             dorm: profile.dorm,
             wing: profile.wing,
-            status: profile.status || 'active'
+            status: profile.status || 'active',
+            profile_id: profile.id // Keep track of profile id for updates
           },
           user_roles: role ? [{
             role: role.role as UserRole
           }] : []
         };
       });
+
+      console.log('Combined users:', combinedUsers);
 
       // Separate active and pending users
       const activeUsers = combinedUsers.filter(u => 
@@ -285,6 +296,8 @@ const AdminDashboard = () => {
       const pendingUsersList = combinedUsers.filter(u => 
         u.profiles?.status === 'pending'
       );
+
+      console.log(`Found ${activeUsers.length} active users and ${pendingUsersList.length} pending users`);
 
       setUsers(activeUsers);
       setPendingUsers(pendingUsersList);
@@ -826,19 +839,32 @@ const AdminDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex gap-4 items-center">
-                      <div className="relative flex-1 max-w-sm">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Search by email, dorm, or wing..."
-                          value={userSearchTerm}
-                          onChange={(e) => setUserSearchTerm(e.target.value)}
-                          className="pl-10"
-                        />
+                    <div className="flex gap-4 items-center justify-between">
+                      <div className="flex gap-2 items-center flex-1">
+                        <div className="relative flex-1 max-w-sm">
+                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                          <Input
+                            placeholder="Search by email, dorm, or wing..."
+                            value={userSearchTerm}
+                            onChange={(e) => setUserSearchTerm(e.target.value)}
+                            className="pl-10"
+                          />
+                        </div>
+                        <Badge variant="secondary" className="px-3 py-1">
+                          {filteredUsers.length} users
+                        </Badge>
                       </div>
-                      <Badge variant="secondary" className="px-3 py-1">
-                        {filteredUsers.length} users
-                      </Badge>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fetchUsers()}
+                        className="gap-2"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refresh
+                      </Button>
                     </div>
 
                     {filteredUsers.length === 0 ? (
@@ -855,25 +881,32 @@ const AdminDashboard = () => {
                           <Card key={user.id} className="hover:shadow-md transition-shadow">
                             <CardContent className="p-6">
                               <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 flex-1">
                                   <Avatar>
                                     <AvatarFallback className="bg-[#00AFCE] text-white">
                                       {user.email.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                   </Avatar>
-                                  <div>
+                                  <div className="flex-1">
                                     <p className="font-semibold">{user.email}</p>
                                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
                                       {user.profiles?.dorm && (
                                         <span className="flex items-center gap-1">
                                           <Building className="w-3 h-3" />
-                                          {user.profiles.dorm} {user.profiles.wing && `- ${user.profiles.wing}`}
+                                          {user.profiles.dorm} {user.profiles.wing && `- Wing ${user.profiles.wing}`}
                                         </span>
                                       )}
                                       <span className="flex items-center gap-1">
                                         <Clock className="w-3 h-3" />
                                         Joined {format(new Date(user.created_at), 'MMM d, yyyy')}
                                       </span>
+                                      <Badge 
+                                        variant={user.profiles?.status === 'active' ? 'default' : 
+                                                user.profiles?.status === 'pending' ? 'secondary' : 'destructive'} 
+                                        className="ml-2"
+                                      >
+                                        {user.profiles?.status || 'active'}
+                                      </Badge>
                                     </div>
                                   </div>
                                 </div>
@@ -1277,39 +1310,122 @@ const AdminDashboard = () => {
 
       {/* Edit User Dialog */}
       <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
             <DialogDescription>
-              Update user information
+              Update user information and profile details
             </DialogDescription>
           </DialogHeader>
           {editingUser && (
-            <div className="space-y-4">
-              <div>
-                <Label>Email</Label>
-                <Input value={editingUser.email} disabled />
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              const formData = new FormData(e.currentTarget);
+              const dorm = formData.get('dorm') as string;
+              const wing = formData.get('wing') as string;
+              const status = formData.get('status') as string;
+              
+              try {
+                // Update profile information
+                const { error: profileError } = await supabase
+                  .from('profiles')
+                  .update({
+                    dorm: dorm || null,
+                    wing: wing || null,
+                    status: status,
+                    updated_at: new Date().toISOString()
+                  })
+                  .eq('user_id', editingUser.id);
+
+                if (profileError) throw profileError;
+
+                toast({
+                  title: "User updated! ✨",
+                  description: "Profile information has been updated successfully.",
+                });
+
+                await fetchUsers();
+                setEditingUser(null);
+              } catch (error) {
+                console.error('Error updating user:', error);
+                toast({
+                  title: "Error",
+                  description: "Failed to update user profile.",
+                  variant: "destructive",
+                });
+              }
+            }}>
+              <div className="space-y-4">
+                <div>
+                  <Label>Email</Label>
+                  <Input value={editingUser.email} disabled />
+                </div>
+                
+                <div>
+                  <Label>Role</Label>
+                  <Select
+                    value={editingUser.user_roles?.[0]?.role || 'user'}
+                    onValueChange={(value: UserRole) => {
+                      updateUserRole(editingUser.id, value);
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">User</SelectItem>
+                      <SelectItem value="pa">PA</SelectItem>
+                      <SelectItem value="admin">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Status</Label>
+                  <Select name="status" defaultValue={editingUser.profiles?.status || 'active'}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="blocked">Blocked</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label>Dorm</Label>
+                  <Input 
+                    name="dorm" 
+                    placeholder="Enter dorm name" 
+                    defaultValue={editingUser.profiles?.dorm || ''} 
+                  />
+                </div>
+
+                <div>
+                  <Label>Wing</Label>
+                  <Input 
+                    name="wing" 
+                    placeholder="Enter wing name" 
+                    defaultValue={editingUser.profiles?.wing || ''} 
+                  />
+                </div>
+
+                <div className="text-xs text-muted-foreground">
+                  Created: {format(new Date(editingUser.created_at), 'MMM d, yyyy h:mm a')}
+                </div>
               </div>
-              <div>
-                <Label>Role</Label>
-                <Select
-                  value={editingUser.user_roles?.[0]?.role || 'user'}
-                  onValueChange={(value: UserRole) => {
-                    updateUserRole(editingUser.id, value);
-                    setEditingUser(null);
-                  }}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="pa">PA</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
+
+              <DialogFooter className="mt-6">
+                <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit">
+                  Save Changes
+                </Button>
+              </DialogFooter>
+            </form>
           )}
         </DialogContent>
       </Dialog>
