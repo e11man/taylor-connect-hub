@@ -128,13 +128,8 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    // TEMPORARILY BYPASSING AUTH FOR TESTING
-    // checkAdminAccess();
-    
-    // Directly set as admin and fetch data
-    setIsAdmin(true);
-    fetchAllData();
-  }, []); // Removed user dependency for testing
+    checkAdminAccess();
+  }, [user]);
 
   useEffect(() => {
     if (isAdmin) {
