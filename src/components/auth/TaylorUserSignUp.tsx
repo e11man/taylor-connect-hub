@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getEmailConfirmUrl } from "@/utils/config";
 import { dormAndFloorData } from "@/utils/dormData";
+import { OTPVerification } from "./OTPVerification";
 
 
 
@@ -24,6 +25,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
   const [isTaylorUser, setIsTaylorUser] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [showOTPVerification, setShowOTPVerification] = useState(false);
 
   useEffect(() => {
     if (email.endsWith('@taylor.edu')) {
@@ -65,6 +67,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         options: {
           emailRedirectTo: redirectUrl,
           data: {
+            user_type: isTaylorUser ? 'student' : 'external',
             dorm: selectedDorm,
             wing: selectedFloor,
           }
@@ -79,10 +82,10 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         });
       } else {
         toast({
-          title: "Success!",
-          description: "Please check your email to confirm your account.",
+          title: "Verification Code Sent! 📧",
+          description: "Please check your email for a 6-digit verification code.",
         });
-        onClose?.();
+        setShowOTPVerification(true);
       }
     } catch (error) {
       toast({
@@ -96,11 +99,34 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
   const dorms = Object.keys(dormAndFloorData);
   const floors = selectedDorm ? dormAndFloorData[selectedDorm as keyof typeof dormAndFloorData] : [];
 
+  const handleVerificationComplete = () => {
+    setShowOTPVerification(false);
+    onClose?.();
+  };
+
+  const handleBackToSignUp = () => {
+    setShowOTPVerification(false);
+  };
+
+  if (showOTPVerification) {
+    return (
+      <OTPVerification 
+        email={email}
+        onVerificationComplete={handleVerificationComplete}
+        onBack={handleBackToSignUp}
+      />
+    );
+  }
+
   return (
     <div className="w-full max-w-sm mx-auto">
       <div className="text-center space-y-2 mb-6">
         <h2 className="text-2xl font-bold text-primary">Create Account</h2>
-        <p className="text-muted-foreground text-sm">Sign up to connect with Taylor University community.</p>
+        <p className="text-muted-foreground text-sm">
+          {isTaylorUser 
+            ? "Sign up to connect with Taylor University community." 
+            : "External users will be reviewed before approval."}
+        </p>
       </div>
       
       <div className="space-y-4">
@@ -157,42 +183,57 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
           <p className="text-destructive text-sm">Passwords do not match</p>
         )}
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Residence Hall</label>
-            <Select onValueChange={setSelectedDorm} value={selectedDorm}>
-              <SelectTrigger className="w-full h-12 bg-background border-input">
-                <SelectValue placeholder="Select Your Dorm" />
-              </SelectTrigger>
-              <SelectContent className="max-h-60 bg-background border-input z-50">
-                {dorms.map((dorm) => (
-                  <SelectItem key={dorm} value={dorm} className="cursor-pointer hover:bg-accent">{dorm}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+        {isTaylorUser && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Residence Hall</label>
+              <Select onValueChange={setSelectedDorm} value={selectedDorm}>
+                <SelectTrigger className="w-full h-12 bg-background border-input">
+                  <SelectValue placeholder="Select Your Dorm" />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 bg-background border-input z-50">
+                  {dorms.map((dorm) => (
+                    <SelectItem key={dorm} value={dorm} className="cursor-pointer hover:bg-accent">{dorm}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-foreground">Floor/Wing</label>
-            <Select onValueChange={setSelectedFloor} value={selectedFloor} disabled={!selectedDorm}>
-              <SelectTrigger className={`w-full h-12 bg-background border-input ${
-                !selectedDorm ? 'opacity-50 cursor-not-allowed' : ''
-              }`}>
-                <SelectValue placeholder={selectedDorm ? "Select Your Floor" : "Select dorm first"} />
-              </SelectTrigger>
-              <SelectContent className="max-h-60 bg-background border-input z-50">
-                {floors.map((floor) => (
-                  <SelectItem key={floor} value={floor} className="cursor-pointer hover:bg-accent">{floor}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Floor/Wing</label>
+              <Select onValueChange={setSelectedFloor} value={selectedFloor} disabled={!selectedDorm}>
+                <SelectTrigger className={`w-full h-12 bg-background border-input ${
+                  !selectedDorm ? 'opacity-50 cursor-not-allowed' : ''
+                }`}>
+                  <SelectValue placeholder={selectedDorm ? "Select Your Floor" : "Select dorm first"} />
+                </SelectTrigger>
+                <SelectContent className="max-h-60 bg-background border-input z-50">
+                  {floors.map((floor) => (
+                    <SelectItem key={floor} value={floor} className="cursor-pointer hover:bg-accent">{floor}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-        </div>
+        )}
+
+        {!isTaylorUser && (
+          <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-sm text-yellow-800">
+              <strong>Note:</strong> External accounts require admin approval before access is granted.
+            </p>
+          </div>
+        )}
 
         <Button 
           onClick={handleSignUp} 
           className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-          disabled={password !== confirmPassword || !password || !confirmPassword}
+          disabled={
+            password !== confirmPassword || 
+            !password || 
+            !confirmPassword || 
+            (isTaylorUser && (!selectedDorm || !selectedFloor))
+          }
         >
           Create Account
         </Button>
