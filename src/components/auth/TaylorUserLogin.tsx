@@ -21,23 +21,53 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
 
   const handleLogin = async () => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        toast({
-          title: "Login Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        if (error.message.includes('Email not confirmed')) {
+          toast({
+            title: "Email Not Verified",
+            description: "Please check your email and verify your account with the 6-digit code before signing in.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Invalid login credentials')) {
+          toast({
+            title: "Invalid Credentials",
+            description: "Please check your email and password.",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Login Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
       } else {
+        // Check if user account is pending approval
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('user_id', data.user.id)
+          .single();
+
+        if (profile?.status === 'pending') {
+          await supabase.auth.signOut();
+          toast({
+            title: "Account Pending",
+            description: "Your account is awaiting admin approval. Please contact support.",
+            variant: "destructive",
+          });
+          return;
+        }
+
         toast({
-          title: "Success!",
-          description: "You have been logged in successfully.",
+          title: "Welcome back! 👋",
+          description: "You have successfully logged in.",
         });
-        // Auto-close the modal after successful login
         onClose?.();
       }
     } catch (error) {
