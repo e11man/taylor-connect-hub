@@ -31,6 +31,10 @@ const fallbackContent: ContentCache = {
 let isContentLoaded = false;
 let contentLoadingPromise: Promise<void> | null = null;
 
+// Global real-time subscription
+let globalSubscription: any = null;
+const subscribedComponents = new Set<() => void>();
+
 // Load all content into cache
 const loadContent = async (languageCode: string = 'en'): Promise<void> => {
   if (contentLoadingPromise) {
@@ -82,6 +86,54 @@ const getContent = (page: string, section: string, key: string, fallback?: strin
   return fallback || key.replace(/[_-]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 };
 
+// Global real-time subscription manager
+const setupGlobalSubscription = () => {
+  if (globalSubscription) return;
+
+  globalSubscription = supabase
+    .channel('global-content-changes')
+    .on(
+      'postgres_changes',
+      {
+        event: '*',
+        schema: 'public',
+        table: 'content'
+      },
+      (payload) => {
+        console.log('Content change detected:', payload);
+        
+        if (payload.eventType === 'DELETE') {
+          const oldRecord = payload.old as ContentItem;
+          const cacheKey = `${oldRecord.page}.${oldRecord.section}.${oldRecord.key}`;
+          delete contentCache[cacheKey];
+        } else {
+          const record = payload.new as ContentItem;
+          const cacheKey = `${record.page}.${record.section}.${record.key}`;
+          contentCache[cacheKey] = record.value;
+        }
+        
+        // Notify all subscribed components
+        subscribedComponents.forEach(callback => callback());
+      }
+    )
+    .subscribe();
+};
+
+const subscribeToContentChanges = (callback: () => void) => {
+  subscribedComponents.add(callback);
+  setupGlobalSubscription();
+  
+  return () => {
+    subscribedComponents.delete(callback);
+    
+    // Clean up global subscription if no components are subscribed
+    if (subscribedComponents.size === 0 && globalSubscription) {
+      supabase.removeChannel(globalSubscription);
+      globalSubscription = null;
+    }
+  };
+};
+
 // Hook for getting content
 export const useContent = (page: string, section: string, key: string, fallback?: string) => {
   const [content, setContent] = useState<string>(() => 
@@ -102,44 +154,34 @@ export const useContent = (page: string, section: string, key: string, fallback?
 
     initializeContent();
 
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('content-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'content'
-        },
-        (payload) => {
-          if (payload.eventType === 'DELETE') {
-            const oldRecord = payload.old as ContentItem;
-            const cacheKey = `${oldRecord.page}.${oldRecord.section}.${oldRecord.key}`;
-            delete contentCache[cacheKey];
-          } else {
-            const record = payload.new as ContentItem;
-            const cacheKey = `${record.page}.${record.section}.${record.key}`;
-            contentCache[cacheKey] = record.value;
-          }
-          
-          // Update content if it matches current hook
-          setContent(getContent(page, section, key, fallback));
-        }
-      )
-      .subscribe();
+    // Subscribe to global content changes
+    const unsubscribe = subscribeToContentChanges(() => {
+      setContent(getContent(page, section, key, fallback));
+    });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return unsubscribe;
   }, [page, section, key, fallback]);
 
   return { content, loading };
 };
 
+// Helper function to get section content
+const getSectionContent = (page: string, section: string): Record<string, string> => {
+  const sectionContent: Record<string, string> = {};
+  Object.entries(contentCache).forEach(([cacheKey, value]) => {
+    if (cacheKey.startsWith(`${page}.${section}.`)) {
+      const key = cacheKey.split('.').slice(2).join('.');
+      sectionContent[key] = value;
+    }
+  });
+  return sectionContent;
+};
+
 // Hook for getting multiple content items
 export const useContentSection = (page: string, section: string) => {
-  const [content, setContent] = useState<Record<string, string>>({});
+  const [content, setContent] = useState<Record<string, string>>(() => 
+    getSectionContent(page, section)
+  );
   const [loading, setLoading] = useState(!isContentLoaded);
 
   useEffect(() => {
@@ -150,48 +192,17 @@ export const useContentSection = (page: string, section: string) => {
         setLoading(false);
       }
       
-      // Filter content for this page/section
-      const sectionContent: Record<string, string> = {};
-      Object.entries(contentCache).forEach(([cacheKey, value]) => {
-        if (cacheKey.startsWith(`${page}.${section}.`)) {
-          const key = cacheKey.split('.').slice(2).join('.');
-          sectionContent[key] = value;
-        }
-      });
-      
-      setContent(sectionContent);
+      setContent(getSectionContent(page, section));
     };
 
     initializeContent();
 
-    // Subscribe to real-time updates
-    const channel = supabase
-      .channel('content-section-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'content',
-          filter: `page=eq.${page}`
-        },
-        () => {
-          // Reload section content
-          const sectionContent: Record<string, string> = {};
-          Object.entries(contentCache).forEach(([cacheKey, value]) => {
-            if (cacheKey.startsWith(`${page}.${section}.`)) {
-              const key = cacheKey.split('.').slice(2).join('.');
-              sectionContent[key] = value;
-            }
-          });
-          setContent(sectionContent);
-        }
-      )
-      .subscribe();
+    // Subscribe to global content changes
+    const unsubscribe = subscribeToContentChanges(() => {
+      setContent(getSectionContent(page, section));
+    });
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return unsubscribe;
   }, [page, section]);
 
   return { content, loading };
@@ -297,6 +308,22 @@ export const useContentAdmin = () => {
     deleteContent,
     getAllContent
   };
+};
+
+// Force reload content cache
+export const reloadContent = async (languageCode: string = 'en'): Promise<void> => {
+  // Reset loading state
+  isContentLoaded = false;
+  contentLoadingPromise = null;
+  
+  // Clear cache
+  Object.keys(contentCache).forEach(key => delete contentCache[key]);
+  
+  // Reload content
+  await loadContent(languageCode);
+  
+  // Notify all subscribed components
+  subscribedComponents.forEach(callback => callback());
 };
 
 // Preload content on app start
