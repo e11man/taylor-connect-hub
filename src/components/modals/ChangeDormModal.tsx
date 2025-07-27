@@ -76,7 +76,7 @@ export const ChangeDormModal = ({
   const { toast } = useToast();
 
   const dorms = Object.keys(dormAndFloorData);
-  const wings = selectedDorm ? dormAndFloorData[selectedDorm as keyof typeof dormAndFloorData] : [];
+  const wings = selectedDorm ? (dormAndFloorData[selectedDorm as keyof typeof dormAndFloorData] || []) : [];
 
   useEffect(() => {
     if (isOpen) {
