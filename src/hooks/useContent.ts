@@ -30,19 +30,35 @@ const fallbackContent: ContentCache = {
 // Content loading state
 let isContentLoaded = false;
 let contentLoadingPromise: Promise<void> | null = null;
+let lastLoadTime = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes cache duration
 
 // Global real-time subscription
 let globalSubscription: any = null;
 const subscribedComponents = new Set<() => void>();
 
+// Check if cache is stale
+const isCacheStale = (): boolean => {
+  return Date.now() - lastLoadTime > CACHE_DURATION;
+};
+
 // Load all content into cache
-const loadContent = async (languageCode: string = 'en'): Promise<void> => {
-  if (contentLoadingPromise) {
+const loadContent = async (languageCode: string = 'en', forceRefresh: boolean = false): Promise<void> => {
+  // If not forcing refresh and cache is still valid, return existing promise or resolve immediately
+  if (!forceRefresh && !isCacheStale() && isContentLoaded) {
+    return Promise.resolve();
+  }
+
+  // If already loading and not forcing refresh, return existing promise
+  if (contentLoadingPromise && !forceRefresh) {
     return contentLoadingPromise;
   }
 
   contentLoadingPromise = (async () => {
     try {
+      console.log('Loading fresh content from Supabase...');
+      const startTime = Date.now();
+      
       const { data, error } = await supabase
         .from('content')
         .select('*')
@@ -53,6 +69,11 @@ const loadContent = async (languageCode: string = 'en'): Promise<void> => {
         return;
       }
 
+      // Clear existing cache if forcing refresh
+      if (forceRefresh) {
+        Object.keys(contentCache).forEach(key => delete contentCache[key]);
+      }
+
       // Populate cache
       data?.forEach((item: ContentItem) => {
         const cacheKey = `${item.page}.${item.section}.${item.key}`;
@@ -60,6 +81,22 @@ const loadContent = async (languageCode: string = 'en'): Promise<void> => {
       });
 
       isContentLoaded = true;
+      lastLoadTime = Date.now();
+      
+      const loadTime = Date.now() - startTime;
+      console.log(`✅ Content loaded: ${data?.length || 0} items in ${loadTime}ms`);
+      
+      // Debug: Log hero content specifically
+      const heroContent = Object.entries(contentCache)
+        .filter(([key]) => key.startsWith('home.hero.'))
+        .reduce((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {} as Record<string, string>);
+      
+      if (Object.keys(heroContent).length > 0) {
+        console.log('🏠 Hero content loaded:', heroContent);
+      }
     } catch (error) {
       console.error('Error loading content:', error);
     }
@@ -77,6 +114,9 @@ const getContent = (page: string, section: string, key: string, fallback?: strin
     return contentCache[cacheKey];
   }
   
+  // Log only when content is not found in cache
+  console.warn(`Content not found in cache: ${cacheKey}, using fallback`);
+  
   // Return fallback content if available
   if (fallbackContent[cacheKey]) {
     return fallbackContent[cacheKey];
@@ -90,6 +130,8 @@ const getContent = (page: string, section: string, key: string, fallback?: strin
 const setupGlobalSubscription = () => {
   if (globalSubscription) return;
 
+  console.log('Setting up real-time content subscription...');
+  
   globalSubscription = supabase
     .channel('global-content-changes')
     .on(
@@ -104,19 +146,37 @@ const setupGlobalSubscription = () => {
         
         if (payload.eventType === 'DELETE') {
           const oldRecord = payload.old as ContentItem;
-          const cacheKey = `${oldRecord.page}.${oldRecord.section}.${oldRecord.key}`;
-          delete contentCache[cacheKey];
-        } else {
+          if (oldRecord) {
+            const cacheKey = `${oldRecord.page}.${oldRecord.section}.${oldRecord.key}`;
+            delete contentCache[cacheKey];
+          }
+        } else if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
           const record = payload.new as ContentItem;
-          const cacheKey = `${record.page}.${record.section}.${record.key}`;
-          contentCache[cacheKey] = record.value;
+          if (record) {
+            const cacheKey = `${record.page}.${record.section}.${record.key}`;
+            contentCache[cacheKey] = record.value;
+            
+            // Update last load time to prevent unnecessary refreshes
+            lastLoadTime = Date.now();
+          }
         }
         
-        // Notify all subscribed components
-        subscribedComponents.forEach(callback => callback());
+        // Notify all subscribed components immediately
+        subscribedComponents.forEach(callback => {
+          try {
+            callback();
+          } catch (error) {
+            console.error('Error in content change callback:', error);
+          }
+        });
       }
     )
-    .subscribe();
+    .subscribe((status) => {
+      console.log('Subscription status:', status);
+      if (status === 'SUBSCRIBED') {
+        console.log('Successfully subscribed to content changes');
+      }
+    });
 };
 
 const subscribeToContentChanges = (callback: () => void) => {
@@ -136,31 +196,54 @@ const subscribeToContentChanges = (callback: () => void) => {
 
 // Hook for getting content
 export const useContent = (page: string, section: string, key: string, fallback?: string) => {
-  const [content, setContent] = useState<string>(() => 
-    getContent(page, section, key, fallback)
-  );
-  const [loading, setLoading] = useState(!isContentLoaded);
+  const [content, setContent] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const initializeContent = async () => {
-      if (!isContentLoaded) {
-        setLoading(true);
-        await loadContent();
-        setLoading(false);
+      try {
+        // Always check for fresh content on component mount
+        const shouldRefresh = !isContentLoaded || isCacheStale();
+        
+        if (shouldRefresh && !hasInitialized) {
+          setLoading(true);
+          await loadContent('en', shouldRefresh);
+          setHasInitialized(true);
+        }
+        
+        // Get content after ensuring it's loaded
+        const fetchedContent = getContent(page, section, key, fallback);
+        if (isMounted) {
+          setContent(fetchedContent);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error in useContent:', error);
+        if (isMounted) {
+          setContent(fallback || '');
+          setLoading(false);
+        }
       }
-      
-      setContent(getContent(page, section, key, fallback));
     };
 
     initializeContent();
 
     // Subscribe to global content changes
     const unsubscribe = subscribeToContentChanges(() => {
-      setContent(getContent(page, section, key, fallback));
+      if (isMounted) {
+        const updatedContent = getContent(page, section, key, fallback);
+        setContent(updatedContent);
+      }
     });
 
-    return unsubscribe;
-  }, [page, section, key, fallback]);
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [page, section, key, fallback, hasInitialized]);
 
   return { content, loading };
 };
@@ -186,9 +269,12 @@ export const useContentSection = (page: string, section: string) => {
 
   useEffect(() => {
     const initializeContent = async () => {
-      if (!isContentLoaded) {
+      // Always check for fresh content on component mount
+      const shouldRefresh = !isContentLoaded || isCacheStale();
+      
+      if (shouldRefresh) {
         setLoading(true);
-        await loadContent();
+        await loadContent('en', shouldRefresh);
         setLoading(false);
       }
       
@@ -315,12 +401,13 @@ export const reloadContent = async (languageCode: string = 'en'): Promise<void> 
   // Reset loading state
   isContentLoaded = false;
   contentLoadingPromise = null;
+  lastLoadTime = 0;
   
   // Clear cache
   Object.keys(contentCache).forEach(key => delete contentCache[key]);
   
   // Reload content
-  await loadContent(languageCode);
+  await loadContent(languageCode, true);
   
   // Notify all subscribed components
   subscribedComponents.forEach(callback => callback());
@@ -328,7 +415,28 @@ export const reloadContent = async (languageCode: string = 'en'): Promise<void> 
 
 // Preload content on app start
 export const preloadContent = () => {
-  if (!isContentLoaded && !contentLoadingPromise) {
-    loadContent();
+  // Always load fresh content on app start
+  if (!contentLoadingPromise) {
+    loadContent('en', true);
   }
+  
+  // Add window focus listener to refresh content when tab becomes active
+  const handleFocus = () => {
+    if (isCacheStale()) {
+      loadContent('en', true);
+    }
+  };
+  
+  window.addEventListener('focus', handleFocus);
+  
+  // Return cleanup function
+  return () => {
+    window.removeEventListener('focus', handleFocus);
+  };
+};
+
+// Export function to manually refresh content
+export const refreshContent = async (): Promise<void> => {
+  await loadContent('en', true);
+  subscribedComponents.forEach(callback => callback());
 };

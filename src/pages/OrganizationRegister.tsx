@@ -2,16 +2,19 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Building2, User2, AlignLeft, Globe, Phone, Loader2, Info } from 'lucide-react';
 import PrimaryButton from '../components/buttons/PrimaryButton';
-import { organizationRegisterContent } from '../content/organizationRegister';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import UserAuthModal from '@/components/modals/UserAuthModal';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { getEmailConfirmUrl } from '@/utils/config';
+import { useContentSection } from '@/hooks/useContent';
+import { DynamicText } from '@/components/content/DynamicText';
 
 const OrganizationRegister: React.FC = () => {
-  const { title, subtitle, form, signInLink } = organizationRegisterContent;
+  const { content: pageContent, loading: contentLoading } = useContentSection('organizationRegister', 'main');
+  const { content: formContent } = useContentSection('organizationRegister', 'form');
+  
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [formData, setFormData] = useState({
     organizationName: '',
@@ -134,15 +137,36 @@ const OrganizationRegister: React.FC = () => {
         <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
         <div>
           <h2 className="mt-6 text-center text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-            {title}
+            <DynamicText 
+              page="organizationRegister" 
+              section="main" 
+              contentKey="title"
+              fallback="Register Your Organization"
+              as="span"
+            />
           </h2>
+          <p className="mt-2 text-center text-sm text-gray-600">
+            <DynamicText 
+              page="organizationRegister" 
+              section="main" 
+              contentKey="subtitle"
+              fallback="Join our community to post volunteer opportunities."
+              as="span"
+            />
+          </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div className="rounded-md shadow-sm -space-y-px flex flex-col gap-6">
             {/* Organization Name */}
             <div>
               <label htmlFor="organizationName" className="block text-sm font-medium text-gray-700 mb-2 font-montserrat">
-                {form.organizationName.label}
+                <DynamicText 
+                  page="organizationRegister" 
+                  section="form" 
+                  contentKey="organizationNameLabel"
+                  fallback="Organization Name"
+                  as="span"
+                />
               </label>
               <div className="relative">
                 <Building2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -157,7 +181,7 @@ const OrganizationRegister: React.FC = () => {
                   className={`w-full pl-10 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
                     errors.organizationName ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={form.organizationName.placeholder}
+                  placeholder={formContent?.organizationNamePlaceholder || "Enter your organization's name"}
                 />
               </div>
               {errors.organizationName && (
@@ -168,7 +192,13 @@ const OrganizationRegister: React.FC = () => {
             {/* Contact Name */}
             <div>
               <label htmlFor="contactName" className="block text-sm font-medium text-gray-700 mb-2 font-montserrat">
-                {form.contactName.label}
+                <DynamicText 
+                  page="organizationRegister" 
+                  section="form" 
+                  contentKey="contactNameLabel"
+                  fallback="Contact Person Name"
+                  as="span"
+                />
               </label>
               <div className="relative">
                 <User2 className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -183,18 +213,24 @@ const OrganizationRegister: React.FC = () => {
                   className={`w-full pl-10 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
                     errors.contactName ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={form.contactName.placeholder}
+                  placeholder={formContent?.contactNamePlaceholder || "Enter contact person's full name"}
                 />
               </div>
               {errors.contactName && (
-                <p className="mt-1 text-sm text-red-600 font-montserrat">{errors.contactName}</p>
+                <p className="mt-2 text-sm text-red-600 font-montserrat">{errors.contactName}</p>
               )}
             </div>
 
             {/* Email Address */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2 font-montserrat">
-                {form.email.label}
+                <DynamicText 
+                  page="organizationRegister" 
+                  section="form" 
+                  contentKey="emailLabel"
+                  fallback="Email"
+                  as="span"
+                />
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -209,18 +245,24 @@ const OrganizationRegister: React.FC = () => {
                   className={`w-full pl-10 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
                     errors.email ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={form.email.placeholder}
+                  placeholder={formContent?.emailPlaceholder || "Enter your organization's email"}
                 />
               </div>
               {errors.email && (
-                <p className="mt-1 text-sm text-red-600 font-montserrat">{errors.email}</p>
+                <p className="mt-2 text-sm text-red-600 font-montserrat">{errors.email}</p>
               )}
             </div>
 
             {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2 font-montserrat">
-                {form.password.label}
+                <DynamicText 
+                  page="organizationRegister" 
+                  section="form" 
+                  contentKey="passwordLabel"
+                  fallback="Password"
+                  as="span"
+                />
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -230,10 +272,10 @@ const OrganizationRegister: React.FC = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
+                  className={`w-full pl-10 pr-12 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
                     errors.password ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={form.password.placeholder}
+                  placeholder={formContent?.passwordPlaceholder || "Create a password"}
                 />
                 <button
                   type="button"
@@ -255,7 +297,13 @@ const OrganizationRegister: React.FC = () => {
             {/* Confirm Password */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2 font-montserrat">
-                {form.confirmPassword.label}
+                <DynamicText 
+                  page="organizationRegister" 
+                  section="form" 
+                  contentKey="confirmPasswordLabel"
+                  fallback="Confirm Password"
+                  as="span"
+                />
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -265,10 +313,10 @@ const OrganizationRegister: React.FC = () => {
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={`w-full pl-10 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
+                  className={`w-full pl-10 pr-12 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
                     errors.confirmPassword ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={form.confirmPassword.placeholder}
+                  placeholder={formContent?.confirmPasswordPlaceholder || "Confirm your password"}
                 />
                 <button
                   type="button"
@@ -290,7 +338,13 @@ const OrganizationRegister: React.FC = () => {
             {/* Organization Description */}
             <div>
               <label htmlFor="organizationDescription" className="block text-sm font-medium text-gray-700 mb-2 font-montserrat">
-                {form.organizationDescription.label}
+                <DynamicText 
+                  page="organizationRegister" 
+                  section="form" 
+                  contentKey="organizationDescriptionLabel"
+                  fallback="Organization Description"
+                  as="span"
+                />
               </label>
               <div className="relative">
                 <AlignLeft className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
@@ -303,7 +357,7 @@ const OrganizationRegister: React.FC = () => {
                   className={`w-full pl-10 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat resize-none ${
                     errors.organizationDescription ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={form.organizationDescription.placeholder}
+                  placeholder={formContent?.organizationDescriptionPlaceholder || "Tell us about your organization (e.g., mission, what you do, target demographics)"}
                 ></textarea>
               </div>
               {errors.organizationDescription && (
@@ -314,7 +368,13 @@ const OrganizationRegister: React.FC = () => {
             {/* Website (Optional) */}
             <div>
               <label htmlFor="website" className="block text-sm font-medium text-gray-700 mb-2 font-montserrat">
-                {form.website.label}
+                <DynamicText 
+                  page="organizationRegister" 
+                  section="form" 
+                  contentKey="websiteLabel"
+                  fallback="Website (Optional)"
+                  as="span"
+                />
               </label>
               <div className="relative">
                 <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -325,7 +385,7 @@ const OrganizationRegister: React.FC = () => {
                   value={formData.website}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat border-gray-200"
-                  placeholder={form.website.placeholder}
+                  placeholder={formContent?.websitePlaceholder || "e.g., https://your-organization.org"}
                 />
               </div>
             </div>
@@ -333,7 +393,13 @@ const OrganizationRegister: React.FC = () => {
             {/* Phone Number (Optional) */}
             <div>
               <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-2 font-montserrat">
-                {form.phoneNumber.label}
+                <DynamicText 
+                  page="organizationRegister" 
+                  section="form" 
+                  contentKey="phoneNumberLabel"
+                  fallback="Phone Number (Optional)"
+                  as="span"
+                />
               </label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -344,7 +410,7 @@ const OrganizationRegister: React.FC = () => {
                   value={formData.phoneNumber}
                   onChange={handleInputChange}
                   className="w-full pl-10 pr-4 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat border-gray-200"
-                  placeholder={form.phoneNumber.placeholder}
+                  placeholder={formContent?.phoneNumberPlaceholder || "e.g., +1 555 123 4567"}
                 />
               </div>
             </div>
@@ -362,14 +428,26 @@ const OrganizationRegister: React.FC = () => {
                 Creating Account...
               </span>
             ) : (
-              form.submitButton
+              <DynamicText 
+                page="organizationRegister" 
+                section="form" 
+                contentKey="submitButton"
+                fallback="Register"
+                as="span"
+              />
             )}
           </PrimaryButton>
 
           {/* Sign In Link */}
           <div className="text-center text-sm mt-4">
             <Link to="/organization-login" className="font-medium text-[#00AFCE] hover:text-[#009ac2] font-montserrat">
-              {signInLink}
+              <DynamicText 
+                page="organizationRegister" 
+                section="main" 
+                contentKey="signInLink"
+                fallback="Already have an account? Sign In"
+                as="span"
+              />
             </Link>
           </div>
           

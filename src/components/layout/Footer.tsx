@@ -1,14 +1,20 @@
 import { Heart } from "lucide-react";
 import AnimatedSection from "@/components/ui/animated-section";
 import { motion } from "framer-motion";
+import { DynamicText } from "@/components/content/DynamicText";
+import { useContentSection } from "@/hooks/useContent";
 
 const Footer = () => {
+  const { content: linksContent } = useContentSection('footer', 'links');
+  const { content: brandContent } = useContentSection('footer', 'brand');
+  const { content: copyrightContent } = useContentSection('footer', 'copyright');
+  
   const footerLinks = [
-    { name: "About", href: "/about" },
-    { name: "Contact", href: "#contact" },
-    { name: "Opportunities", href: "#opportunities" },
-    { name: "Privacy", href: "#" },
-    { name: "Terms", href: "#" }
+    { name: linksContent.about || "About", href: "/about" },
+    { name: linksContent.contact || "Contact", href: "#contact" },
+    { name: linksContent.opportunities || "Opportunities", href: "#opportunities" },
+    { name: linksContent.privacy || "Privacy", href: "#" },
+    { name: linksContent.terms || "Terms", href: "#" }
   ];
 
   return (
@@ -26,7 +32,13 @@ const Footer = () => {
                 <Heart className="w-4 h-4 text-white" />
               </div>
               <span className="text-lg font-montserrat font-bold text-primary">
-                Community Connect
+                <DynamicText 
+                  page="footer" 
+                  section="brand" 
+                  contentKey="name"
+                  fallback="Community Connect"
+                  as="span"
+                />
               </span>
             </motion.div>
 
@@ -34,7 +46,7 @@ const Footer = () => {
             <div className="flex flex-wrap justify-center gap-6">
               {footerLinks.map((link, index) => (
                 <motion.a
-                  key={link.name}
+                  key={link.href}
                   href={link.href}
                   className="text-sm text-muted-foreground hover:text-[#00AFCE] transition-colors duration-300 font-montserrat font-medium"
                   whileHover={{ 
@@ -67,7 +79,13 @@ const Footer = () => {
               }}
               viewport={{ once: false }}
             >
-              © 2024 Community Connect
+              <DynamicText 
+                page="footer" 
+                section="copyright" 
+                contentKey="text"
+                fallback="© 2024 Community Connect"
+                as="span"
+              />
             </motion.p>
           </div>
 
@@ -83,7 +101,13 @@ const Footer = () => {
             viewport={{ once: false }}
           >
             <p className="text-xs text-muted-foreground font-montserrat">
-              In partnership with Taylor University
+              <DynamicText 
+                page="footer" 
+                section="brand" 
+                contentKey="partnership"
+                fallback="In partnership with Taylor University"
+                as="span"
+              />
             </p>
           </motion.div>
         </div>

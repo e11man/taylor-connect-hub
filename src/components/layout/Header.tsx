@@ -6,6 +6,8 @@ import PrimaryButton from "@/components/buttons/PrimaryButton";
 import RequestVolunteersModal from "@/components/modals/RequestVolunteersModal";
 import UserAuthModal from "@/components/modals/UserAuthModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { DynamicText } from "@/components/content/DynamicText";
+import { useContentSection } from "@/hooks/useContent";
 
 const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -13,15 +15,18 @@ const Header = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const { user, signOut } = useAuth();
+  const { content: navContent } = useContentSection('header', 'nav');
+  const { content: brandContent } = useContentSection('header', 'brand');
+  const { content: buttonContent } = useContentSection('header', 'buttons');
 
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   
   const NAV_LINKS = [
-    { name: "Home", href: "/", isRoute: true },
-    { name: "About", href: isHomePage ? "#about" : "/about", isRoute: !isHomePage },
-    { name: "Opportunities", href: isHomePage ? "#opportunities" : "/#opportunities", isRoute: false },
-    { name: "Contact", href: isHomePage ? "#contact" : "/#contact", isRoute: false }
+    { name: navContent.home || "Home", href: "/", isRoute: true },
+    { name: navContent.about || "About", href: isHomePage ? "#about" : "/about", isRoute: !isHomePage },
+    { name: navContent.opportunities || "Opportunities", href: isHomePage ? "#opportunities" : "/#opportunities", isRoute: false },
+    { name: navContent.contact || "Contact", href: isHomePage ? "#contact" : "/#contact", isRoute: false }
   ];
 
   // Lock scroll when mobile nav is open
@@ -140,13 +145,20 @@ const Header = () => {
           tabIndex={isOpen ? 0 : -1}
         >
           <img src={logo} alt="Community Connect Logo" className="h-12 w-auto" />
-          <span className="text-lg font-montserrat">Community Connect</span>
-          
+          <span className="text-lg font-montserrat">
+            <DynamicText 
+              page="header" 
+              section="brand" 
+              contentKey="name"
+              fallback="Community Connect"
+              as="span"
+            />
+          </span>
         </Link>
         {/* Nav links */}
         <ul className="flex flex-col gap-3 mb-10">
           {navLinks.map((link) => (
-            <li key={link.name}>
+            <li key={link.href}>
               {link.isRoute ? (
                 <Link
                   to={link.href}
@@ -185,7 +197,13 @@ const Header = () => {
               }}
               className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
             >
-              Request Volunteers
+              <DynamicText 
+                page="header" 
+                section="buttons" 
+                contentKey="requestVolunteers"
+                fallback="Request Volunteers"
+                as="span"
+              />
             </PrimaryButton>
             <button
               onClick={() => {
@@ -195,7 +213,13 @@ const Header = () => {
               className="w-full flex items-center justify-center gap-2 py-3 px-4 text-base font-semibold bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
             >
               <LogOut className="w-4 h-4" />
-              Sign Out
+              <DynamicText 
+                page="header" 
+                section="buttons" 
+                contentKey="signOut"
+                fallback="Sign Out"
+                as="span"
+              />
             </button>
           </div>
         ) : (
@@ -207,7 +231,13 @@ const Header = () => {
               }}
               className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
             >
-              Log in
+              <DynamicText 
+                page="header" 
+                section="buttons" 
+                contentKey="login"
+                fallback="Log in"
+                as="span"
+              />
             </PrimaryButton>
             <PrimaryButton
               onClick={() => {
@@ -216,14 +246,26 @@ const Header = () => {
               }}
               className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl bg-[#E14F3D] hover:bg-[#C73E2F]"
             >
-              Request Volunteers
+              <DynamicText 
+                page="header" 
+                section="buttons" 
+                contentKey="requestVolunteers"
+                fallback="Request Volunteers"
+                as="span"
+              />
             </PrimaryButton>
           </div>
         )}
         <div className="flex-1" />
         {/* Footer */}
         <div className="mt-10 text-xs text-gray-500 text-center">
-          &copy; {new Date().getFullYear()} Community Connect
+          <DynamicText 
+            page="footer" 
+            section="copyright" 
+            contentKey="text"
+            fallback={`© ${new Date().getFullYear()} Community Connect`}
+            as="span"
+          />
         </div>
       </nav>
     </aside>
@@ -237,14 +279,22 @@ const Header = () => {
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 font-bold text-gray-900 text-lg md:text-xl tracking-tight">
           <img src={logo} alt="Community Connect Logo" className="w-12 h-12 rounded-lg object-contain" />
-          <span className="hidden sm:inline text-base md:text-xl font-montserrat">Community Connect</span>
+          <span className="hidden sm:inline text-base md:text-xl font-montserrat">
+            <DynamicText 
+              page="header" 
+              section="brand" 
+              contentKey="name"
+              fallback="Community Connect"
+              as="span"
+            />
+          </span>
         </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
           <ul className="flex gap-6">
             {NAV_LINKS.map(link => (
-              <li key={link.name}>
+              <li key={link.href}>
                 {link.isRoute ? (
                   <Link
                     to={link.href}
@@ -279,7 +329,13 @@ const Header = () => {
                   onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
                   onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
                 >
-                  Request Volunteers
+                  <DynamicText 
+                    page="header" 
+                    section="buttons" 
+                    contentKey="requestVolunteers"
+                    fallback="Request Volunteers"
+                    as="span"
+                  />
                 </PrimaryButton>
                 <button
                   onClick={signOut}
@@ -295,7 +351,13 @@ const Header = () => {
                   onClick={() => setAuthModalOpen(true)}
                   className="shadow-sm hover:shadow-md whitespace-nowrap"
                 >
-                  Log in
+                  <DynamicText 
+                    page="header" 
+                    section="buttons" 
+                    contentKey="login"
+                    fallback="Log in"
+                    as="span"
+                  />
                 </PrimaryButton>
                 <PrimaryButton
                   onClick={() => setModalOpen(true)}
@@ -304,7 +366,13 @@ const Header = () => {
                   onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
                   onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
                 >
-                  Request Volunteers
+                  <DynamicText 
+                    page="header" 
+                    section="buttons" 
+                    contentKey="requestVolunteers"
+                    fallback="Request Volunteers"
+                    as="span"
+                  />
                 </PrimaryButton>
               </>
             )}
@@ -321,14 +389,26 @@ const Header = () => {
               onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
               onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
             >
-              Request Volunteers
+              <DynamicText 
+                page="header" 
+                section="buttons" 
+                contentKey="requestVolunteers"
+                fallback="Request Volunteers"
+                as="span"
+              />
             </PrimaryButton>
           ) : (
             <PrimaryButton
               onClick={() => setAuthModalOpen(true)}
               className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
             >
-              Log in
+              <DynamicText 
+                page="header" 
+                section="buttons" 
+                contentKey="login"
+                fallback="Log in"
+                as="span"
+              />
             </PrimaryButton>
           )}
           <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
