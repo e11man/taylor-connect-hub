@@ -24,6 +24,8 @@ interface UserEvent {
   event_id: string;
 }
 
+type UserRole = 'pa' | 'admin' | 'user' | '' | null;
+
 const OpportunitiesSection = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
@@ -32,7 +34,8 @@ const OpportunitiesSection = () => {
   const [groupSignupModalOpen, setGroupSignupModalOpen] = useState(false);
   const [viewParticipantsModalOpen, setViewParticipantsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>(null);
+  const [userRoleLoading, setUserRoleLoading] = useState(false);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
   const { user, refreshUserEvents, userEventsRefreshTrigger, eventsRefreshTrigger } = useAuth();
   const { toast } = useToast();
@@ -43,8 +46,67 @@ const OpportunitiesSection = () => {
     if (user) {
       fetchUserEvents();
       fetchUserRole();
+      // Debug: Test different queries
+      debugUserRoleQueries();
     }
   }, [user, userEventsRefreshTrigger, eventsRefreshTrigger]);
+
+  // Temporary debug function
+  const debugUserRoleQueries = async () => {
+    if (!user) return;
+    
+    console.log('=== DEBUG: Testing user_roles queries ===');
+    
+    // Test 1: Get all records from user_roles
+    try {
+      const { data: allRoles, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .limit(5);
+      
+      console.log('All user_roles records (first 5):', allRoles, error);
+    } catch (err) {
+      console.error('Error fetching all roles:', err);
+    }
+    
+    // Test 2: Try to find current user by user_id
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      console.log('Query by user_id:', data, error);
+    } catch (err) {
+      console.error('Error with user_id query:', err);
+    }
+    
+    // Test 3: Try to find current user by id
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('id', user.id);
+      
+      console.log('Query by id:', data, error);
+    } catch (err) {
+      console.error('Error with id query:', err);
+    }
+    
+    // Test 4: Get column info
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .limit(1);
+      
+      if (data && data.length > 0) {
+        console.log('user_roles table columns:', Object.keys(data[0]));
+      }
+    } catch (err) {
+      console.error('Error getting columns:', err);
+    }
+  };
 
   const fetchEvents = async () => {
     try {
@@ -85,22 +147,46 @@ const OpportunitiesSection = () => {
   };
 
   const fetchUserRole = async () => {
-    if (!user) return;
+    if (!user || userRoleLoading || userRole !== null) return;
     
+    setUserRoleLoading(true);
     try {
-      const { data, error } = await supabase
+      console.log('Fetching user role for user:', user.id);
+      
+      // First try with user_id field
+      let { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
-        .single();
+        .maybeSingle();
+
+      // If no data found, try with id field (in case the schema uses uuid as primary key)
+      if (!data && !error) {
+        console.log('No data found with user_id, trying with id field...');
+        const result = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle();
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         console.error('Error fetching user role:', error);
+        setUserRole(''); // Set empty string to indicate role was fetched but not found
+      } else if (data) {
+        console.log('User role fetched:', data.role);
+        setUserRole(data.role?.toLowerCase().trim() || '');
       } else {
-        setUserRole(data?.role || null);
+        console.log('No user role found for user');
+        setUserRole('');
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
+      setUserRole(''); // Set empty string to indicate role was fetched but not found
+    } finally {
+      setUserRoleLoading(false);
     }
   };
 
@@ -134,8 +220,8 @@ const OpportunitiesSection = () => {
       return;
     }
 
-    // Check if user already has 2 commitments
-    if (userEvents.length >= 2) {
+    // Check if user already has 2 commitments (PAs are exempt)
+    if (userEvents.length >= 2 && userRole !== 'pa') {
       toast({
         title: "Maximum commitments reached",
         description: "You can only sign up for 2 opportunities at a time.",
@@ -204,7 +290,15 @@ const OpportunitiesSection = () => {
   return (
     <section className="bg-white section-padding">
       <div className="container-custom">
-
+        {/* Temporary debug info - remove after debugging */}
+        {user && (
+          <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
+            <p>Debug Info:</p>
+            <p>User ID: {user.id}</p>
+            <p>User Role: {userRoleLoading ? 'Loading...' : (userRole || 'Not set')}</p>
+            <p>Role is PA: {userRole === 'pa' ? 'Yes' : 'No'}</p>
+          </div>
+        )}
 
         {/* Opportunities Horizontal Scroll */}
         <div className="mb-12">
@@ -290,29 +384,52 @@ const OpportunitiesSection = () => {
                     </button>
                   )}
 
-                  {user && userRole === 'pa' && !isSignedUp(event.id) && (
-                    <button
-                      onClick={() => handleGroupSignup(event)}
-                      className="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
-                    >
-                      <Users className="w-4 h-4" />
-                      Group
-                    </button>
-                  )}
-                  
-                  {isSignedUp(event.id) ? (
-                    <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-full font-semibold">
-                      Signed Up ✓
-                    </div>
-                  ) : (
-                    <PrimaryButton 
-                      onClick={() => handleSignUp(event.id)}
-                      className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90"
-                      disabled={userEvents.length >= 2 && userRole !== 'pa'}
-                    >
-                      {userEvents.length >= 2 && userRole !== 'pa' ? 'Max Reached' : 'Sign Up'}
-                    </PrimaryButton>
-                  )}
+                  {/* Show both buttons side by side for PA users who haven't signed up */}
+                  {(() => {
+                    const showPAButtons = user && userRole === 'pa' && !isSignedUp(event.id);
+                    console.log('Button render check:', {
+                      user: !!user,
+                      userRole,
+                      isPA: userRole === 'pa',
+                      isSignedUp: isSignedUp(event.id),
+                      showPAButtons
+                    });
+                    return showPAButtons ? (
+                      <div className="flex flex-col sm:flex-row gap-2">
+                        <PrimaryButton 
+                          onClick={() => handleSignUp(event.id)}
+                          className="flex-1 bg-[#E14F3D] hover:bg-[#E14F3D]/90"
+                          disabled={userEvents.length >= 2}
+                        >
+                          Sign Up
+                        </PrimaryButton>
+                        <button
+                          onClick={() => handleGroupSignup(event)}
+                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
+                          data-testid="add-group-button"
+                        >
+                          <Users className="w-4 h-4" />
+                          Add Group
+                        </button>
+                      </div>
+                    ) : (
+                      <>
+                        {isSignedUp(event.id) ? (
+                          <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-full font-semibold">
+                            Signed Up ✓
+                          </div>
+                        ) : (
+                          <PrimaryButton 
+                            onClick={() => handleSignUp(event.id)}
+                            className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90"
+                            disabled={userEvents.length >= 2 && userRole !== 'pa'}
+                          >
+                            {userEvents.length >= 2 && userRole !== 'pa' ? 'Max Reached' : 'Sign Up'}
+                          </PrimaryButton>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
