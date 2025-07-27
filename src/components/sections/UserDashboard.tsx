@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Calendar, MapPin, Users, X, Settings } from "lucide-react";
+import { formatEventDate, formatEventTime } from "@/utils/formatEvent";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -215,7 +216,7 @@ const UserDashboard = () => {
                       <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0" />
                       <span className="font-medium text-primary">Date:</span>
                       <span className="text-muted-foreground truncate">
-                        {new Date(userEvent.events.date).toLocaleDateString()}
+                        {formatEventDate(userEvent.events.date)}
                       </span>
                     </div>
                     
@@ -223,7 +224,7 @@ const UserDashboard = () => {
                       <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0" />
                       <span className="font-medium text-primary">Time:</span>
                       <span className="text-muted-foreground truncate">
-                        {new Date(userEvent.events.date).toLocaleTimeString()}
+                        {formatEventTime(userEvent.events.date)}
                       </span>
                     </div>
                     
