@@ -24,6 +24,8 @@ interface UserEvent {
   event_id: string;
 }
 
+type UserRole = 'pa' | 'admin' | 'user' | '' | null;
+
 const OpportunitiesSection = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
@@ -32,7 +34,8 @@ const OpportunitiesSection = () => {
   const [groupSignupModalOpen, setGroupSignupModalOpen] = useState(false);
   const [viewParticipantsModalOpen, setViewParticipantsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<UserRole>(null);
+  const [userRoleLoading, setUserRoleLoading] = useState(false);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
   const { user, refreshUserEvents, userEventsRefreshTrigger, eventsRefreshTrigger } = useAuth();
   const { toast } = useToast();
@@ -85,8 +88,9 @@ const OpportunitiesSection = () => {
   };
 
   const fetchUserRole = async () => {
-    if (!user) return;
+    if (!user || userRoleLoading || userRole !== null) return;
     
+    setUserRoleLoading(true);
     try {
       const { data, error } = await supabase
         .from('user_roles')
@@ -96,11 +100,15 @@ const OpportunitiesSection = () => {
 
       if (error) {
         console.error('Error fetching user role:', error);
+        setUserRole(''); // Set empty string to indicate role was fetched but not found
       } else {
-        setUserRole(data?.role || null);
+        setUserRole(data?.role || '');
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
+      setUserRole(''); // Set empty string to indicate role was fetched but not found
+    } finally {
+      setUserRoleLoading(false);
     }
   };
 
@@ -134,8 +142,8 @@ const OpportunitiesSection = () => {
       return;
     }
 
-    // Check if user already has 2 commitments
-    if (userEvents.length >= 2) {
+    // Check if user already has 2 commitments (PAs are exempt)
+    if (userEvents.length >= 2 && userRole !== 'pa') {
       toast({
         title: "Maximum commitments reached",
         description: "You can only sign up for 2 opportunities at a time.",
@@ -290,28 +298,41 @@ const OpportunitiesSection = () => {
                     </button>
                   )}
 
-                  {user && userRole === 'pa' && !isSignedUp(event.id) && (
-                    <button
-                      onClick={() => handleGroupSignup(event)}
-                      className="w-full bg-blue-100 hover:bg-blue-200 text-blue-800 py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
-                    >
-                      <Users className="w-4 h-4" />
-                      Group
-                    </button>
-                  )}
-                  
-                  {isSignedUp(event.id) ? (
-                    <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-full font-semibold">
-                      Signed Up ✓
+                  {/* Show both buttons side by side for PA users who haven't signed up */}
+                  {user && userRole === 'pa' && !isSignedUp(event.id) ? (
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <PrimaryButton 
+                        onClick={() => handleSignUp(event.id)}
+                        className="flex-1 bg-[#E14F3D] hover:bg-[#E14F3D]/90"
+                        disabled={userEvents.length >= 2}
+                      >
+                        Sign Up
+                      </PrimaryButton>
+                      <button
+                        onClick={() => handleGroupSignup(event)}
+                        className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
+                        data-testid="add-group-button"
+                      >
+                        <Users className="w-4 h-4" />
+                        Add Group
+                      </button>
                     </div>
                   ) : (
-                    <PrimaryButton 
-                      onClick={() => handleSignUp(event.id)}
-                      className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90"
-                      disabled={userEvents.length >= 2 && userRole !== 'pa'}
-                    >
-                      {userEvents.length >= 2 && userRole !== 'pa' ? 'Max Reached' : 'Sign Up'}
-                    </PrimaryButton>
+                    <>
+                      {isSignedUp(event.id) ? (
+                        <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-full font-semibold">
+                          Signed Up ✓
+                        </div>
+                      ) : (
+                        <PrimaryButton 
+                          onClick={() => handleSignUp(event.id)}
+                          className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90"
+                          disabled={userEvents.length >= 2 && userRole !== 'pa'}
+                        >
+                          {userEvents.length >= 2 && userRole !== 'pa' ? 'Max Reached' : 'Sign Up'}
+                        </PrimaryButton>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
