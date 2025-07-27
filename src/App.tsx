@@ -16,6 +16,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import TestDatabase from "./pages/TestDatabase";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import ContentTest from "./pages/ContentTest";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,6 +52,7 @@ const App = () => (
                 <Route path="/admin/dashboard" element={<AdminDashboard />} />
                 <Route path="/admin/test" element={<TestDatabase />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/content-test" element={<ContentTest />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

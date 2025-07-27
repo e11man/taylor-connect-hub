@@ -114,6 +114,9 @@ const getContent = (page: string, section: string, key: string, fallback?: strin
     return contentCache[cacheKey];
   }
   
+  // Log only when content is not found in cache
+  console.warn(`Content not found in cache: ${cacheKey}, using fallback`);
+  
   // Return fallback content if available
   if (fallbackContent[cacheKey]) {
     return fallbackContent[cacheKey];
@@ -193,34 +196,54 @@ const subscribeToContentChanges = (callback: () => void) => {
 
 // Hook for getting content
 export const useContent = (page: string, section: string, key: string, fallback?: string) => {
-  const [content, setContent] = useState<string>(() => 
-    getContent(page, section, key, fallback)
-  );
-  const [loading, setLoading] = useState(!isContentLoaded);
+  const [content, setContent] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+
     const initializeContent = async () => {
-      // Always check for fresh content on component mount
-      const shouldRefresh = !isContentLoaded || isCacheStale();
-      
-      if (shouldRefresh) {
-        setLoading(true);
-        await loadContent('en', shouldRefresh);
-        setLoading(false);
+      try {
+        // Always check for fresh content on component mount
+        const shouldRefresh = !isContentLoaded || isCacheStale();
+        
+        if (shouldRefresh && !hasInitialized) {
+          setLoading(true);
+          await loadContent('en', shouldRefresh);
+          setHasInitialized(true);
+        }
+        
+        // Get content after ensuring it's loaded
+        const fetchedContent = getContent(page, section, key, fallback);
+        if (isMounted) {
+          setContent(fetchedContent);
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error('Error in useContent:', error);
+        if (isMounted) {
+          setContent(fallback || '');
+          setLoading(false);
+        }
       }
-      
-      setContent(getContent(page, section, key, fallback));
     };
 
     initializeContent();
 
     // Subscribe to global content changes
     const unsubscribe = subscribeToContentChanges(() => {
-      setContent(getContent(page, section, key, fallback));
+      if (isMounted) {
+        const updatedContent = getContent(page, section, key, fallback);
+        setContent(updatedContent);
+      }
     });
 
-    return unsubscribe;
-  }, [page, section, key, fallback]);
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, [page, section, key, fallback, hasInitialized]);
 
   return { content, loading };
 };
