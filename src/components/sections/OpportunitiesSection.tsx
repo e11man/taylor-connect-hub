@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Calendar, MapPin, Users, MessageCircle } from "lucide-react";
+import { formatEventDate, formatEventTime, formatParticipants } from "@/utils/formatEvent";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -233,7 +234,7 @@ const OpportunitiesSection = () => {
                     <Calendar className="w-4 h-4 text-[#00AFCE]" />
                     <span className="font-medium text-primary">Date:</span>
                     <span className="text-muted-foreground">
-                      {new Date(event.date).toLocaleDateString()}
+                      {formatEventDate(event.date)}
                     </span>
                   </div>
                   
@@ -241,7 +242,7 @@ const OpportunitiesSection = () => {
                     <Calendar className="w-4 h-4 text-[#00AFCE]" />
                     <span className="font-medium text-primary">Time:</span>
                     <span className="text-muted-foreground">
-                      {new Date(event.date).toLocaleTimeString()}
+                      {formatEventTime(event.date)}
                     </span>
                   </div>
 
@@ -255,7 +256,7 @@ const OpportunitiesSection = () => {
                     <Users className="w-4 h-4 text-[#00AFCE]" />
                     <span className="font-medium text-primary">Participants:</span>
                     <span className="text-muted-foreground">
-                      {eventSignupCounts[event.id] || 0} / {event.max_participants}
+                      {formatParticipants(eventSignupCounts[event.id] || 0, event.max_participants)}
                     </span>
                   </div>
                 </div>

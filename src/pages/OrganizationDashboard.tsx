@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Edit2, Trash2, Calendar, MapPin, Users, LogOut, MessageCircle } from "lucide-react";
+import { formatEventDate } from "@/utils/formatEvent";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
@@ -414,7 +415,7 @@ const OrganizationDashboard = () => {
                     <div className="space-y-2 text-sm text-muted-foreground mb-4">
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
-                        {new Date(event.date).toLocaleDateString()}
+                        {formatEventDate(event.date)}
                       </div>
                       {event.location && (
                         <div className="flex items-center gap-2">
