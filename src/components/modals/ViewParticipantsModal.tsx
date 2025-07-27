@@ -17,14 +17,10 @@ interface Participant {
   id: string;
   user_id: string;
   signed_up_at: string;
-  signed_up_by: string | null;
   profile: {
     email: string;
     dorm: string;
     wing: string;
-  };
-  signed_up_by_profile?: {
-    email: string;
   };
 }
 
@@ -51,46 +47,36 @@ export const ViewParticipantsModal = ({
         .select(`
           id,
           user_id,
-          signed_up_at,
-          signed_up_by,
-          profiles:user_id (
-            email,
-            dorm,
-            wing
-          )
+          signed_up_at
         `)
         .eq('event_id', eventId)
         .order('signed_up_at', { ascending: true });
 
       if (error) throw error;
 
-      // Fetch PA profiles for those who signed up others
-      const signedUpByIds = data
-        ?.filter(p => p.signed_up_by)
-        .map(p => p.signed_up_by)
-        .filter((v, i, a) => a.indexOf(v) === i); // unique values
-
-      let paProfiles: Record<string, any> = {};
-      if (signedUpByIds && signedUpByIds.length > 0) {
-        const { data: paData } = await supabase
+      // Get user profiles separately
+      const userIds = data?.map(p => p.user_id) || [];
+      let profiles: Record<string, any> = {};
+      
+      if (userIds.length > 0) {
+        const { data: profileData } = await supabase
           .from('profiles')
-          .select('user_id, email')
-          .in('user_id', signedUpByIds);
+          .select('user_id, email, dorm, wing')
+          .in('user_id', userIds);
 
-        paProfiles = paData?.reduce((acc, profile) => {
+        profiles = profileData?.reduce((acc, profile) => {
           acc[profile.user_id] = profile;
           return acc;
         }, {}) || {};
       }
 
-      // Map the data with PA profiles
-      const participantsWithPAs = data?.map(participant => ({
+      // Map the data with profiles
+      const participantsWithProfiles = data?.map(participant => ({
         ...participant,
-        profile: participant.profiles,
-        signed_up_by_profile: participant.signed_up_by ? paProfiles[participant.signed_up_by] : null
-      })) || [];
+        profile: profiles[participant.user_id]
+      })).filter(p => p.profile) || [];
 
-      setParticipants(participantsWithPAs);
+      setParticipants(participantsWithProfiles);
     } catch (error) {
       console.error('Error fetching participants:', error);
     } finally {
@@ -171,11 +157,6 @@ export const ViewParticipantsModal = ({
                             <p className="text-xs text-muted-foreground">
                               {participant.profile.email}
                             </p>
-                            {participant.signed_up_by_profile && (
-                              <p className="text-xs text-blue-600 mt-1">
-                                Signed up by {participant.signed_up_by_profile.email.split('@')[0]}
-                              </p>
-                            )}
                           </div>
                         </div>
                         
@@ -184,11 +165,6 @@ export const ViewParticipantsModal = ({
                             <Calendar className="w-3 h-3 inline mr-1" />
                             {formatDate(participant.signed_up_at)}
                           </p>
-                          {participant.signed_up_by && (
-                            <Badge variant="secondary" className="text-xs mt-1">
-                              Group signup
-                            </Badge>
-                          )}
                         </div>
                       </div>
                     ))}

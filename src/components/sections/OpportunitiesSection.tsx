@@ -153,38 +153,25 @@ const OpportunitiesSection = () => {
     try {
       console.log('Fetching user role for user:', user.id);
       
-      // First try with user_id field
-      let { data, error } = await supabase
+      const { data, error } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      // If no data found, try with id field (in case the schema uses uuid as primary key)
-      if (!data && !error) {
-        console.log('No data found with user_id, trying with id field...');
-        const result = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('id', user.id)
-          .maybeSingle();
-        data = result.data;
-        error = result.error;
-      }
-
       if (error) {
         console.error('Error fetching user role:', error);
-        setUserRole(''); // Set empty string to indicate role was fetched but not found
+        setUserRole('');
       } else if (data) {
         console.log('User role fetched:', data.role);
-        setUserRole(data.role?.toLowerCase().trim() || '');
+        setUserRole((data.role?.toLowerCase().trim() as UserRole) || '');
       } else {
         console.log('No user role found for user');
         setUserRole('');
       }
     } catch (error) {
       console.error('Error fetching user role:', error);
-      setUserRole(''); // Set empty string to indicate role was fetched but not found
+      setUserRole('');
     } finally {
       setUserRoleLoading(false);
     }
