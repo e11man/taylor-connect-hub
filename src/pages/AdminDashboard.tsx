@@ -44,6 +44,7 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { ContentManagement } from "@/components/admin/ContentManagement";
 import { format } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
 
@@ -801,7 +802,7 @@ const AdminDashboard = () => {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 h-auto p-1 bg-white shadow-sm">
+            <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-white shadow-sm">
               <TabsTrigger value="users" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
                 <Users className="w-4 h-4 mr-2" />
                 Users
@@ -817,6 +818,10 @@ const AdminDashboard = () => {
               <TabsTrigger value="events" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
                 <Calendar className="w-4 h-4 mr-2" />
                 Events
+              </TabsTrigger>
+              <TabsTrigger value="content" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
+                <Sparkles className="w-4 h-4 mr-2" />
+                Content
               </TabsTrigger>
             </TabsList>
 
@@ -1298,6 +1303,11 @@ const AdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+            </TabsContent>
+
+            {/* Content Management Tab */}
+            <TabsContent value="content" className="space-y-6">
+              <ContentManagement />
             </TabsContent>
           </Tabs>
         </div>

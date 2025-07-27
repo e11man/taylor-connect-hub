@@ -5,12 +5,17 @@ import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
+import { useContentSection } from "@/hooks/useContent";
+import { DynamicText } from "@/components/content/DynamicText";
 
 const HeroSection = () => {
+  const { content } = useContentSection('home', 'hero');
+  const { content: impactContent } = useContentSection('home', 'impact');
+  
   const stats = [
-    { icon: Users, label: "Active Volunteers", value: "6" },
-    { icon: Clock, label: "Hours Volunteered", value: "48" },
-    { icon: Building, label: "Partner Organizations", value: "4" }
+    { icon: Users, label: impactContent.volunteers_label || "Active Volunteers", value: "6" },
+    { icon: Clock, label: impactContent.hours_label || "Hours Volunteered", value: "48" },
+    { icon: Building, label: impactContent.organizations_label || "Partner Organizations", value: "4" }
   ];
 
   const buttonVariants = {
