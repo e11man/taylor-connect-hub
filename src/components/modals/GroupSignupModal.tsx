@@ -167,6 +167,7 @@ const GroupSignupModal = ({
     
     try {
       const signupPromises = [];
+      const signupData = [];
       
       // Sign up selected users
       for (const userId of selectedUsers) {
@@ -175,9 +176,15 @@ const GroupSignupModal = ({
             .from('user_events')
             .insert({
               user_id: userId,
-              event_id: eventId
+              event_id: eventId,
+              signed_up_by: user.id
             })
         );
+        signupData.push({
+          userId,
+          eventId,
+          signedUpBy: user.id
+        });
       }
 
       // Include myself if checked
@@ -187,9 +194,15 @@ const GroupSignupModal = ({
             .from('user_events')
             .insert({
               user_id: user.id,
-              event_id: eventId
+              event_id: eventId,
+              signed_up_by: user.id
             })
         );
+        signupData.push({
+          userId: user.id,
+          eventId,
+          signedUpBy: user.id
+        });
       }
 
       const results = await Promise.all(signupPromises);
@@ -200,9 +213,24 @@ const GroupSignupModal = ({
         throw new Error(`Failed to sign up ${errors.length} users`);
       }
 
+      // Send confirmation emails
+      try {
+        const emailResponse = await supabase.functions.invoke('send-signup-confirmation', {
+          body: { signups: signupData }
+        });
+        
+        if (emailResponse.error) {
+          console.error('Error sending confirmation emails:', emailResponse.error);
+          // Don't fail the entire operation if emails fail
+        }
+      } catch (emailError) {
+        console.error('Error invoking email function:', emailError);
+        // Don't fail the entire operation if emails fail
+      }
+
       toast({
         title: "Success!",
-        description: `Successfully signed up ${totalSignups} ${totalSignups === 1 ? 'person' : 'people'} for "${eventTitle}".`,
+        description: `Successfully signed up ${totalSignups} ${totalSignups === 1 ? 'person' : 'people'} for "${eventTitle}". Confirmation emails have been sent.`,
       });
 
       onSignupSuccess();

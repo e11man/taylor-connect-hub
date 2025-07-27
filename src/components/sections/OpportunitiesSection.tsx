@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, Users, MessageCircle } from "lucide-react";
+import { Calendar, MapPin, Users, MessageCircle, Eye } from "lucide-react";
 import { formatEventDate, formatEventTime, formatParticipants } from "@/utils/formatEvent";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import GroupSignupModal from "@/components/modals/GroupSignupModal";
+import { ViewParticipantsModal } from "@/components/modals/ViewParticipantsModal";
 
 interface Event {
   id: string;
@@ -29,6 +30,7 @@ const OpportunitiesSection = () => {
   const [loading, setLoading] = useState(true);
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [groupSignupModalOpen, setGroupSignupModalOpen] = useState(false);
+  const [viewParticipantsModalOpen, setViewParticipantsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
@@ -258,6 +260,18 @@ const OpportunitiesSection = () => {
                     <span className="text-muted-foreground">
                       {formatParticipants(eventSignupCounts[event.id] || 0, event.max_participants)}
                     </span>
+                    {user && userRole === 'pa' && eventSignupCounts[event.id] > 0 && (
+                      <button
+                        onClick={() => {
+                          setSelectedEvent(event);
+                          setViewParticipantsModalOpen(true);
+                        }}
+                        className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1 ml-2"
+                      >
+                        <Eye className="w-3 h-3" />
+                        View
+                      </button>
+                    )}
                   </div>
                 </div>
 
@@ -334,6 +348,18 @@ const OpportunitiesSection = () => {
           maxParticipants={selectedEvent.max_participants}
           currentSignups={eventSignupCounts[selectedEvent.id] || 0}
           onSignupSuccess={handleGroupSignupSuccess}
+        />
+      )}
+
+      {selectedEvent && (
+        <ViewParticipantsModal
+          isOpen={viewParticipantsModalOpen}
+          onClose={() => {
+            setViewParticipantsModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          eventId={selectedEvent.id}
+          eventTitle={selectedEvent.title}
         />
       )}
     </section>

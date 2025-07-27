@@ -56,3 +56,6 @@ backend = "postgres"
 
 [functions.send-chat-notifications]
 verify_jwt = false
+
+[functions.send-signup-confirmation]
+verify_jwt = false
