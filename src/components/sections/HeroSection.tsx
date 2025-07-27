@@ -1,4 +1,4 @@
-import { ArrowRight, Users, Clock, Building } from "lucide-react";
+import { ArrowRight, Users, Clock, Building, Bug } from "lucide-react";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import AnimatedSection from "@/components/ui/animated-section";
@@ -7,10 +7,12 @@ import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
 import { useContentSection } from "@/hooks/useContent";
 import { DynamicText } from "@/components/content/DynamicText";
+import { useState } from "react";
 
 const HeroSection = () => {
-  const { content } = useContentSection('home', 'hero');
+  const { content, loading } = useContentSection('home', 'hero');
   const { content: impactContent } = useContentSection('home', 'impact');
+  const [showDebug, setShowDebug] = useState(false);
   
   const stats = [
     { icon: Users, label: impactContent.volunteers_label || "Active Volunteers", value: "6" },
@@ -27,7 +29,46 @@ const HeroSection = () => {
   };
 
   return (
-    <section id="home" className="bg-white section-padding">
+    <section id="home" className="bg-white section-padding relative">
+      {/* Debug Toggle Button */}
+      <button
+        onClick={() => setShowDebug(!showDebug)}
+        className="absolute top-4 right-4 p-2 bg-gray-900 text-white rounded-lg shadow-lg hover:bg-gray-800 transition-colors z-10"
+        title="Toggle content debug"
+      >
+        <Bug className="w-4 h-4" />
+      </button>
+
+      {/* Debug Panel */}
+      {showDebug && (
+        <div className="absolute top-16 right-4 w-96 bg-gray-900 text-white rounded-lg shadow-2xl p-4 z-10 max-h-96 overflow-y-auto">
+          <h3 className="font-bold mb-2 text-yellow-400">Hero Content Debug</h3>
+          {loading ? (
+            <p className="text-sm text-gray-400">Loading...</p>
+          ) : (
+            <div className="space-y-2">
+              <div className="text-xs font-mono">
+                {Object.keys(content).length > 0 ? (
+                  Object.entries(content).map(([key, value]) => (
+                    <div key={key} className="mb-1">
+                      <span className="text-blue-400">{key}:</span>
+                      <span className="text-green-400 ml-2">"{value}"</span>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-gray-500">No content found for home.hero</p>
+                )}
+              </div>
+              <div className="pt-2 mt-2 border-t border-gray-700">
+                <p className="text-xs text-gray-400">
+                  Total keys: {Object.keys(content).length}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="container-custom">
         <div className="text-center max-w-4xl mx-auto">
           {/* Main Hero Content */}

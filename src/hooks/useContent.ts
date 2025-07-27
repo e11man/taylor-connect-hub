@@ -57,6 +57,8 @@ const loadContent = async (languageCode: string = 'en', forceRefresh: boolean = 
   contentLoadingPromise = (async () => {
     try {
       console.log('Loading fresh content from Supabase...');
+      const startTime = Date.now();
+      
       const { data, error } = await supabase
         .from('content')
         .select('*')
@@ -80,7 +82,21 @@ const loadContent = async (languageCode: string = 'en', forceRefresh: boolean = 
 
       isContentLoaded = true;
       lastLoadTime = Date.now();
-      console.log(`Content loaded: ${data?.length || 0} items`);
+      
+      const loadTime = Date.now() - startTime;
+      console.log(`✅ Content loaded: ${data?.length || 0} items in ${loadTime}ms`);
+      
+      // Debug: Log hero content specifically
+      const heroContent = Object.entries(contentCache)
+        .filter(([key]) => key.startsWith('home.hero.'))
+        .reduce((acc, [key, value]) => {
+          acc[key] = value;
+          return acc;
+        }, {} as Record<string, string>);
+      
+      if (Object.keys(heroContent).length > 0) {
+        console.log('🏠 Hero content loaded:', heroContent);
+      }
     } catch (error) {
       console.error('Error loading content:', error);
     }
