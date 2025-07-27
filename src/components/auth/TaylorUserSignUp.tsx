@@ -3,13 +3,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Info } from 'lucide-react';
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { getEmailConfirmUrl } from "@/utils/config";
 import { dormAndFloorData } from "@/utils/dormData";
 import { OTPVerification } from "./OTPVerification";
-
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 
 interface TaylorUserSignUpProps {
@@ -26,6 +26,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showOTPVerification, setShowOTPVerification] = useState(false);
+  const [showPasswordWarning, setShowPasswordWarning] = useState(false);
 
   useEffect(() => {
     if (email.endsWith('@taylor.edu')) {
@@ -34,6 +35,8 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
       setIsTaylorUser(false);
       setSelectedDorm('');
       setSelectedFloor('');
+      // Hide password warning when email changes to non-Taylor
+      setShowPasswordWarning(false);
     }
   }, [email]);
 
@@ -139,22 +142,46 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
           required
         />
         
-        <div className="relative">
-          <Input
-            type={showPassword ? "text" : "password"}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="h-12 pr-12"
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors duration-200"
-          >
-            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-          </button>
+        <div className="space-y-2">
+          <div className="relative">
+            <Input
+              type={showPassword ? "text" : "password"}
+              placeholder="Password"
+              value={password}
+              onChange={(e) => {
+                setPassword(e.target.value);
+                // Show warning when Taylor user starts typing password
+                if (isTaylorUser && e.target.value.length > 0) {
+                  setShowPasswordWarning(true);
+                }
+              }}
+              onFocus={() => {
+                // Show warning when Taylor user focuses on password field
+                if (isTaylorUser && password.length === 0) {
+                  setShowPasswordWarning(true);
+                }
+              }}
+              className="h-12 pr-12"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors duration-200"
+            >
+              {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+            </button>
+          </div>
+
+          {/* Password security warning for Taylor users */}
+          {showPasswordWarning && isTaylorUser && (
+            <Alert className="border-amber-200 bg-amber-50 transition-all duration-300 animate-in fade-in slide-in-from-top-1">
+              <Info className="h-4 w-4 text-amber-600" />
+              <AlertDescription className="text-amber-800 text-sm">
+                For your security, please do not reuse your Taylor email password.
+              </AlertDescription>
+            </Alert>
+          )}
         </div>
         
         <div className="relative">
