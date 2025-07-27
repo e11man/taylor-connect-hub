@@ -50,7 +50,8 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
 
-  const apiKey = import.meta.env.VITE_GEOAPIFY_API_KEY as string | undefined;
+  // NOTE: For now we store the key in plain text as requested.
+  const apiKey = "470d678e463c4c87aadc70eaeecec1f2";
 
   /** Fetch suggestions when query changes (debounced) */
   useEffect(() => {
@@ -61,12 +62,6 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       return;
     }
 
-    if (!apiKey) {
-      console.error('Geoapify API key is missing ‑ set VITE_GEOAPIFY_API_KEY in your env');
-      return;
-    }
-
-    // Debounce network calls to avoid hitting rate limits
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
       try {
