@@ -46,8 +46,67 @@ const OpportunitiesSection = () => {
     if (user) {
       fetchUserEvents();
       fetchUserRole();
+      // Debug: Test different queries
+      debugUserRoleQueries();
     }
   }, [user, userEventsRefreshTrigger, eventsRefreshTrigger]);
+
+  // Temporary debug function
+  const debugUserRoleQueries = async () => {
+    if (!user) return;
+    
+    console.log('=== DEBUG: Testing user_roles queries ===');
+    
+    // Test 1: Get all records from user_roles
+    try {
+      const { data: allRoles, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .limit(5);
+      
+      console.log('All user_roles records (first 5):', allRoles, error);
+    } catch (err) {
+      console.error('Error fetching all roles:', err);
+    }
+    
+    // Test 2: Try to find current user by user_id
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', user.id);
+      
+      console.log('Query by user_id:', data, error);
+    } catch (err) {
+      console.error('Error with user_id query:', err);
+    }
+    
+    // Test 3: Try to find current user by id
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('id', user.id);
+      
+      console.log('Query by id:', data, error);
+    } catch (err) {
+      console.error('Error with id query:', err);
+    }
+    
+    // Test 4: Get column info
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .limit(1);
+      
+      if (data && data.length > 0) {
+        console.log('user_roles table columns:', Object.keys(data[0]));
+      }
+    } catch (err) {
+      console.error('Error getting columns:', err);
+    }
+  };
 
   const fetchEvents = async () => {
     try {
