@@ -41,7 +41,13 @@ const HeroSection = () => {
                   transition={{ duration: 0.5, delay: 0.3, ease: [0.25, 0.46, 0.45, 0.94] }}
                   viewport={{ once: false }}
                 >
-                  Connect.
+                  <DynamicText 
+                    page="home" 
+                    section="hero" 
+                    contentKey="titleLine1"
+                    fallback="Connect."
+                    as="span"
+                  />
                 </motion.span>
                 <motion.span 
                   className="block text-secondary"
@@ -50,7 +56,13 @@ const HeroSection = () => {
                   transition={{ duration: 0.5, delay: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
                   viewport={{ once: false }}
                 >
-                  Volunteer.
+                  <DynamicText 
+                    page="home" 
+                    section="hero" 
+                    contentKey="titleLine2"
+                    fallback="Volunteer."
+                    as="span"
+                  />
                 </motion.span>
                 <motion.span 
                   className="block"
@@ -59,15 +71,26 @@ const HeroSection = () => {
                   transition={{ duration: 0.5, delay: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
                   viewport={{ once: false }}
                 >
-                  Make a Difference.
+                  <DynamicText 
+                    page="home" 
+                    section="hero" 
+                    contentKey="titleLine3"
+                    fallback="Make a Difference."
+                    as="span"
+                  />
                 </motion.span>
               </h1>
             </AnimatedText>
             
             <AnimatedText variant="slideUp" delay={0.6}>
               <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed text-muted-foreground">
-                Join thousands of volunteers making a positive impact in their communities. 
-                Find opportunities that match your skills and passion.
+                <DynamicText 
+                  page="home" 
+                  section="hero" 
+                  contentKey="subtitle"
+                  fallback="Join thousands of volunteers making a positive impact in their communities. Find opportunities that match your skills and passion."
+                  as="span"
+                />
               </p>
             </AnimatedText>
 
@@ -94,7 +117,13 @@ const HeroSection = () => {
                   size="lg" 
                   className="bg-accent hover:bg-accent/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
                 >
-                  Get Started <ArrowRight className="ml-2 w-5 h-5" />
+                  <DynamicText 
+                    page="home" 
+                    section="hero" 
+                    contentKey="ctaButton"
+                    fallback="Get Started"
+                    as="span"
+                  /> <ArrowRight className="ml-2 w-5 h-5" />
                 </PrimaryButton>
               </motion.div>
               <motion.div 
@@ -106,7 +135,13 @@ const HeroSection = () => {
                   variant="outline" 
                   className="border-primary text-primary hover:bg-primary hover:text-white transform transition-all duration-300 hover:scale-105"
                 >
-                  Learn More
+                  <DynamicText 
+                    page="home" 
+                    section="hero" 
+                    contentKey="secondaryButton"
+                    fallback="Learn More"
+                    as="span"
+                  />
                 </SecondaryButton>
               </motion.div>
             </motion.div>
