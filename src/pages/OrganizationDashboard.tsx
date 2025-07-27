@@ -16,6 +16,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
+import { AddressAutocomplete, AddressDetails } from '@/components/ui/address-autocomplete';
 
 interface Event {
   id: string;
@@ -58,6 +59,8 @@ const OrganizationDashboard = () => {
     location: '',
     max_participants: ''
   });
+
+  const [selectedAddress, setSelectedAddress] = useState<AddressDetails | null>(null);
 
   useEffect(() => {
     if (!user) {
@@ -116,7 +119,7 @@ const OrganizationDashboard = () => {
           title: newEvent.title,
           description: newEvent.description,
           date: newEvent.date,
-          location: newEvent.location,
+          location: selectedAddress?.formatted || newEvent.location || null,
           max_participants: parseInt(newEvent.max_participants) || null,
           organization_id: organization.id
         }])
@@ -128,6 +131,7 @@ const OrganizationDashboard = () => {
       setEvents([...events, data]);
       setIsCreateModalOpen(false);
       setNewEvent({ title: '', description: '', date: '', location: '', max_participants: '' });
+      setSelectedAddress(null); // Clear selected address after creation
       
       toast({
         title: "Success!",
@@ -155,7 +159,7 @@ const OrganizationDashboard = () => {
           title: newEvent.title,
           description: newEvent.description,
           date: newEvent.date,
-          location: newEvent.location,
+          location: selectedAddress?.formatted || newEvent.location || null,
           max_participants: parseInt(newEvent.max_participants) || null,
         })
         .eq('id', editingEvent.id)
@@ -168,6 +172,7 @@ const OrganizationDashboard = () => {
       setIsEditModalOpen(false);
       setEditingEvent(null);
       setNewEvent({ title: '', description: '', date: '', location: '', max_participants: '' });
+      setSelectedAddress(null); // Clear selected address after update
       
       toast({
         title: "Success!",
@@ -226,6 +231,7 @@ const OrganizationDashboard = () => {
       location: event.location || '',
       max_participants: event.max_participants?.toString() || ''
     });
+    setSelectedAddress({ formatted: event.location }); // Pre-fill with current address
     setIsEditModalOpen(true);
   };
 
@@ -357,12 +363,14 @@ const OrganizationDashboard = () => {
                     />
                   </div>
                   <div>
-                    <Label htmlFor="location">Location</Label>
-                    <Input
-                      id="location"
-                      value={newEvent.location}
-                      onChange={(e) => setNewEvent({...newEvent, location: e.target.value})}
-                      placeholder="Event location"
+                    <Label htmlFor="location">Location*</Label>
+                    <AddressAutocomplete
+                      onSelect={(addr) => {
+                        setSelectedAddress(addr);
+                        setNewEvent({ ...newEvent, location: addr ? addr.formatted : '' });
+                      }}
+                      placeholder="Search for an address"
+                      initialValue={selectedAddress}
                     />
                   </div>
                   <div>
@@ -378,7 +386,12 @@ const OrganizationDashboard = () => {
                   <div className="flex gap-2 pt-4">
                     <PrimaryButton 
                       onClick={handleCreateEvent}
-                      disabled={!newEvent.title || !newEvent.description || !newEvent.date}
+                      disabled={
+                        !newEvent.title ||
+                        !newEvent.description ||
+                        !newEvent.date ||
+                        !selectedAddress // Ensure a valid address is chosen
+                      }
                       className="flex-1"
                     >
                       Create Opportunity
@@ -508,11 +521,13 @@ const OrganizationDashboard = () => {
                 </div>
                 <div>
                   <Label htmlFor="edit-location">Location</Label>
-                  <Input
-                    id="edit-location"
-                    value={newEvent.location}
-                    onChange={(e) => setNewEvent({...newEvent, location: e.target.value})}
-                    placeholder="Event location"
+                  <AddressAutocomplete
+                    onSelect={(addr) => {
+                      setSelectedAddress(addr);
+                      setNewEvent({ ...newEvent, location: addr ? addr.formatted : '' });
+                    }}
+                    placeholder="Search for an address"
+                    initialValue={selectedAddress}
                   />
                 </div>
                 <div>
@@ -528,7 +543,7 @@ const OrganizationDashboard = () => {
                 <div className="flex gap-2 pt-4">
                   <PrimaryButton 
                     onClick={handleEditEvent}
-                    disabled={!newEvent.title || !newEvent.description || !newEvent.date}
+                    disabled={!newEvent.title || !newEvent.description || !newEvent.date || !selectedAddress}
                     className="flex-1"
                   >
                     Update Opportunity
