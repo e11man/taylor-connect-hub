@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, Users, MessageCircle, Eye } from "lucide-react";
+import { Calendar, MapPin, Users, MessageCircle } from "lucide-react";
 import { formatEventDate, formatEventTime, formatParticipants } from "@/utils/formatEvent";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import GroupSignupModal from "@/components/modals/GroupSignupModal";
-import { ViewParticipantsModal } from "@/components/modals/ViewParticipantsModal";
 
 interface Event {
   id: string;
@@ -32,7 +31,6 @@ const OpportunitiesSection = () => {
   const [loading, setLoading] = useState(true);
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [groupSignupModalOpen, setGroupSignupModalOpen] = useState(false);
-  const [viewParticipantsModalOpen, setViewParticipantsModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [userRoleLoading, setUserRoleLoading] = useState(false);
@@ -277,19 +275,11 @@ const OpportunitiesSection = () => {
   return (
     <section className="bg-white section-padding">
       <div className="container-custom">
-        {/* Temporary debug info - remove after debugging */}
-        {user && (
-          <div className="mb-4 p-4 bg-gray-100 rounded text-sm">
-            <p>Debug Info:</p>
-            <p>User ID: {user.id}</p>
-            <p>User Role: {userRoleLoading ? 'Loading...' : (userRole || 'Not set')}</p>
-            <p>Role is PA: {userRole === 'pa' ? 'Yes' : 'No'}</p>
-          </div>
-        )}
+
 
         {/* Opportunities Horizontal Scroll */}
         <div className="mb-8 md:mb-12">
-          <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scroll-smooth" style={{
+          <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scroll-smooth snap-x snap-mandatory" style={{
             msOverflowStyle: 'none',
             scrollbarWidth: 'none',
             WebkitOverflowScrolling: 'touch'
@@ -300,10 +290,10 @@ const OpportunitiesSection = () => {
           {events.map((event, index) => (
             <div 
               key={event.id}
-              className="group animate-scale-in flex-shrink-0 w-72 sm:w-80 min-w-72 sm:min-w-80"
+              className="group animate-scale-in flex-shrink-0 w-[85vw] sm:w-72 md:w-80 min-w-[85vw] sm:min-w-72 md:min-w-80 snap-start"
               style={{ animationDelay: `${index * 0.2}s` }}
             >
-              <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300 h-full flex flex-col min-h-[380px] md:min-h-[400px]">
+              <div className="bg-white rounded-2xl md:rounded-3xl p-5 sm:p-6 md:p-8 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300 h-full flex flex-col min-h-[350px] sm:min-h-[380px] md:min-h-[400px]">
                 {/* Title and Description */}
                 <h3 className="text-lg md:text-xl font-montserrat font-bold mb-3 text-primary group-hover:text-[#00AFCE] transition-all duration-300 line-clamp-2">
                   {event.title}
@@ -342,67 +332,62 @@ const OpportunitiesSection = () => {
                     <span className="text-muted-foreground">
                       {formatParticipants(eventSignupCounts[event.id] || 0, event.max_participants)}
                     </span>
-                    {user && userRole === 'pa' && eventSignupCounts[event.id] > 0 && (
-                      <button
-                        onClick={() => {
-                          setSelectedEvent(event);
-                          setViewParticipantsModalOpen(true);
-                        }}
-                        className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1 ml-2 touch-manipulation"
-                      >
-                        <Eye className="w-3 h-3" />
-                        View
-                      </button>
-                    )}
                   </div>
                 </div>
 
                 {/* Action Buttons */}
                 <div className="mt-auto space-y-2 md:space-y-3">
-                  {user && isSignedUp(event.id) && (
-                    <button
-                      onClick={() => {
-                        setSelectedEvent(event);
-                        setChatModalOpen(true);
-                      }}
-                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 md:py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors touch-manipulation min-h-[44px]"
-                    >
-                      <MessageCircle className="w-4 h-4" />
-                      Chat
-                    </button>
-                  )}
 
-                  {/* Show both buttons side by side for PA users who haven't signed up */}
+                  {/* Show buttons based on user role and signup status */}
                   {(() => {
-                    const showPAButtons = user && userRole === 'pa' && !isSignedUp(event.id);
-                    console.log('Button render check:', {
-                      user: !!user,
-                      userRole,
-                      isPA: userRole === 'pa',
-                      isSignedUp: isSignedUp(event.id),
-                      showPAButtons
-                    });
-                    return showPAButtons ? (
-                      <div className="flex flex-col gap-2">
-                        <PrimaryButton 
-                          onClick={() => handleSignUp(event.id)}
-                          className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90 min-h-[44px] touch-manipulation"
-                          disabled={userEvents.length >= 2}
-                        >
-                          Sign Up
-                        </PrimaryButton>
-                        <button
-                          onClick={() => handleGroupSignup(event)}
-                          className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[44px] touch-manipulation"
-                          data-testid="add-group-button"
-                        >
-                          <Users className="w-4 h-4" />
-                          Add Group
-                        </button>
-                      </div>
-                    ) : (
+                    const isPAUser = user && userRole === 'pa';
+                    const userSignedUp = isSignedUp(event.id);
+                    
+                    // For PA users
+                    if (isPAUser) {
+                      return (
+                        <div className="flex flex-col gap-2">
+                          {userSignedUp ? (
+                            <>
+                              <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-xl font-semibold min-h-[44px] flex items-center justify-center">
+                                Signed Up ✓
+                              </div>
+                              <button
+                                onClick={() => handleGroupSignup(event)}
+                                className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[44px] touch-manipulation"
+                                data-testid="add-group-button"
+                              >
+                                <Users className="w-4 h-4" />
+                                Add Group
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <PrimaryButton 
+                                onClick={() => handleSignUp(event.id)}
+                                className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90 min-h-[44px] touch-manipulation"
+                                disabled={userEvents.length >= 2}
+                              >
+                                Sign Up
+                              </PrimaryButton>
+                              <button
+                                onClick={() => handleGroupSignup(event)}
+                                className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[44px] touch-manipulation"
+                                data-testid="add-group-button"
+                              >
+                                <Users className="w-4 h-4" />
+                                Add Group
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      );
+                    }
+                    
+                    // For regular users
+                    return (
                       <>
-                        {isSignedUp(event.id) ? (
+                        {userSignedUp ? (
                           <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-xl font-semibold min-h-[44px] flex items-center justify-center">
                             Signed Up ✓
                           </div>
@@ -453,18 +438,6 @@ const OpportunitiesSection = () => {
           maxParticipants={selectedEvent.max_participants}
           currentSignups={eventSignupCounts[selectedEvent.id] || 0}
           onSignupSuccess={handleGroupSignupSuccess}
-        />
-      )}
-
-      {selectedEvent && (
-        <ViewParticipantsModal
-          isOpen={viewParticipantsModalOpen}
-          onClose={() => {
-            setViewParticipantsModalOpen(false);
-            setSelectedEvent(null);
-          }}
-          eventId={selectedEvent.id}
-          eventTitle={selectedEvent.title}
         />
       )}
     </section>

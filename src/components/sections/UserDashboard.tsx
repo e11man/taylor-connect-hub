@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, Users, X, Settings } from "lucide-react";
+import { Calendar, MapPin, Users, X, Settings, MessageCircle } from "lucide-react";
 import { formatEventDate, formatEventTime } from "@/utils/formatEvent";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -9,6 +9,7 @@ import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
 import { ChangeDormModal } from "@/components/modals/ChangeDormModal";
 import { UpdatePasswordModal } from "@/components/modals/UpdatePasswordModal";
+import { EventChatModal } from "@/components/chat/EventChatModal";
 
 interface UserEvent {
   id: string;
@@ -37,6 +38,8 @@ const UserDashboard = () => {
   const [activeTab, setActiveTab] = useState<'events' | 'settings'>('events');
   const [changeDormModalOpen, setChangeDormModalOpen] = useState(false);
   const [updatePasswordModalOpen, setUpdatePasswordModalOpen] = useState(false);
+  const [chatModalOpen, setChatModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<UserEvent['events'] | null>(null);
   const { user, userEventsRefreshTrigger, refreshUserEvents } = useAuth();
   const { toast } = useToast();
 
@@ -91,6 +94,11 @@ const UserDashboard = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleChatOpen = (event: UserEvent['events']) => {
+    setSelectedEvent(event);
+    setChatModalOpen(true);
   };
 
   const handleCancelSignup = async (userEventId: string, eventTitle: string) => {
@@ -236,9 +244,18 @@ const UserDashboard = () => {
                   </div>
                   
                   <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">
-                    <p className="text-xs text-muted-foreground">
-                      Signed up on {new Date(userEvent.signed_up_at).toLocaleDateString()}
-                    </p>
+                    <div className="flex justify-between items-center">
+                      <p className="text-xs text-muted-foreground">
+                        Signed up on {new Date(userEvent.signed_up_at).toLocaleDateString()}
+                      </p>
+                      <button
+                        onClick={() => handleChatOpen(userEvent.events)}
+                        className="bg-[#00AFCE] hover:bg-[#00AFCE]/90 text-white py-2 px-4 rounded-lg text-sm font-semibold flex items-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[36px] touch-manipulation"
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Chat
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}
@@ -299,6 +316,19 @@ const UserDashboard = () => {
         isOpen={updatePasswordModalOpen}
         onClose={() => setUpdatePasswordModalOpen(false)}
       />
+
+      {selectedEvent && (
+        <EventChatModal
+          isOpen={chatModalOpen}
+          onClose={() => {
+            setChatModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          eventId={selectedEvent.id}
+          eventTitle={selectedEvent.title}
+          organizationId="" // We may need to add organization_id to the UserEvent interface and fetch it
+        />
+      )}
     </section>
   );
 };
