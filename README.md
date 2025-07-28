@@ -1,73 +1,110 @@
-# Welcome to your Lovable project
+# Taylor Connect Hub
 
-## Project info
+A community service platform for Taylor University students to connect with volunteer opportunities and manage group signups.
 
-**URL**: https://lovable.dev/projects/495e2005-0ed5-40ca-bef4-774a1be7ab29
+## 🚀 Quick Start
 
-## How can I edit this code?
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd taylor-connect-hub
+   ```
 
-There are several ways of editing your application.
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
 
-**Use Lovable**
+3. **Set up environment variables**
+   ```bash
+   cp .env.example .env.local
+   # Add your Supabase credentials
+   ```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/495e2005-0ed5-40ca-bef4-774a1be7ab29) and start prompting.
+4. **Start development server**
+   ```bash
+   npm run dev
+   ```
 
-Changes made via Lovable will be committed automatically to this repo.
+## 📚 Documentation
 
-**Use your preferred IDE**
+All documentation is organized in the [`md/`](./md/) folder:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+- **[Complete Setup Guide](./md/COMPLETE_SETUP_INSTRUCTIONS.md)** - Full setup instructions
+- **[Deployment Guide](./md/DEPLOYMENT_GUIDE.md)** - How to deploy the application
+- **[PA Group Management](./md/PA_GROUP_MANAGEMENT_FEATURE.md)** - PA group signup feature
+- **[Admin Fixes](./md/ADMIN_LOGIN_FIX_README.md)** - Admin authentication fixes
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+## 🛠️ Tech Stack
 
-Follow these steps:
+- **Frontend**: React, TypeScript, Vite
+- **UI**: shadcn/ui, Tailwind CSS
+- **Backend**: Supabase (PostgreSQL, Auth, Edge Functions)
+- **Email**: Resend (for notifications)
+- **Deployment**: Vercel
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+## 🎯 Features
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+- **User Authentication**: Student and organization signup/login
+- **Event Management**: Create and manage volunteer opportunities
+- **PA Group Signups**: Program Assistants can sign up multiple students
+- **Email Notifications**: Automated confirmations for event signups
+- **Admin Dashboard**: Manage users, events, and system settings
+- **Real-time Chat**: Event-specific communication
 
-# Step 3: Install the necessary dependencies.
-npm i
+## 📁 Project Structure
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+```
+taylor-connect-hub/
+├── src/
+│   ├── components/     # React components
+│   ├── pages/         # Page components
+│   ├── contexts/      # React contexts
+│   ├── hooks/         # Custom hooks
+│   ├── utils/         # Utility functions
+│   └── integrations/  # External integrations
+├── supabase/
+│   ├── migrations/    # Database migrations
+│   └── functions/     # Edge functions
+├── md/               # Documentation
+└── public/           # Static assets
 ```
 
-**Edit a file directly in GitHub**
+## 🔧 Development
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### Database Migrations
+```bash
+# Apply migrations
+supabase db push
 
-**Use GitHub Codespaces**
+# Create new migration
+supabase migration new migration_name
+```
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+### Edge Functions
+```bash
+# Deploy functions
+supabase functions deploy function-name
+```
 
-## What technologies are used for this project?
+### Environment Variables
+Required environment variables:
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `RESEND_API_KEY` (for email notifications)
 
-This project is built with:
+## 🚀 Deployment
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+The application is deployed on Vercel and automatically updates on push to main branch.
 
-## How can I deploy this project?
+## 📞 Support
 
-Simply open [Lovable](https://lovable.dev/projects/495e2005-0ed5-40ca-bef4-774a1be7ab29) and click on Share -> Publish.
+For issues and questions:
+1. Check the [documentation](./md/) first
+2. Look for existing solutions in [SOLUTION_SUMMARY.md](./md/SOLUTION_SUMMARY.md)
+3. Create an issue with detailed information
 
-## Can I connect a custom domain to my Lovable project?
+---
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+**Built for Taylor University Community Service** 

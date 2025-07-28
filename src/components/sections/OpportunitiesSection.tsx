@@ -288,10 +288,11 @@ const OpportunitiesSection = () => {
         )}
 
         {/* Opportunities Horizontal Scroll */}
-        <div className="mb-12">
-          <div className="flex gap-6 overflow-x-auto pb-4" style={{
+        <div className="mb-8 md:mb-12">
+          <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scroll-smooth" style={{
             msOverflowStyle: 'none',
-            scrollbarWidth: 'none'
+            scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch'
           }}>
             <style>
               {`.overflow-x-auto::-webkit-scrollbar { display: none; }`}
@@ -299,44 +300,44 @@ const OpportunitiesSection = () => {
           {events.map((event, index) => (
             <div 
               key={event.id}
-              className="group animate-scale-in flex-shrink-0 w-80 min-w-80"
+              className="group animate-scale-in flex-shrink-0 w-72 sm:w-80 min-w-72 sm:min-w-80"
               style={{ animationDelay: `${index * 0.2}s` }}
             >
-              <div className="bg-white rounded-3xl p-8 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300 h-full flex flex-col min-h-[400px]">
+              <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-8 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300 h-full flex flex-col min-h-[380px] md:min-h-[400px]">
                 {/* Title and Description */}
-                <h3 className="text-xl font-montserrat font-bold mb-3 text-primary group-hover:text-[#00AFCE] transition-all duration-300">
+                <h3 className="text-lg md:text-xl font-montserrat font-bold mb-3 text-primary group-hover:text-[#00AFCE] transition-all duration-300 line-clamp-2">
                   {event.title}
                 </h3>
-                <p className="text-muted-foreground mb-6 line-clamp-3 leading-relaxed">
+                <p className="text-sm md:text-base text-muted-foreground mb-4 md:mb-6 line-clamp-3 leading-relaxed">
                   {event.description}
                 </p>
 
                 {/* Key Details */}
-                <div className="space-y-3 mb-6">
-                  <div className="flex items-center gap-3 text-sm">
-                    <Calendar className="w-4 h-4 text-[#00AFCE]" />
+                <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
+                  <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
+                    <Calendar className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
                     <span className="font-medium text-primary">Date:</span>
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground truncate">
                       {formatEventDate(event.date)}
                     </span>
                   </div>
                   
-                  <div className="flex items-center gap-3 text-sm">
-                    <Calendar className="w-4 h-4 text-[#00AFCE]" />
+                  <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
+                    <Calendar className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
                     <span className="font-medium text-primary">Time:</span>
                     <span className="text-muted-foreground">
                       {formatEventTime(event.date)}
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-sm">
-                    <MapPin className="w-4 h-4 text-[#00AFCE]" />
+                  <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
+                    <MapPin className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
                     <span className="font-medium text-primary">Location:</span>
                     <span className="text-muted-foreground truncate">{event.location}</span>
                   </div>
 
-                  <div className="flex items-center gap-3 text-sm">
-                    <Users className="w-4 h-4 text-[#00AFCE]" />
+                  <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
+                    <Users className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
                     <span className="font-medium text-primary">Participants:</span>
                     <span className="text-muted-foreground">
                       {formatParticipants(eventSignupCounts[event.id] || 0, event.max_participants)}
@@ -347,7 +348,7 @@ const OpportunitiesSection = () => {
                           setSelectedEvent(event);
                           setViewParticipantsModalOpen(true);
                         }}
-                        className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1 ml-2"
+                        className="text-xs text-blue-600 hover:text-blue-800 underline flex items-center gap-1 ml-2 touch-manipulation"
                       >
                         <Eye className="w-3 h-3" />
                         View
@@ -357,14 +358,14 @@ const OpportunitiesSection = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="mt-auto space-y-3">
+                <div className="mt-auto space-y-2 md:space-y-3">
                   {user && isSignedUp(event.id) && (
                     <button
                       onClick={() => {
                         setSelectedEvent(event);
                         setChatModalOpen(true);
                       }}
-                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
+                      className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-3 md:py-3 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors touch-manipulation min-h-[44px]"
                     >
                       <MessageCircle className="w-4 h-4" />
                       Chat
@@ -382,17 +383,17 @@ const OpportunitiesSection = () => {
                       showPAButtons
                     });
                     return showPAButtons ? (
-                      <div className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex flex-col gap-2">
                         <PrimaryButton 
                           onClick={() => handleSignUp(event.id)}
-                          className="flex-1 bg-[#E14F3D] hover:bg-[#E14F3D]/90"
+                          className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90 min-h-[44px] touch-manipulation"
                           disabled={userEvents.length >= 2}
                         >
                           Sign Up
                         </PrimaryButton>
                         <button
                           onClick={() => handleGroupSignup(event)}
-                          className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-full font-semibold flex items-center justify-center gap-2 transition-colors"
+                          className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[44px] touch-manipulation"
                           data-testid="add-group-button"
                         >
                           <Users className="w-4 h-4" />
@@ -402,13 +403,13 @@ const OpportunitiesSection = () => {
                     ) : (
                       <>
                         {isSignedUp(event.id) ? (
-                          <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-full font-semibold">
+                          <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-xl font-semibold min-h-[44px] flex items-center justify-center">
                             Signed Up ✓
                           </div>
                         ) : (
                           <PrimaryButton 
                             onClick={() => handleSignUp(event.id)}
-                            className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90"
+                            className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90 min-h-[44px] touch-manipulation"
                             disabled={userEvents.length >= 2 && userRole !== 'pa'}
                           >
                             {userEvents.length >= 2 && userRole !== 'pa' ? 'Max Reached' : 'Sign Up'}

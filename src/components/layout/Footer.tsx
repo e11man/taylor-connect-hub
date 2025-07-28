@@ -3,6 +3,7 @@ import AnimatedSection from "@/components/ui/animated-section";
 import { motion } from "framer-motion";
 import { DynamicText } from "@/components/content/DynamicText";
 import { useContentSection } from "@/hooks/useContent";
+import tuLogo from "@/assets/tu_logo.png";
 
 const Footer = () => {
   const { content: linksContent } = useContentSection('footer', 'links');
@@ -89,7 +90,7 @@ const Footer = () => {
             </motion.p>
           </div>
 
-          {/* Partnership note */}
+          {/* Partnership note with Taylor University logo */}
           <motion.div 
             className="text-center mt-4 pt-4 border-t border-gray-100"
             initial={{ opacity: 0, y: 10 }}
@@ -100,15 +101,18 @@ const Footer = () => {
             }}
             viewport={{ once: false }}
           >
-            <p className="text-xs text-muted-foreground font-montserrat">
-              <DynamicText 
-                page="footer" 
-                section="brand" 
-                contentKey="partnership"
-                fallback="In partnership with Taylor University"
-                as="span"
+            <div className="flex items-center justify-center space-x-2">
+              <span className="text-xs text-muted-foreground font-montserrat">
+                In partnership with
+              </span>
+              <motion.img
+                src={tuLogo}
+                alt="Taylor University"
+                className="h-6 w-auto opacity-80 hover:opacity-100 transition-opacity duration-300"
+                whileHover={{ scale: 1.05 }}
+                transition={{ duration: 0.2 }}
               />
-            </p>
+            </div>
           </motion.div>
         </div>
       </AnimatedSection>
