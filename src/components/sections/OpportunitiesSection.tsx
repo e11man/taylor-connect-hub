@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, Users, MessageCircle, Search } from "lucide-react";
-import { formatEventDate, formatEventTime, formatParticipants } from "@/utils/formatEvent";
+import { Calendar, MapPin, Users, MessageCircle, Search, Clock } from "lucide-react";
+import { formatEventDate, formatEventTime, formatEventTimeRange, formatParticipants } from "@/utils/formatEvent";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -15,6 +15,8 @@ interface Event {
   title: string;
   description: string;
   date: string;
+  arrival_time: string | null;
+  estimated_end_time: string | null;
   location: string;
   max_participants: number;
   image_url: string;
@@ -352,10 +354,10 @@ const OpportunitiesSection = () => {
                   </div>
                   
                   <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
-                    <Calendar className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
+                    <Clock className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
                     <span className="font-medium text-primary">Time:</span>
                     <span className="text-muted-foreground">
-                      {formatEventTime(event.date)}
+                      {formatEventTimeRange(event.arrival_time, event.estimated_end_time)}
                     </span>
                   </div>
 

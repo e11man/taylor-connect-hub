@@ -1,10 +1,14 @@
-import { useMemo } from "react";
-import { formatEventDate, formatEventTime, formatParticipants } from "@/utils/formatEvent";
+import { useMemo } from 'react';
+import { formatEventDate, formatEventTime, formatEventTimeRange, formatParticipants } from '@/utils/formatEvent';
 
 interface UseFormattedEventDataProps {
+  title: string;
+  description: string | null;
   date: string;
-  location?: string;
-  max_participants?: number;
+  location: string | null;
+  max_participants: number | null;
+  arrival_time: string | null;
+  estimated_end_time: string | null;
 }
 
 export const useFormattedEventData = (
@@ -13,7 +17,7 @@ export const useFormattedEventData = (
 ) => {
   return useMemo(() => {
     const formattedDate = formatEventDate(event.date);
-    const formattedTime = formatEventTime(event.date);
+    const formattedTimeRange = formatEventTimeRange(event.arrival_time, event.estimated_end_time);
     const formattedLocation = event.location ?? "";
 
     const formattedParticipants =
@@ -24,9 +28,9 @@ export const useFormattedEventData = (
 
     return {
       formattedDate,
-      formattedTime,
+      formattedTimeRange,
       formattedLocation,
       formattedParticipants,
     };
-  }, [event.date, event.location, event.max_participants, currentParticipants]);
+  }, [event.date, event.arrival_time, event.estimated_end_time, event.location, event.max_participants, currentParticipants]);
 };

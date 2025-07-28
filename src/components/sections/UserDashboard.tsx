@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, Users, X, Settings, MessageCircle } from "lucide-react";
-import { formatEventDate, formatEventTime } from "@/utils/formatEvent";
+import { Calendar, MapPin, Users, MessageCircle, Clock, Settings, X } from "lucide-react";
+import { formatEventDate, formatEventTime, formatEventTimeRange } from "@/utils/formatEvent";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -22,6 +22,8 @@ interface UserEvent {
     date: string;
     location: string;
     max_participants: number;
+    arrival_time: string;
+    estimated_end_time: string;
   };
 }
 
@@ -66,7 +68,9 @@ const UserDashboard = () => {
             description,
             date,
             location,
-            max_participants
+            max_participants,
+            arrival_time,
+            estimated_end_time
           )
         `)
         .eq('user_id', user.id);
@@ -229,10 +233,10 @@ const UserDashboard = () => {
                     </div>
                     
                     <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
-                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0" />
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0" />
                       <span className="font-medium text-primary">Time:</span>
                       <span className="text-muted-foreground truncate">
-                        {formatEventTime(userEvent.events.date)}
+                        {formatEventTimeRange(userEvent.events.arrival_time, userEvent.events.estimated_end_time)}
                       </span>
                     </div>
                     

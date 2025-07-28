@@ -47,6 +47,7 @@ import Footer from "@/components/layout/Footer";
 import { ContentManagement } from "@/components/admin/ContentManagement";
 import { format } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
+import { formatEventTimeRange } from "@/utils/formatEvent";
 
 type UserRole = Database["public"]["Enums"]["user_role"];
 
@@ -83,6 +84,8 @@ interface Event {
   title: string;
   description: string | null;
   date: string;
+  arrival_time: string | null;
+  estimated_end_time: string | null;
   location: string | null;
   max_participants: number | null;
   organization_id: string | null;
@@ -1275,6 +1278,10 @@ const AdminDashboard = () => {
                                     <CalendarDays className="w-4 h-4 text-gray-400" />
                                     <span>{format(new Date(event.date), 'MMM d, yyyy')}</span>
                                   </div>
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-4 h-4 text-gray-400" />
+                                    <span>{formatEventTimeRange(event.arrival_time, event.estimated_end_time)}</span>
+                                  </div>
                                   {event.location && (
                                     <div className="flex items-center gap-2">
                                       <MapPin className="w-4 h-4 text-gray-400" />
@@ -1504,6 +1511,8 @@ const AdminDashboard = () => {
                 title: formData.get('title') as string,
                 description: formData.get('description') as string,
                 date: formData.get('date') as string,
+                arrival_time: formData.get('arrival_time') as string || null,
+                estimated_end_time: formData.get('estimated_end_time') as string || null,
                 location: formData.get('location') as string,
                 max_participants: parseInt(formData.get('max_participants') as string) || null,
               });
@@ -1519,6 +1528,14 @@ const AdminDashboard = () => {
               <div>
                 <Label htmlFor="date">Date</Label>
                 <Input id="date" name="date" type="datetime-local" defaultValue={editingEvent.date} required />
+              </div>
+              <div>
+                <Label htmlFor="arrival_time">Arrival Time</Label>
+                <Input id="arrival_time" name="arrival_time" type="datetime-local" defaultValue={editingEvent.arrival_time || ''} />
+              </div>
+              <div>
+                <Label htmlFor="estimated_end_time">Estimated End Time</Label>
+                <Input id="estimated_end_time" name="estimated_end_time" type="datetime-local" defaultValue={editingEvent.estimated_end_time || ''} />
               </div>
               <div>
                 <Label htmlFor="location">Location</Label>

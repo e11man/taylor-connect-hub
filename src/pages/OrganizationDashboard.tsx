@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit2, Trash2, Calendar, MapPin, Users, LogOut, MessageCircle } from "lucide-react";
-import { formatEventDate } from "@/utils/formatEvent";
+import { Plus, Edit2, Trash2, Calendar, MapPin, Users, LogOut, MessageCircle, Clock } from "lucide-react";
+import { formatEventDate, formatEventTimeRange } from "@/utils/formatEvent";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
@@ -23,6 +23,8 @@ interface Event {
   title: string;
   description: string;
   date: string;
+  arrival_time: string | null;
+  estimated_end_time: string | null;
   location: string;
   max_participants: number;
   created_at: string;
@@ -51,16 +53,31 @@ const OrganizationDashboard = () => {
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   
   const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
     date: '',
+    arrival_time: '',
+    estimated_end_time: '',
     location: '',
-    max_participants: ''
+    max_participants: '6'
   });
 
   const [selectedAddress, setSelectedAddress] = useState<AddressDetails | null>(null);
+
+  // Helper function to check if selected date is today
+  const isToday = (date: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    return date === today;
+  };
+
+  // Helper function to get current time in HH:MM format
+  const getCurrentTime = () => {
+    const now = new Date();
+    return now.toTimeString().slice(0, 5);
+  };
 
   useEffect(() => {
     if (!user) {
@@ -112,13 +129,40 @@ const OrganizationDashboard = () => {
   const handleCreateEvent = async () => {
     if (!organization) return;
 
+    setHasAttemptedSubmit(true);
+    
+    if (!newEvent.title || !newEvent.description || !newEvent.date || !newEvent.arrival_time || !newEvent.estimated_end_time || !selectedAddress || parseInt(newEvent.max_participants) < 6) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newEvent.arrival_time >= newEvent.estimated_end_time) {
+      toast({
+        title: "Error",
+        description: "End time must be after arrival time",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
+      // Combine date and time fields into proper datetime strings
+      const eventDate = `${newEvent.date}T${newEvent.arrival_time}:00`;
+      const arrivalTime = `${newEvent.date}T${newEvent.arrival_time}:00`;
+      const endTime = `${newEvent.date}T${newEvent.estimated_end_time}:00`;
+
       const { data, error } = await supabase
         .from('events')
         .insert([{
           title: newEvent.title,
           description: newEvent.description,
-          date: newEvent.date,
+          date: eventDate,
+          arrival_time: arrivalTime,
+          estimated_end_time: endTime,
           location: selectedAddress?.formatted || newEvent.location || null,
           max_participants: parseInt(newEvent.max_participants) || null,
           organization_id: organization.id
@@ -130,8 +174,9 @@ const OrganizationDashboard = () => {
 
       setEvents([...events, data]);
       setIsCreateModalOpen(false);
-      setNewEvent({ title: '', description: '', date: '', location: '', max_participants: '' });
+      setNewEvent({ title: '', description: '', date: '', arrival_time: '', estimated_end_time: '', location: '', max_participants: '6' });
       setSelectedAddress(null); // Clear selected address after creation
+      setHasAttemptedSubmit(false);
       
       toast({
         title: "Success!",
@@ -159,6 +204,8 @@ const OrganizationDashboard = () => {
           title: newEvent.title,
           description: newEvent.description,
           date: newEvent.date,
+          arrival_time: newEvent.arrival_time || null,
+          estimated_end_time: newEvent.estimated_end_time || null,
           location: selectedAddress?.formatted || newEvent.location || null,
           max_participants: parseInt(newEvent.max_participants) || null,
         })
@@ -171,7 +218,7 @@ const OrganizationDashboard = () => {
       setEvents(events.map(event => event.id === editingEvent.id ? data : event));
       setIsEditModalOpen(false);
       setEditingEvent(null);
-      setNewEvent({ title: '', description: '', date: '', location: '', max_participants: '' });
+      setNewEvent({ title: '', description: '', date: '', arrival_time: '', estimated_end_time: '', location: '', max_participants: '' });
       setSelectedAddress(null); // Clear selected address after update
       
       toast({
@@ -228,6 +275,8 @@ const OrganizationDashboard = () => {
       title: event.title,
       description: event.description || '',
       date: event.date.split('T')[0], // Convert to YYYY-MM-DD format
+      arrival_time: event.arrival_time || '',
+      estimated_end_time: event.estimated_end_time || '',
       location: event.location || '',
       max_participants: event.max_participants?.toString() || ''
     });
@@ -319,7 +368,12 @@ const OrganizationDashboard = () => {
           {/* Events Section */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-montserrat font-bold text-primary">Your Opportunities</h2>
-            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <Dialog open={isCreateModalOpen} onOpenChange={(open) => {
+              setIsCreateModalOpen(open);
+              if (!open) {
+                setHasAttemptedSubmit(false);
+              }
+            }}>
               <DialogTrigger asChild>
                 <PrimaryButton className="flex items-center gap-2">
                   <Plus className="w-4 h-4" />
@@ -335,35 +389,67 @@ const OrganizationDashboard = () => {
                 </DialogHeader>
                 <div className="space-y-4">
                   <div>
-                    <Label htmlFor="title">Title*</Label>
+                    <Label htmlFor="title" className={`${hasAttemptedSubmit && !newEvent.title ? 'text-red-600' : 'text-foreground'}`}>Title*</Label>
                     <Input
                       id="title"
                       value={newEvent.title}
                       onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
                       placeholder="Opportunity Title"
+                      className={`${hasAttemptedSubmit && !newEvent.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     />
+                    {hasAttemptedSubmit && !newEvent.title && <p className="text-xs text-red-600 mt-1">Title is required</p>}
                   </div>
                   <div>
-                    <Label htmlFor="description">Description*</Label>
+                    <Label htmlFor="description" className={`${hasAttemptedSubmit && !newEvent.description ? 'text-red-600' : 'text-foreground'}`}>Description*</Label>
                     <Textarea
                       id="description"
                       value={newEvent.description}
                       onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
                       placeholder="Describe the opportunity"
                       rows={3}
+                      className={`${hasAttemptedSubmit && !newEvent.description ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     />
+                    {hasAttemptedSubmit && !newEvent.description && <p className="text-xs text-red-600 mt-1">Description is required</p>}
                   </div>
                   <div>
-                    <Label htmlFor="date">Date*</Label>
+                    <Label htmlFor="date" className={`${hasAttemptedSubmit && !newEvent.date ? 'text-red-600' : 'text-foreground'}`}>Date*</Label>
                     <Input
                       id="date"
-                      type="datetime-local"
+                      type="date"
                       value={newEvent.date}
+                      min={new Date().toISOString().split('T')[0]}
                       onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
+                      className={`${hasAttemptedSubmit && !newEvent.date ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     />
+                    {hasAttemptedSubmit && !newEvent.date && <p className="text-xs text-red-600 mt-1">Date is required</p>}
                   </div>
                   <div>
-                    <Label htmlFor="location">Location*</Label>
+                    <Label htmlFor="arrival_time" className={`${hasAttemptedSubmit && !newEvent.arrival_time ? 'text-red-600' : 'text-foreground'}`}>Arrival Time*</Label>
+                    <Input
+                      id="arrival_time"
+                      type="time"
+                      value={newEvent.arrival_time}
+                      min={isToday(newEvent.date) ? getCurrentTime() : undefined}
+                      onChange={(e) => setNewEvent({...newEvent, arrival_time: e.target.value})}
+                      className={`${hasAttemptedSubmit && !newEvent.arrival_time ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    {hasAttemptedSubmit && !newEvent.arrival_time && <p className="text-xs text-red-600 mt-1">Arrival time is required</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="estimated_end_time" className={`${hasAttemptedSubmit && (!newEvent.estimated_end_time || (newEvent.arrival_time && newEvent.estimated_end_time && newEvent.arrival_time >= newEvent.estimated_end_time)) ? 'text-red-600' : 'text-foreground'}`}>End Time*</Label>
+                    <Input
+                      id="estimated_end_time"
+                      type="time"
+                      value={newEvent.estimated_end_time}
+                      min={newEvent.arrival_time || (isToday(newEvent.date) ? getCurrentTime() : undefined)}
+                      onChange={(e) => setNewEvent({...newEvent, estimated_end_time: e.target.value})}
+                      className={`${hasAttemptedSubmit && (!newEvent.estimated_end_time || (newEvent.arrival_time && newEvent.estimated_end_time && newEvent.arrival_time >= newEvent.estimated_end_time)) ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
+                    />
+                    {hasAttemptedSubmit && !newEvent.estimated_end_time && <p className="text-xs text-red-600 mt-1">End time is required</p>}
+                    {hasAttemptedSubmit && newEvent.arrival_time && newEvent.estimated_end_time && newEvent.arrival_time >= newEvent.estimated_end_time && <p className="text-xs text-red-600 mt-1">End time must be after arrival time</p>}
+                  </div>
+                  <div>
+                    <Label htmlFor="location" className={`${hasAttemptedSubmit && !selectedAddress ? 'text-red-600' : 'text-foreground'}`}>Location*</Label>
                     <AddressAutocomplete
                       onSelect={(addr) => {
                         setSelectedAddress(addr);
@@ -371,17 +457,22 @@ const OrganizationDashboard = () => {
                       }}
                       placeholder="Search for an address"
                       initialValue={selectedAddress}
+                      className={`${hasAttemptedSubmit && !selectedAddress ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     />
+                    {hasAttemptedSubmit && !selectedAddress && <p className="text-xs text-red-600 mt-1">Location is required</p>}
                   </div>
                   <div>
-                    <Label htmlFor="max_participants">Max Volunteers</Label>
+                    <Label htmlFor="max_participants" className={`${hasAttemptedSubmit && parseInt(newEvent.max_participants) < 6 ? 'text-red-600' : 'text-foreground'}`}>Max Volunteers*</Label>
                     <Input
                       id="max_participants"
                       type="number"
+                      min="6"
                       value={newEvent.max_participants}
                       onChange={(e) => setNewEvent({...newEvent, max_participants: e.target.value})}
-                      placeholder="Maximum number of volunteers"
+                      placeholder="Minimum 6 volunteers"
+                      className={`${hasAttemptedSubmit && parseInt(newEvent.max_participants) < 6 ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
                     />
+                    {hasAttemptedSubmit && parseInt(newEvent.max_participants) < 6 && <p className="text-xs text-red-600 mt-1">Minimum 6 volunteers required</p>}
                   </div>
                   <div className="flex gap-2 pt-4">
                     <PrimaryButton 
@@ -390,13 +481,20 @@ const OrganizationDashboard = () => {
                         !newEvent.title ||
                         !newEvent.description ||
                         !newEvent.date ||
-                        !selectedAddress // Ensure a valid address is chosen
+                        !newEvent.arrival_time ||
+                        !newEvent.estimated_end_time ||
+                        !selectedAddress ||
+                        parseInt(newEvent.max_participants) < 6 ||
+                        newEvent.arrival_time >= newEvent.estimated_end_time
                       }
                       className="flex-1"
                     >
                       Create Opportunity
                     </PrimaryButton>
-                    <SecondaryButton onClick={() => setIsCreateModalOpen(false)}>
+                    <SecondaryButton onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setHasAttemptedSubmit(false);
+                    }}>
                       Cancel
                     </SecondaryButton>
                   </div>
@@ -429,6 +527,10 @@ const OrganizationDashboard = () => {
                       <div className="flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         {formatEventDate(event.date)}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-4 h-4" />
+                        {formatEventTimeRange(event.arrival_time, event.estimated_end_time)}
                       </div>
                       {event.location && (
                         <div className="flex items-center gap-2">
@@ -517,6 +619,24 @@ const OrganizationDashboard = () => {
                     type="datetime-local"
                     value={newEvent.date}
                     onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-arrival_time">Arrival Time</Label>
+                  <Input
+                    id="edit-arrival_time"
+                    type="datetime-local"
+                    value={newEvent.arrival_time}
+                    onChange={(e) => setNewEvent({...newEvent, arrival_time: e.target.value})}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="edit-estimated_end_time">Estimated End Time</Label>
+                  <Input
+                    id="edit-estimated_end_time"
+                    type="datetime-local"
+                    value={newEvent.estimated_end_time}
+                    onChange={(e) => setNewEvent({...newEvent, estimated_end_time: e.target.value})}
                   />
                 </div>
                 <div>

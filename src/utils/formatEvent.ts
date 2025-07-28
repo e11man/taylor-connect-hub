@@ -23,6 +23,44 @@ export const formatEventTime = (dateString: string): string => {
   return `${hours}:${minutes.toString().padStart(2, '0')} ${period}`;
 };
 
+export const formatEventTimeRange = (arrivalTime: string | null, endTime: string | null): string => {
+  if (!arrivalTime || !endTime) {
+    return 'Time TBD';
+  }
+  
+  const arrival = new Date(arrivalTime);
+  const end = new Date(endTime);
+  
+  const arrivalFormatted = formatEventTime(arrivalTime);
+  const endFormatted = formatEventTime(endTime);
+  
+  return `${arrivalFormatted} - ${endFormatted}`;
+};
+
+export const formatEventDuration = (arrivalTime: string | null, endTime: string | null): string => {
+  if (!arrivalTime || !endTime) {
+    return '';
+  }
+  
+  const arrival = new Date(arrivalTime);
+  const end = new Date(endTime);
+  const durationMs = end.getTime() - arrival.getTime();
+  const durationHours = Math.ceil(durationMs / (1000 * 60 * 60));
+  
+  return `${durationHours} hour${durationHours !== 1 ? 's' : ''}`;
+};
+
+export const formatEventTimeWithDuration = (arrivalTime: string | null, endTime: string | null): string => {
+  const timeRange = formatEventTimeRange(arrivalTime, endTime);
+  const duration = formatEventDuration(arrivalTime, endTime);
+  
+  if (duration) {
+    return `${timeRange} (${duration})`;
+  }
+  
+  return timeRange;
+};
+
 export const formatParticipants = (current: number, max: number): string => {
   return `${current} of ${max}`;
 };
