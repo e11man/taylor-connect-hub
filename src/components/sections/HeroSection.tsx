@@ -6,12 +6,14 @@ import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
 import { useContentSection } from "@/hooks/useContent";
+import { useHomepageStats } from "@/hooks/useHomepageStats";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const HeroSection = () => {
   const { content: heroContent, loading: heroLoading } = useContentSection('home', 'hero');
   const { content: impactContent, loading: impactLoading } = useContentSection('home', 'impact');
+  const { stats: dynamicStats, loading: statsLoading } = useHomepageStats();
   const [showDebug, setShowDebug] = useState(false);
   
   // Extract content with fallbacks
@@ -23,9 +25,21 @@ const HeroSection = () => {
   const secondaryButton = heroContent.secondaryButton || "Learn More";
   
   const stats = [
-    { icon: Users, label: impactContent.volunteers_label || "Active Volunteers", value: "6" },
-    { icon: Clock, label: impactContent.hours_label || "Hours Volunteered", value: "48" },
-    { icon: Building, label: impactContent.organizations_label || "Partner Organizations", value: "4" }
+    { 
+      icon: Users, 
+      label: impactContent.volunteers_label || "Active Volunteers", 
+      value: statsLoading ? "..." : dynamicStats.active_volunteers.toString()
+    },
+    { 
+      icon: Clock, 
+      label: impactContent.hours_label || "Hours Contributed", 
+      value: statsLoading ? "..." : dynamicStats.hours_contributed.toString()
+    },
+    { 
+      icon: Building, 
+      label: impactContent.organizations_label || "Partner Organizations", 
+      value: statsLoading ? "..." : dynamicStats.partner_organizations.toString()
+    }
   ];
 
   const buttonVariants = {

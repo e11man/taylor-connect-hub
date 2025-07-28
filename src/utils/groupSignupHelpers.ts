@@ -28,13 +28,12 @@ export const handleGroupSignup = async ({
     // Prepare signup data for Supabase
     const signupInserts = selectedUsers.map(user => ({
       user_id: user.userId,
-      event_id: eventId,
-      signed_up_by: currentUser.id
+      event_id: eventId
     }));
 
     // Batch insert all signups
     const { data: signupData, error: insertError } = await supabase
-      .from('event_signups')
+      .from('user_events')
       .insert(signupInserts)
       .select();
 
