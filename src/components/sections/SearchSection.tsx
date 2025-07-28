@@ -1,14 +1,17 @@
 import { useState } from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
+import { useSearch } from "@/contexts/SearchContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const SearchSection = () => {
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("all");
+  const { query, activeCategory, setQuery, setActiveCategory, clearSearch } = useSearch();
+  const isMobile = useIsMobile();
 
   const categories = [
     { id: "all", name: "All" },
@@ -73,10 +76,24 @@ const SearchSection = () => {
                 <Input
                   type="text"
                   placeholder="Search by title, description, or category..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 text-base sm:text-lg rounded-xl sm:rounded-2xl border-2 border-gray-200 focus:border-[#00AFCE] bg-white transition-all duration-300 hover:shadow-md focus:shadow-lg"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="pl-10 sm:pl-12 pr-12 sm:pr-4 py-4 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl border-2 border-gray-200 focus:border-[#00AFCE] bg-white transition-all duration-300 hover:shadow-md focus:shadow-lg min-h-[48px] sm:min-h-[56px]"
+                  aria-label="Search opportunities"
                 />
+                
+                {/* Clear button for mobile */}
+                 {query && (
+                   <Button
+                     variant="ghost"
+                     size="sm"
+                     onClick={clearSearch}
+                     className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 h-8 w-8 rounded-full hover:bg-gray-100"
+                     aria-label="Clear search"
+                   >
+                     <X className="w-4 h-4" />
+                   </Button>
+                 )}
               </motion.div>
             </motion.div>
           </div>
@@ -95,15 +112,16 @@ const SearchSection = () => {
               </AnimatedText>
             </div>
 
-            <div className="overflow-x-auto pb-4" style={{
+            <div className="overflow-x-auto pb-4 scroll-smooth" style={{
               msOverflowStyle: 'none',
-              scrollbarWidth: 'none'
+              scrollbarWidth: 'none',
+              WebkitOverflowScrolling: 'touch'
             }}>
               <style>
                 {`.overflow-x-auto::-webkit-scrollbar { display: none; }`}
               </style>
               <motion.div 
-                className="flex gap-3 sm:gap-4 min-w-max px-4"
+                className="flex gap-3 sm:gap-4 min-w-max px-4 snap-x snap-mandatory"
                 initial="hidden"
                 whileInView="visible"
                 viewport={{ once: false, amount: 0.3 }}
@@ -121,7 +139,7 @@ const SearchSection = () => {
                     key={category.id}
                     onClick={() => setActiveCategory(category.id)}
                     className={`
-                      px-4 sm:px-6 py-2 sm:py-3 rounded-xl sm:rounded-2xl font-montserrat font-semibold transition-all duration-300 border-2 whitespace-nowrap text-sm sm:text-base
+                      px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-montserrat font-semibold transition-all duration-300 border-2 whitespace-nowrap text-sm sm:text-base min-h-[44px] sm:min-h-[48px] snap-start
                       ${activeCategory === category.id
                         ? 'bg-[#E14F3D] text-white border-[#E14F3D] shadow-lg'
                         : 'bg-white text-gray-700 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE]'
@@ -142,6 +160,8 @@ const SearchSection = () => {
                       transition: { duration: 0.2 }
                     }}
                     whileTap={{ scale: 0.95 }}
+                    aria-pressed={activeCategory === category.id}
+                    aria-label={`Filter by ${category.name} category`}
                   >
                     {category.name}
                   </motion.button>

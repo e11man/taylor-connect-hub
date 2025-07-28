@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, Users, MessageCircle } from "lucide-react";
+import { Calendar, MapPin, Users, MessageCircle, Search } from "lucide-react";
 import { formatEventDate, formatEventTime, formatParticipants } from "@/utils/formatEvent";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import GroupSignupModal from "@/components/modals/GroupSignupModal";
+import { useSearch } from "@/contexts/SearchContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Event {
   id: string;
@@ -26,6 +28,8 @@ interface UserEvent {
 type UserRole = 'pa' | 'admin' | 'user' | '' | null;
 
 const OpportunitiesSection = () => {
+  const { filteredEvents, isLoading: searchLoading, error: searchError } = useSearch();
+  const isMobile = useIsMobile();
   const [events, setEvents] = useState<Event[]>([]);
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -37,6 +41,9 @@ const OpportunitiesSection = () => {
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
   const { user, refreshUserEvents, userEventsRefreshTrigger, eventsRefreshTrigger } = useAuth();
   const { toast } = useToast();
+
+  // Use filtered events from search context when available, otherwise show all events
+  const displayEvents = filteredEvents.length > 0 ? filteredEvents : events;
 
   useEffect(() => {
     fetchEvents();
@@ -260,12 +267,46 @@ const OpportunitiesSection = () => {
     refreshUserEvents();
   };
 
-  if (loading) {
+  if (loading || searchLoading) {
     return (
       <section className="bg-white section-padding">
         <div className="container-custom">
           <div className="text-center">
-            <p className="text-xl text-muted-foreground">Loading events...</p>
+            <p className="text-xl text-muted-foreground">
+              {searchLoading ? 'Searching events...' : 'Loading events...'}
+            </p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (searchError) {
+    return (
+      <section className="bg-white section-padding">
+        <div className="container-custom">
+          <div className="text-center">
+            <div className="flex flex-col items-center gap-4">
+              <Search className="w-12 h-12 text-gray-400" />
+              <p className="text-xl text-muted-foreground">Search Error</p>
+              <p className="text-sm text-gray-500">{searchError}</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (displayEvents.length === 0) {
+    return (
+      <section className="bg-white section-padding">
+        <div className="container-custom">
+          <div className="text-center">
+            <div className="flex flex-col items-center gap-4">
+              <Search className="w-12 h-12 text-gray-400" />
+              <p className="text-xl text-muted-foreground">No events found</p>
+              <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+            </div>
           </div>
         </div>
       </section>
@@ -275,8 +316,6 @@ const OpportunitiesSection = () => {
   return (
     <section className="bg-white section-padding">
       <div className="container-custom">
-
-
         {/* Opportunities Horizontal Scroll */}
         <div className="mb-8 md:mb-12">
           <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scroll-smooth snap-x snap-mandatory" style={{
@@ -287,7 +326,7 @@ const OpportunitiesSection = () => {
             <style>
               {`.overflow-x-auto::-webkit-scrollbar { display: none; }`}
             </style>
-          {events.map((event, index) => (
+          {displayEvents.map((event, index) => (
             <div 
               key={event.id}
               className="group animate-scale-in flex-shrink-0 w-[85vw] sm:w-72 md:w-80 min-w-[85vw] sm:min-w-72 md:min-w-80 snap-start"
