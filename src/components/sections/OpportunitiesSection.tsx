@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import GroupSignupModal from "@/components/modals/GroupSignupModal";
+import UserAuthModal from "@/components/modals/UserAuthModal";
 import { useSearch } from "@/contexts/SearchContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -37,6 +38,7 @@ const OpportunitiesSection = () => {
   const [loading, setLoading] = useState(true);
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [groupSignupModalOpen, setGroupSignupModalOpen] = useState(false);
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [userRoleLoading, setUserRoleLoading] = useState(false);
@@ -206,11 +208,7 @@ const OpportunitiesSection = () => {
 
   const handleSignUp = async (eventId: string) => {
     if (!user) {
-      toast({
-        title: "Login Required",
-        description: "Please log in to sign up for events.",
-        variant: "destructive",
-      });
+      setAuthModalOpen(true);
       return;
     }
 
@@ -481,6 +479,13 @@ const OpportunitiesSection = () => {
           onSignupSuccess={handleGroupSignupSuccess}
         />
       )}
+      
+      {/* User Auth Modal */}
+      <UserAuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultMode="login"
+      />
     </section>
   );
 };

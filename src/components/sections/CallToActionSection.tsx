@@ -22,12 +22,12 @@ const CallToActionSection = () => {
   return (
     <section className="bg-white section-padding">
       <div className="container-custom">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 md:gap-12 lg:gap-16 items-center">
           
           {/* Image */}
           <AnimatedSection variant="slideLeft" delay={0.1}>
             <motion.div 
-              className="relative rounded-2xl overflow-hidden shadow-lg"
+              className="relative rounded-xl md:rounded-2xl overflow-hidden shadow-md md:shadow-lg max-w-sm sm:max-w-md md:max-w-lg lg:max-w-none mx-auto lg:mx-0"
               whileHover={{ 
                 scale: 1.02, 
                 rotateY: 5,
@@ -38,14 +38,14 @@ const CallToActionSection = () => {
               <motion.img 
                 src={communityGarden}
                 alt="Volunteers working together in a community garden"
-                className="w-full h-auto object-cover"
+                className="w-full h-auto object-cover aspect-[4/3] sm:aspect-[3/2] md:aspect-auto"
                 initial={{ scale: 1.1 }}
                 whileInView={{ scale: 1 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
                 viewport={{ once: false }}
               />
               <motion.div 
-                className="absolute inset-0 bg-primary/10"
+                className="absolute inset-0 bg-primary/5 sm:bg-primary/8 md:bg-primary/10"
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
@@ -57,13 +57,13 @@ const CallToActionSection = () => {
           {/* Content */}
           <AnimatedSection variant="slideRight" delay={0.2}>
             <AnimatedText variant="slideUp" delay={0.3}>
-              <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
+              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold mb-4 md:mb-6 text-primary">
                 Join Our Community
               </h2>
             </AnimatedText>
             
             <AnimatedText variant="fade" delay={0.4}>
-              <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
+              <p className="text-lg sm:text-xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
                 Be part of something bigger. Connect with like-minded volunteers 
                 and make a meaningful impact in your local community.
               </p>

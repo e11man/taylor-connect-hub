@@ -426,6 +426,7 @@ const Header = () => {
       <UserAuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
+        defaultMode="login"
       />
     </header>
   );

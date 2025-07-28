@@ -8,10 +8,18 @@ import '@/styles/modal.css';
 interface UserAuthModalProps {
   isOpen: boolean;
   onClose: () => void;
+  defaultMode?: 'login' | 'signup';
 }
 
-const UserAuthModal = ({ isOpen, onClose }: UserAuthModalProps) => {
-  const [isLoginMode, setIsLoginMode] = useState(false);
+const UserAuthModal = ({ isOpen, onClose, defaultMode = 'signup' }: UserAuthModalProps) => {
+  const [isLoginMode, setIsLoginMode] = useState(defaultMode === 'login');
+
+  // Reset to default mode when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setIsLoginMode(defaultMode === 'login');
+    }
+  }, [isOpen, defaultMode]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
