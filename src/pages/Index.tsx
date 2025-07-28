@@ -8,7 +8,6 @@ import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import ContactSection from "@/components/sections/ContactSection";
 import UserDashboard from "@/components/sections/UserDashboard";
 import { useAuth } from "@/contexts/AuthContext";
-import { ContentDebugger } from "@/components/debug/ContentDebugger";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -51,9 +50,6 @@ const Index = () => {
         )}
       </main>
       <Footer />
-      
-      {/* Temporary debug component - remove in production */}
-      <ContentDebugger />
     </div>
   );
 };
