@@ -103,9 +103,11 @@ export type Database = {
       }
       events: {
         Row: {
+          arrival_time: string | null
           created_at: string
           date: string
           description: string | null
+          estimated_end_time: string | null
           id: string
           image_url: string | null
           location: string | null
@@ -115,9 +117,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          arrival_time?: string | null
           created_at?: string
           date: string
           description?: string | null
+          estimated_end_time?: string | null
           id?: string
           image_url?: string | null
           location?: string | null
@@ -127,9 +131,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          arrival_time?: string | null
           created_at?: string
           date?: string
           description?: string | null
+          estimated_end_time?: string | null
           id?: string
           image_url?: string | null
           location?: string | null
@@ -368,6 +374,26 @@ export type Database = {
       check_is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      get_active_volunteers_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_homepage_stats: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          active_volunteers: number
+          hours_contributed: number
+          partner_organizations: number
+        }[]
+      }
+      get_hours_contributed: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      get_partner_organizations_count: {
+        Args: Record<PropertyKey, never>
+        Returns: number
       }
       is_admin: {
         Args: { user_id: string }
