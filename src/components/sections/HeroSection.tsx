@@ -6,14 +6,12 @@ import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
 import { useContentSection } from "@/hooks/useContent";
-import { useHomepageStats } from "@/hooks/useHomepageStats";
 import { useState } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const HeroSection = () => {
-  const { content: heroContent, loading: heroLoading } = useContentSection('home', 'hero');
-  const { content: impactContent, loading: impactLoading } = useContentSection('home', 'impact');
-  const { stats: dynamicStats, loading: statsLoading } = useHomepageStats();
+  const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
+  const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
   const [showDebug, setShowDebug] = useState(false);
   
   // Extract content with fallbacks
@@ -28,17 +26,17 @@ const HeroSection = () => {
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: statsLoading ? "..." : dynamicStats.active_volunteers.toString()
+      value: impactContent.active_volunteers || "0"
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: statsLoading ? "..." : dynamicStats.hours_contributed.toString()
+      value: impactContent.hours_contributed || "0"
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: statsLoading ? "..." : dynamicStats.partner_organizations.toString()
+      value: impactContent.partner_organizations || "0"
     }
   ];
 
