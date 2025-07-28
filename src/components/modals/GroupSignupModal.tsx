@@ -254,20 +254,20 @@ const GroupSignupModal = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-montserrat font-bold text-primary">
+      <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[90vh] sm:max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogHeader className="px-4 sm:px-6">
+          <DialogTitle className="text-lg sm:text-xl font-montserrat font-bold text-primary">
             Group Signup
           </DialogTitle>
-          <p className="text-muted-foreground">
+          <p className="text-sm sm:text-base text-muted-foreground">
             Sign up multiple people for: <span className="font-semibold">{eventTitle}</span>
           </p>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Available spots: {availableSpots} | Selected: {totalSelected}
           </p>
         </DialogHeader>
 
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1 overflow-y-auto px-4 sm:px-6">
           {/* Search and Filters */}
           <div className="space-y-3">
             <div className="relative">
@@ -276,11 +276,11 @@ const GroupSignupModal = ({
                 placeholder="Search by name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 text-sm sm:text-base"
               />
             </div>
             
-            <div className="flex items-center space-x-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-6">
               <div className="flex items-center space-x-2">
                 <Checkbox
                   id="sameFloor"
@@ -298,7 +298,7 @@ const GroupSignupModal = ({
                   checked={includeMyself}
                   onCheckedChange={(checked) => setIncludeMyself(checked === true)}
                 />
-                <label htmlFor="includeMyself" className="text-sm font-medium text-blue-600">
+                <label htmlFor="includeMyself" className="text-sm font-medium text-accent">
                   Sign myself up too
                 </label>
               </div>
@@ -306,7 +306,7 @@ const GroupSignupModal = ({
           </div>
 
           {/* User List */}
-          <div className="border rounded-lg max-h-80 overflow-y-auto">
+          <div className="border rounded-lg max-h-60 sm:max-h-80 overflow-y-auto">
             {loading ? (
               <div className="p-4 text-center text-muted-foreground">
                 Loading users...
@@ -316,7 +316,7 @@ const GroupSignupModal = ({
                 {showOnlyMyFloor ? "No users found on your floor" : "No users found"}
               </div>
             ) : (
-              <div className="space-y-1 p-2">
+              <div className="space-y-1 p-1 sm:p-2">
                 {users.map((userProfile) => {
                   const isSelected = selectedUsers.has(userProfile.user_id);
                   const cannotSignUp = userProfile.commitments >= 2;
@@ -324,26 +324,26 @@ const GroupSignupModal = ({
                   return (
                     <div
                       key={userProfile.user_id}
-                      className={`flex items-center justify-between p-3 rounded-lg border transition-all cursor-pointer ${
+                      className={`flex items-center justify-between p-2 sm:p-3 rounded-lg border transition-all cursor-pointer ${
                         isSelected 
-                          ? 'bg-primary/10 border-primary' 
+                          ? 'bg-accent/10 border-accent' 
                           : cannotSignUp
                           ? 'bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed'
                           : 'hover:bg-gray-50 border-gray-200'
                       }`}
                       onClick={() => !cannotSignUp && handleUserToggle(userProfile.user_id)}
                     >
-                      <div className="flex items-center space-x-3 flex-1">
+                      <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                         <Checkbox
                           checked={isSelected}
                           disabled={cannotSignUp}
-                          className="pointer-events-none"
+                          className="pointer-events-none flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">
                             {userProfile.email.split('@')[0]}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-xs text-muted-foreground truncate">
                             {userProfile.email}
                           </p>
                           <p className="text-xs text-muted-foreground">
@@ -352,12 +352,12 @@ const GroupSignupModal = ({
                         </div>
                       </div>
                       
-                      <div className="flex items-center space-x-2">
-                        <div className="text-xs text-muted-foreground">
+                      <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 flex-shrink-0">
+                        <div className="text-xs text-muted-foreground whitespace-nowrap">
                           Commitments: {userProfile.commitments}/2
                         </div>
                         {cannotSignUp && (
-                          <div className="text-xs text-red-500 font-medium">
+                          <div className="text-xs text-red-500 font-medium whitespace-nowrap">
                             Maximum reached
                           </div>
                         )}
@@ -370,21 +370,32 @@ const GroupSignupModal = ({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex justify-between items-center pt-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 px-4 sm:px-6">
             <p className="text-sm text-muted-foreground">
               {totalSelected} {totalSelected === 1 ? 'person' : 'people'} selected
             </p>
             
-            <div className="flex space-x-2">
-              <Button variant="outline" onClick={onClose}>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="w-full sm:w-auto order-2 sm:order-1"
+              >
                 Cancel
               </Button>
               <Button
                 onClick={handleSubmit}
                 disabled={totalSelected === 0 || totalSelected > availableSpots || submitting}
-                className="bg-primary hover:bg-primary/90"
+                className="w-full sm:w-auto order-1 sm:order-2 bg-accent hover:bg-accent/90 text-accent-foreground shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] disabled:hover:scale-100"
               >
-                {submitting ? "Signing Up..." : `Sign Up ${totalSelected} ${totalSelected === 1 ? 'Person' : 'People'}`}
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    Signing Up...
+                  </span>
+                ) : (
+                  `Sign Up ${totalSelected} ${totalSelected === 1 ? 'Person' : 'People'}`
+                )}
               </Button>
             </div>
           </div>
