@@ -375,26 +375,6 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: boolean
       }
-      get_active_volunteers_count: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      get_homepage_stats: {
-        Args: Record<PropertyKey, never>
-        Returns: {
-          active_volunteers: number
-          hours_contributed: number
-          partner_organizations: number
-        }[]
-      }
-      get_hours_contributed: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      get_partner_organizations_count: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
