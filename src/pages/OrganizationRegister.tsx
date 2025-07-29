@@ -43,21 +43,16 @@ const OrganizationRegister: React.FC = () => {
     const otp = generateOTP();
     
     try {
-      const response = await fetch('/functions/v1/send-organization-otp', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('send-organization-otp', {
+        body: {
           email,
           otp,
           organizationName
-        })
+        }
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to send OTP email');
+      if (error) {
+        throw error;
       }
 
       return otp;
