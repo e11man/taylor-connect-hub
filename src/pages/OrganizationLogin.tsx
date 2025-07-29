@@ -56,7 +56,7 @@ const OrganizationLogin = () => {
         .from('organizations')
         .select('id, user_id, name, status, contact_email')
         .eq('user_id', data.user.id)
-        .single();
+        .maybeSingle();
 
       console.log("🏢 Organization lookup result:", { 
         orgData, 
