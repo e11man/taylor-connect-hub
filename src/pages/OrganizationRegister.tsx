@@ -104,7 +104,7 @@ const OrganizationRegister: React.FC = () => {
 
         toast({
           title: "Registration successful!",
-          description: "Please check your email for verification, then you can sign in.",
+          description: "Please check your email to verify your account. After verification, wait for admin approval before signing in.",
         });
 
         // Reset form

@@ -93,17 +93,14 @@ const OrganizationLogin = () => {
       console.log("📋 Organization status check:", orgData.status);
       
       if (orgData.status === 'pending') {
-        await supabase.auth.signOut();
         throw new Error(errorPending);
       }
       
       if (orgData.status === 'blocked') {
-        await supabase.auth.signOut();
         throw new Error(errorBlocked);
       }
       
       if (orgData.status !== 'approved') {
-        await supabase.auth.signOut();
         throw new Error(`Organization status: ${orgData.status}. Contact admin for assistance.`);
       }
 

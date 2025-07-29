@@ -34,45 +34,90 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         if (!mounted) return;
         
         if (event === 'SIGNED_IN' && session?.user) {
-          // Check user status immediately after sign in
+          // Check if this is an organization or regular user
+          console.log('🔍 Checking user status after sign in for:', session.user.email);
+          
           try {
-            const { data: profile, error } = await supabase
-              .from('profiles')
+            // First check if it's an organization
+            const { data: orgData, error: orgError } = await supabase
+              .from('organizations')
               .select('status')
               .eq('user_id', session.user.id)
-              .single();
+              .maybeSingle();
 
-            if (error) {
-              console.error('Error checking user status:', error);
-              // If we can't check status, sign out for security
-              await supabase.auth.signOut();
-              return;
-            }
+            if (orgData) {
+              // This is an organization - check organization status
+              console.log('👔 Organization status:', orgData.status);
+              
+              if (orgData.status === 'pending') {
+                await supabase.auth.signOut();
+                toast({
+                  title: "Organization Pending Approval",
+                  description: "Your organization requires admin approval before access. You'll receive an email when approved.",
+                  variant: "destructive",
+                });
+                return;
+              }
+              
+              if (orgData.status === 'blocked') {
+                await supabase.auth.signOut();
+                toast({
+                  title: "Organization Blocked",
+                  description: "Your organization has been blocked. Please contact support.",
+                  variant: "destructive",
+                });
+                return;
+              }
+              
+              if (orgData.status !== 'approved') {
+                await supabase.auth.signOut();
+                toast({
+                  title: "Organization Access Denied",
+                  description: `Organization status: ${orgData.status}. Contact admin for assistance.`,
+                  variant: "destructive",
+                });
+                return;
+              }
+            } else {
+              // This is a regular user - check profile status
+              const { data: profile, error: profileError } = await supabase
+                .from('profiles')
+                .select('status')
+                .eq('user_id', session.user.id)
+                .maybeSingle();
 
-            if (profile?.status === 'pending') {
-              // User is pending approval - sign them out immediately
-              await supabase.auth.signOut();
-              toast({
-                title: "Account Pending Approval",
-                description: "Your account requires admin approval before access. You'll receive an email when approved.",
-                variant: "destructive",
-              });
-              return;
-            }
+              if (profileError && profileError.code !== 'PGRST116') {
+                console.error('Error checking user profile status:', profileError);
+                await supabase.auth.signOut();
+                return;
+              }
 
-            if (profile?.status === 'blocked') {
-              // User is blocked - sign them out immediately
-              await supabase.auth.signOut();
-              toast({
-                title: "Account Blocked",
-                description: "Your account has been blocked. Please contact support.",
-                variant: "destructive",
-              });
-              return;
+              if (profile) {
+                console.log('👤 User profile status:', profile.status);
+                
+                if (profile.status === 'pending') {
+                  await supabase.auth.signOut();
+                  toast({
+                    title: "Account Pending Approval",
+                    description: "Your account requires admin approval before access. You'll receive an email when approved.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+
+                if (profile.status === 'blocked') {
+                  await supabase.auth.signOut();
+                  toast({
+                    title: "Account Blocked",
+                    description: "Your account has been blocked. Please contact support.",
+                    variant: "destructive",
+                  });
+                  return;
+                }
+              }
             }
           } catch (error) {
             console.error('Error in status check:', error);
-            // If status check fails, sign out for security
             await supabase.auth.signOut();
             return;
           }
