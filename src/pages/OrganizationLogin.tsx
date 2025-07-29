@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { ForgotPasswordModal } from "@/components/modals/ForgotPasswordModal";
 import { DynamicText } from "@/components/content/DynamicText";
 import { useContent, useContentSection } from "@/hooks/useContent";
+import { debugOrganizationLookup, logDebugResults } from "@/utils/debugOrganizationLookup";
 
 const OrganizationLogin = () => {
   const [email, setEmail] = useState("");
@@ -25,32 +26,85 @@ const OrganizationLogin = () => {
   const { content: successDescription } = useContent('organizationLogin', 'messages', 'successDescription', 'Welcome back to your organization dashboard.');
   const { content: errorTitle } = useContent('organizationLogin', 'messages', 'errorTitle', 'Error');
   const { content: errorNotOrganization } = useContent('organizationLogin', 'messages', 'errorNotOrganization', 'This account is not registered as an organization');
+  const { content: errorPending } = useContent('organizationLogin', 'messages', 'errorPending', 'Your organization is pending approval. Please wait for admin approval.');
+  const { content: errorBlocked } = useContent('organizationLogin', 'messages', 'errorBlocked', 'Your organization account has been blocked. Please contact support.');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
     try {
+      console.log("🔑 Starting organization login process for:", email);
+      
+      // Step 1: Authenticate user
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error("❌ Auth error:", error);
         throw error;
       }
 
-      // Check if this is an organization user by looking at their organization profile
+      console.log("✅ User authenticated:", data.user.id);
+
+      // Step 2: Check organization profile with enhanced error handling
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
-        .select('*')
+        .select('id, user_id, name, status, contact_email')
         .eq('user_id', data.user.id)
         .single();
 
-      if (orgError || !orgData) {
+      console.log("🏢 Organization lookup result:", { orgData, orgError });
+
+      if (orgError) {
+        console.error("❌ Organization lookup failed:", orgError);
+        
+        // Run debug process for detailed analysis
+        const debugResults = await debugOrganizationLookup(email);
+        logDebugResults(debugResults, email);
+        
+        await supabase.auth.signOut();
+        
+        if (orgError.code === 'PGRST116') {
+          // No rows returned - organization doesn't exist
+          throw new Error(errorNotOrganization);
+        } else {
+          // Other errors (likely RLS or database issues)
+          throw new Error(`Organization lookup failed: ${orgError.message}`);
+        }
+      }
+
+      if (!orgData) {
+        console.error("❌ No organization data returned");
         await supabase.auth.signOut();
         throw new Error(errorNotOrganization);
       }
+
+      // Step 3: Check organization status
+      console.log("📋 Organization status check:", orgData.status);
+      
+      if (orgData.status === 'pending') {
+        await supabase.auth.signOut();
+        throw new Error(errorPending);
+      }
+      
+      if (orgData.status === 'blocked') {
+        await supabase.auth.signOut();
+        throw new Error(errorBlocked);
+      }
+      
+      if (orgData.status !== 'approved') {
+        await supabase.auth.signOut();
+        throw new Error(`Organization status: ${orgData.status}. Contact admin for assistance.`);
+      }
+
+      console.log("✅ Organization login successful:", {
+        orgId: orgData.id,
+        orgName: orgData.name,
+        status: orgData.status
+      });
 
       toast({
         title: successTitle,
@@ -59,6 +113,8 @@ const OrganizationLogin = () => {
 
       navigate('/organization-dashboard');
     } catch (error: any) {
+      console.error("❌ Organization login failed:", error);
+      
       toast({
         title: errorTitle,
         description: error.message || "Failed to sign in. Please try again.",

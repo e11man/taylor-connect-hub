@@ -318,18 +318,21 @@ export type Database = {
           event_id: string
           id: string
           signed_up_at: string
+          signed_up_by: string | null
           user_id: string
         }
         Insert: {
           event_id: string
           id?: string
           signed_up_at?: string
+          signed_up_by?: string | null
           user_id: string
         }
         Update: {
           event_id?: string
           id?: string
           signed_up_at?: string
+          signed_up_by?: string | null
           user_id?: string
         }
         Relationships: [
