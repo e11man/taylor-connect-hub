@@ -116,19 +116,10 @@ export function OrganizationOTPVerification({
     try {
       console.log('🔄 Resending OTP for organization:', organizationName);
       
-      // Generate new OTP and send via edge function
-      const generateOTP = () => {
-        return Math.floor(100000 + Math.random() * 900000).toString();
-      };
-      
-      const newOtp = generateOTP();
-      
-      const { data, error } = await supabase.functions.invoke('send-organization-otp', {
-        body: {
-          email,
-          otp: newOtp,
-          organizationName
-        }
+      // Use Supabase's built-in resend functionality
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: email
       });
 
       if (error) {

@@ -121,24 +121,19 @@ const OrganizationRegister: React.FC = () => {
       try {
         console.log('🔄 Starting organization registration for:', formData.email);
         
-        // First, generate and send OTP
-        console.log('📧 Generating and sending OTP...');
-        const otp = await sendOTP(formData.email, formData.organizationName);
-        console.log('✅ OTP generated and sent successfully');
-        
-        // Then sign up with Supabase using the OTP we generated
-        console.log('👤 Creating Supabase user account...');
+        // Create user account with organization metadata using Supabase's built-in OTP
+        console.log('👤 Creating Supabase user account with OTP verification...');
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
           options: {
+            emailRedirectTo: `${window.location.origin}/`,
             data: {
               user_type: 'organization',
               organization_name: formData.organizationName,
               description: formData.organizationDescription,
               website: formData.website,
               phone: formData.phoneNumber,
-              otp_code: otp  // Store OTP for verification
             }
           }
         });

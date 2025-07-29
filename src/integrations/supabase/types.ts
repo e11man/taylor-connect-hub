@@ -242,6 +242,7 @@ export type Database = {
           contact_email: string
           created_at: string
           description: string | null
+          email_confirmed: boolean
           id: string
           name: string
           phone: string | null
@@ -256,6 +257,7 @@ export type Database = {
           contact_email: string
           created_at?: string
           description?: string | null
+          email_confirmed?: boolean
           id?: string
           name: string
           phone?: string | null
@@ -270,6 +272,7 @@ export type Database = {
           contact_email?: string
           created_at?: string
           description?: string | null
+          email_confirmed?: boolean
           id?: string
           name?: string
           phone?: string | null
@@ -377,6 +380,10 @@ export type Database = {
       check_is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      confirm_organization_email: {
+        Args: { user_id: string }
+        Returns: undefined
       }
       is_admin: {
         Args: { user_id: string }

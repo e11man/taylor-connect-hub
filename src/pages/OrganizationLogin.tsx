@@ -54,7 +54,7 @@ const OrganizationLogin = () => {
       
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
-        .select('id, user_id, name, status, contact_email, email_confirmed')
+        .select('id, user_id, name, contact_email, email_confirmed')
         .eq('user_id', data.user.id)
         .maybeSingle();
 
@@ -89,9 +89,8 @@ const OrganizationLogin = () => {
         throw new Error(errorNotOrganization);
       }
 
-      // Step 3: Check email confirmation and organization status
-      console.log("📋 Organization status check:", {
-        status: orgData.status,
+      // Step 3: Check email confirmation
+      console.log("📋 Organization email confirmation check:", {
         emailConfirmed: orgData.email_confirmed
       });
       
@@ -99,31 +98,11 @@ const OrganizationLogin = () => {
         await supabase.auth.signOut();
         throw new Error("Please verify your email address before logging in. Check your inbox for the verification code.");
       }
-      
-      if (orgData.status === 'pending') {
-        await supabase.auth.signOut();
-        throw new Error("Your organization is pending admin approval. You'll receive an email notification once approved.");
-      }
-      
-      if (orgData.status === 'rejected') {
-        await supabase.auth.signOut();
-        throw new Error("Your organization registration was not approved. Please contact support for more information.");
-      }
-      
-      if (orgData.status === 'blocked') {
-        await supabase.auth.signOut();
-        throw new Error(errorBlocked);
-      }
-      
-      if (orgData.status !== 'approved') {
-        await supabase.auth.signOut();
-        throw new Error(`Organization status: ${orgData.status}. Contact admin for assistance.`);
-      }
 
       console.log("✅ Organization login successful:", {
         orgId: orgData.id,
         orgName: orgData.name,
-        status: orgData.status
+        emailConfirmed: orgData.email_confirmed
       });
 
       toast({
