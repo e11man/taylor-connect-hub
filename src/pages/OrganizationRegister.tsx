@@ -43,6 +43,8 @@ const OrganizationRegister: React.FC = () => {
     const otp = generateOTP();
     
     try {
+      console.log('🔄 Sending OTP for organization:', organizationName);
+      
       const { data, error } = await supabase.functions.invoke('send-organization-otp', {
         body: {
           email,
@@ -51,14 +53,18 @@ const OrganizationRegister: React.FC = () => {
         }
       });
 
+      console.log('📧 Edge function response:', { data, error });
+
       if (error) {
-        throw error;
+        console.error('❌ Edge function error:', error);
+        throw new Error(`Failed to send verification email: ${error.message}`);
       }
 
+      console.log('✅ OTP sent successfully');
       return otp;
-    } catch (error) {
-      console.error('Error sending OTP:', error);
-      throw error;
+    } catch (error: any) {
+      console.error('❌ Error sending OTP:', error);
+      throw new Error(`Failed to send verification email: ${error.message || error}`);
     }
   };
 
@@ -113,10 +119,15 @@ const OrganizationRegister: React.FC = () => {
       setIsLoading(true);
       
       try {
+        console.log('🔄 Starting organization registration for:', formData.email);
+        
         // First, generate and send OTP
+        console.log('📧 Generating and sending OTP...');
         const otp = await sendOTP(formData.email, formData.organizationName);
+        console.log('✅ OTP generated and sent successfully');
         
         // Then sign up with Supabase using the OTP we generated
+        console.log('👤 Creating Supabase user account...');
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -133,9 +144,12 @@ const OrganizationRegister: React.FC = () => {
         });
 
         if (error) {
+          console.error('❌ Supabase signup error:', error);
           throw error;
         }
 
+        console.log('✅ User account created successfully');
+        
         toast({
           title: "Verification Code Sent! 📧",
           description: "Please check your email for a 6-digit verification code.",
@@ -144,6 +158,7 @@ const OrganizationRegister: React.FC = () => {
         // Show OTP verification step
         setShowOTPVerification(true);
       } catch (error: any) {
+        console.error('❌ Registration failed:', error);
         toast({
           title: "Registration failed",
           description: error.message || "Failed to create account. Please try again.",
