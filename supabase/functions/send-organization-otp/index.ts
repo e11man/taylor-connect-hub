@@ -16,14 +16,40 @@ interface OTPEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  console.log("🔄 Edge function called with method:", req.method);
+  
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
+    console.log("✅ Handling CORS preflight request");
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, otp, organizationName }: OTPEmailRequest = await req.json();
+    console.log("📧 Processing OTP email request");
+    
+    // Check if Resend API key is available
+    const apiKey = Deno.env.get("RESEND_API_KEY");
+    if (!apiKey) {
+      console.error("❌ RESEND_API_KEY not found in environment");
+      throw new Error("Email service not configured");
+    }
+    console.log("✅ Resend API key found");
 
+    const body = await req.json();
+    console.log("📄 Request body received:", { 
+      email: body.email, 
+      organizationName: body.organizationName,
+      otpLength: body.otp?.length 
+    });
+
+    const { email, otp, organizationName }: OTPEmailRequest = body;
+
+    if (!email || !otp || !organizationName) {
+      throw new Error("Missing required fields: email, otp, or organizationName");
+    }
+
+    console.log("📨 Sending email via Resend...");
+    
     const emailResponse = await resend.emails.send({
       from: "Community Connect <onboarding@resend.dev>",
       to: [email],
@@ -67,9 +93,12 @@ const handler = async (req: Request): Promise<Response> => {
       `,
     });
 
-    console.log("OTP email sent successfully:", emailResponse);
+    console.log("✅ Email sent successfully:", emailResponse);
 
-    return new Response(JSON.stringify(emailResponse), {
+    return new Response(JSON.stringify({ 
+      success: true, 
+      data: emailResponse 
+    }), {
       status: 200,
       headers: {
         "Content-Type": "application/json",
@@ -77,9 +106,12 @@ const handler = async (req: Request): Promise<Response> => {
       },
     });
   } catch (error: any) {
-    console.error("Error in send-organization-otp function:", error);
+    console.error("❌ Error in send-organization-otp function:", error);
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message || "Failed to send verification email"
+      }),
       {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
