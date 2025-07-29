@@ -517,20 +517,19 @@ const AdminDashboard = () => {
   // Organization management functions
   const approveOrganization = async (orgId: string) => {
     try {
-      const { error } = await supabase
-        .from('organizations')
-        .update({ 
-          status: 'approved',
-          approved_at: new Date().toISOString(),
-          approved_by: user?.id
-        })
-        .eq('id', orgId);
+      const { data, error } = await supabase.functions.invoke('send-admin-approval', {
+        body: {
+          organizationId: orgId,
+          action: 'approve',
+          adminId: user?.id
+        }
+      });
 
       if (error) throw error;
 
       toast({
         title: "Organization approved! 🎊",
-        description: "They can now create events.",
+        description: "They can now create events and have been notified via email.",
       });
 
       await fetchOrganizations();
@@ -545,19 +544,24 @@ const AdminDashboard = () => {
   };
 
   const rejectOrganization = async (orgId: string) => {
-    if (!confirm("Are you sure you want to reject this organization?")) return;
+    const reason = prompt("Please provide a reason for rejection (optional):");
+    if (reason === null) return; // User cancelled
 
     try {
-      const { error } = await supabase
-        .from('organizations')
-        .update({ status: 'rejected' })
-        .eq('id', orgId);
+      const { data, error } = await supabase.functions.invoke('send-admin-approval', {
+        body: {
+          organizationId: orgId,
+          action: 'reject',
+          adminId: user?.id,
+          reason: reason || undefined
+        }
+      });
 
       if (error) throw error;
 
       toast({
         title: "Organization rejected",
-        description: "The organization has been denied.",
+        description: "The organization has been denied and notified via email.",
       });
 
       await fetchOrganizations();
