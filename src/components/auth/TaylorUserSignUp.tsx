@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { getEmailConfirmUrl } from "@/utils/config";
 import { dormAndFloorData } from "@/utils/dormData";
 import { OTPVerification } from "./OTPVerification";
+import { ApprovalPendingMessage } from "./ApprovalPendingMessage";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 
@@ -26,6 +27,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showOTPVerification, setShowOTPVerification] = useState(false);
+  const [showApprovalPending, setShowApprovalPending] = useState(false);
   const [showPasswordWarning, setShowPasswordWarning] = useState(false);
 
   useEffect(() => {
@@ -64,31 +66,66 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
     try {
       const redirectUrl = getEmailConfirmUrl('/');
       
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            user_type: isTaylorUser ? 'student' : 'external',
-            dorm: selectedDorm,
-            wing: selectedFloor,
+      // For non-Taylor users, we need to prevent auto-signin
+      if (isTaylorUser) {
+        // Taylor users: Normal signup with auto-signin
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              user_type: 'student',
+              dorm: selectedDorm,
+              wing: selectedFloor,
+            }
           }
-        }
-      });
+        });
 
-      if (error) {
-        toast({
-          title: "Sign Up Error",
-          description: error.message,
-          variant: "destructive",
-        });
+        if (error) {
+          toast({
+            title: "Sign Up Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Verification Code Sent! 📧",
+            description: "Please check your email for a 6-digit verification code.",
+          });
+          setShowOTPVerification(true);
+        }
       } else {
-        toast({
-          title: "Verification Code Sent! 📧",
-          description: "Please check your email for a 6-digit verification code.",
+        // Non-Taylor users: Signup without auto-signin
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              user_type: 'external',
+              dorm: selectedDorm,
+              wing: selectedFloor,
+            }
+          }
         });
-        setShowOTPVerification(true);
+
+        if (error) {
+          toast({
+            title: "Sign Up Error",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          // Immediately sign out to prevent auto-access
+          await supabase.auth.signOut();
+          
+          toast({
+            title: "Account Created Successfully! 📝",
+            description: "Your account has been submitted for admin approval.",
+          });
+          setShowApprovalPending(true);
+        }
       }
     } catch (error) {
       toast({
@@ -111,12 +148,26 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
     setShowOTPVerification(false);
   };
 
+  const handleApprovalPendingClose = () => {
+    setShowApprovalPending(false);
+    onClose?.();
+  };
+
   if (showOTPVerification) {
     return (
       <OTPVerification 
         email={email}
         onVerificationComplete={handleVerificationComplete}
         onBack={handleBackToSignUp}
+      />
+    );
+  }
+
+  if (showApprovalPending) {
+    return (
+      <ApprovalPendingMessage 
+        email={email}
+        onClose={handleApprovalPendingClose}
       />
     );
   }
@@ -128,7 +179,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         <p className="text-muted-foreground text-sm">
           {isTaylorUser 
             ? "Sign up to connect with Taylor University community." 
-            : "External users will be reviewed before approval."}
+            : "Non-Taylor email accounts require admin approval."}
         </p>
       </div>
       
@@ -247,7 +298,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         {!isTaylorUser && (
           <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
             <p className="text-sm text-yellow-800">
-              <strong>Note:</strong> External accounts require admin approval before access is granted.
+              <strong>Note:</strong> Non-Taylor email accounts require admin approval before access is granted.
             </p>
           </div>
         )}

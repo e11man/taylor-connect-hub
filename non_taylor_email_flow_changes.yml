@@ -1,0 +1,307 @@
+# Non-Taylor Email Authentication Flow Changes
+# This YAML describes the modifications needed to handle non-Taylor email accounts differently
+
+project: "Taylor Connect Hub"
+component: "Authentication System"
+priority: "High"
+type: "Feature Enhancement"
+
+## Overview
+Currently, all users (Taylor and non-Taylor emails) go through the same OTP verification flow. This needs to be changed so that:
+- Taylor email users (@taylor.edu) continue with OTP verification as before
+- Non-Taylor email users skip OTP verification and see an approval pending message
+- Non-Taylor users get directed to contact form for questions
+
+## Current Flow Analysis
+
+### Current Authentication Flow:
+1. User enters email and password in `TaylorUserSignUp.tsx`
+2. System detects if email ends with `@taylor.edu`
+3. All users are sent to `OTPVerification.tsx` component
+4. OTP verification happens for both Taylor and non-Taylor users
+5. After verification, non-Taylor users get "pending" status in database
+
+### Problems with Current Flow:
+- Non-Taylor users shouldn't need OTP verification since they're not immediately approved
+- Creates unnecessary friction for external users
+- Confusing user experience for non-Taylor accounts
+
+## Required Changes
+
+### 1. Modify TaylorUserSignUp.tsx
+
+#### Current Logic (Lines 45-75):
+```typescript
+// Current: All users go to OTP verification
+if (error) {
+  // Error handling
+} else {
+  toast({
+    title: "Verification Code Sent! 📧",
+    description: "Please check your email for a 6-digit verification code.",
+  });
+  setShowOTPVerification(true);
+}
+```
+
+#### New Logic Required:
+```typescript
+// New: Different flows based on email domain
+if (error) {
+  // Error handling
+} else {
+  if (isTaylorUser) {
+    // Taylor users: Continue with OTP verification
+    toast({
+      title: "Verification Code Sent! 📧",
+      description: "Please check your email for a 6-digit verification code.",
+    });
+    setShowOTPVerification(true);
+  } else {
+    // Non-Taylor users: Show approval pending message
+    toast({
+      title: "Account Created Successfully! 📝",
+      description: "Your account has been submitted for admin approval.",
+    });
+    setShowApprovalPending(true); // New state
+  }
+}
+```
+
+#### New State Variables Needed:
+```typescript
+const [showApprovalPending, setShowApprovalPending] = useState(false);
+```
+
+#### New Component Rendering Logic:
+```typescript
+if (showOTPVerification) {
+  return (
+    <OTPVerification 
+      email={email}
+      onVerificationComplete={handleVerificationComplete}
+      onBack={handleBackToSignUp}
+    />
+  );
+}
+
+if (showApprovalPending) {
+  return (
+    <ApprovalPendingMessage 
+      email={email}
+      onClose={onClose}
+    />
+  );
+}
+```
+
+### 2. Create New ApprovalPendingMessage Component
+
+#### File: `src/components/auth/ApprovalPendingMessage.tsx`
+
+```typescript
+interface ApprovalPendingMessageProps {
+  email: string;
+  onClose?: () => void;
+}
+
+export function ApprovalPendingMessage({ email, onClose }: ApprovalPendingMessageProps) {
+  const handleContactSupport = () => {
+    // Navigate to contact form or open contact modal
+    window.open('/contact', '_blank');
+  };
+
+  return (
+    <div className="w-full max-w-sm mx-auto">
+      <div className="text-center space-y-4 mb-6">
+        <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
+          <Clock className="w-8 h-8 text-blue-600" />
+        </div>
+        
+        <h2 className="text-2xl font-bold text-primary">Account Submitted</h2>
+        <p className="text-muted-foreground text-sm">
+          Thank you for creating an account with <strong>{email}</strong>
+        </p>
+      </div>
+      
+      <div className="space-y-6">
+        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <h3 className="font-semibold text-blue-900 mb-2">What happens next?</h3>
+          <ul className="text-sm text-blue-800 space-y-1">
+            <li>• Your account has been submitted for admin review</li>
+            <li>• You'll receive an email when your account is approved</li>
+            <li>• This process typically takes 1-2 business days</li>
+          </ul>
+        </div>
+
+        <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+          <h3 className="font-semibold text-amber-900 mb-2">Important Note</h3>
+          <p className="text-sm text-amber-800">
+            Non-Taylor email accounts require admin approval before access is granted. 
+            This helps maintain the security and integrity of our community platform.
+          </p>
+        </div>
+
+        <Button 
+          onClick={handleContactSupport}
+          className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold"
+        >
+          Contact Support
+        </Button>
+
+        <Button 
+          variant="outline" 
+          onClick={onClose}
+          className="w-full"
+        >
+          Close
+        </Button>
+      </div>
+    </div>
+  );
+}
+```
+
+### 3. Update Text Content
+
+#### Change "External users" to "Non-Taylor emails":
+
+**Current Text (Line 108):**
+```typescript
+<p className="text-muted-foreground text-sm">
+  {isTaylorUser 
+    ? "Sign up to connect with Taylor University community." 
+    : "External users will be reviewed before approval."}
+</p>
+```
+
+**New Text:**
+```typescript
+<p className="text-muted-foreground text-sm">
+  {isTaylorUser 
+    ? "Sign up to connect with Taylor University community." 
+    : "Non-Taylor email accounts require admin approval."}
+</p>
+```
+
+#### Update Warning Box Text (Lines 240-246):
+
+**Current Text:**
+```typescript
+<div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+  <p className="text-sm text-yellow-800">
+    <strong>Note:</strong> External accounts require admin approval before access is granted.
+  </p>
+</div>
+```
+
+**New Text:**
+```typescript
+<div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+  <p className="text-sm text-yellow-800">
+    <strong>Note:</strong> Non-Taylor email accounts require admin approval before access is granted.
+  </p>
+</div>
+```
+
+### 4. Database Considerations
+
+#### Current Database Logic (Supabase Migration):
+```sql
+-- Current: All non-Taylor emails get 'pending' status
+IF NOT NEW.email LIKE '%@taylor.edu' THEN
+  user_status := 'pending';
+END IF;
+```
+
+**This logic is correct and should remain unchanged.**
+
+### 5. Import Requirements
+
+#### Add to TaylorUserSignUp.tsx:
+```typescript
+import { ApprovalPendingMessage } from "./ApprovalPendingMessage";
+import { Clock } from 'lucide-react';
+```
+
+## Implementation Steps
+
+### Step 1: Create ApprovalPendingMessage Component
+1. Create `src/components/auth/ApprovalPendingMessage.tsx`
+2. Implement the component with proper styling and functionality
+3. Add contact form navigation
+
+### Step 2: Modify TaylorUserSignUp.tsx
+1. Add `showApprovalPending` state
+2. Update signup logic to conditionally show OTP or approval message
+3. Update text content to use "Non-Taylor emails" instead of "External users"
+4. Add conditional rendering for new component
+
+### Step 3: Test Both Flows
+1. Test with @taylor.edu email - should go to OTP verification
+2. Test with non-Taylor email - should show approval pending message
+3. Verify database status is set correctly for both cases
+
+### Step 4: Update Contact Form Integration
+1. Ensure contact form route exists (`/contact`)
+2. Or create contact modal component
+3. Test contact support button functionality
+
+## Expected User Experience
+
+### Taylor Email Users (@taylor.edu):
+1. Enter email, password, dorm, wing
+2. Click "Create Account"
+3. See "Verification Code Sent" toast
+4. Redirected to OTP verification screen
+5. Enter 6-digit code
+6. Account verified and can access platform
+
+### Non-Taylor Email Users:
+1. Enter email, password
+2. Click "Create Account"
+3. See "Account Created Successfully" toast
+4. Redirected to approval pending screen
+5. See explanation of approval process
+6. Can contact support if needed
+7. Must wait for admin approval email
+
+## Benefits of This Change
+
+1. **Better User Experience**: Non-Taylor users don't go through unnecessary OTP verification
+2. **Clearer Messaging**: "Non-Taylor emails" is more specific than "External users"
+3. **Reduced Friction**: Streamlined flow for external users
+4. **Better Support**: Clear contact option for questions
+5. **Consistent with Business Logic**: OTP verification only for immediately approved users
+
+## Testing Checklist
+
+- [ ] Taylor email signup goes to OTP verification
+- [ ] Non-Taylor email signup shows approval pending message
+- [ ] Database correctly sets status for both user types
+- [ ] Contact support button works correctly
+- [ ] All text uses "Non-Taylor emails" terminology
+- [ ] Error handling works for both flows
+- [ ] Mobile responsiveness maintained
+- [ ] Accessibility standards met
+
+## Files to Modify
+
+1. `src/components/auth/TaylorUserSignUp.tsx` - Main signup logic
+2. `src/components/auth/ApprovalPendingMessage.tsx` - New component (create)
+3. Contact form/modal component (existing or create)
+
+## Dependencies
+
+- Lucide React icons (`Clock`)
+- Existing UI components (`Button`, `Alert`, etc.)
+- Contact form route or modal
+- Supabase authentication (no changes needed)
+
+## Notes
+
+- No changes needed to database schema or migrations
+- No changes needed to OTPVerification component
+- No changes needed to admin approval process
+- Maintains backward compatibility
+- Improves user experience for external users 

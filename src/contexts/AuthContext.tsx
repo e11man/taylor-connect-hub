@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
   user: User | null;
@@ -22,14 +23,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userEventsRefreshTrigger, setUserEventsRefreshTrigger] = useState(0);
   const [eventsRefreshTrigger, setEventsRefreshTrigger] = useState(0);
   const mountedRef = useRef(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     let mounted = true;
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (!mounted) return;
+        
+        if (event === 'SIGNED_IN' && session?.user) {
+          // Check user status immediately after sign in
+          try {
+            const { data: profile, error } = await supabase
+              .from('profiles')
+              .select('status')
+              .eq('user_id', session.user.id)
+              .single();
+
+            if (error) {
+              console.error('Error checking user status:', error);
+              // If we can't check status, sign out for security
+              await supabase.auth.signOut();
+              return;
+            }
+
+            if (profile?.status === 'pending') {
+              // User is pending approval - sign them out immediately
+              await supabase.auth.signOut();
+              toast({
+                title: "Account Pending Approval",
+                description: "Your account requires admin approval before access. You'll receive an email when approved.",
+                variant: "destructive",
+              });
+              return;
+            }
+
+            if (profile?.status === 'blocked') {
+              // User is blocked - sign them out immediately
+              await supabase.auth.signOut();
+              toast({
+                title: "Account Blocked",
+                description: "Your account has been blocked. Please contact support.",
+                variant: "destructive",
+              });
+              return;
+            }
+          } catch (error) {
+            console.error('Error in status check:', error);
+            // If status check fails, sign out for security
+            await supabase.auth.signOut();
+            return;
+          }
+        }
         
         setSession(session);
         setUser(session?.user ?? null);

@@ -1,0 +1,385 @@
+# Critical Security Fix: Prevent Pending Users from Auto-Signing In
+# This YAML describes the urgent fix needed to prevent non-approved users from accessing the platform
+
+project: "Taylor Connect Hub"
+component: "Authentication System"
+priority: "CRITICAL"
+type: "Security Fix"
+severity: "High"
+
+## 🚨 CRITICAL ISSUE IDENTIFIED
+
+### Problem Summary:
+Currently, when users sign up (especially non-Taylor email users), Supabase automatically signs them in after account creation. This is a **critical security vulnerability** because:
+
+1. **Non-Taylor users** get "pending" status in the database
+2. **Supabase auto-signs them in** immediately after signup
+3. **They can access the platform** before admin approval
+4. **This bypasses the approval workflow** entirely
+
+### Current Broken Flow:
+1. User signs up with non-Taylor email
+2. Account created with "pending" status ✅
+3. Supabase auto-signs user in ❌ (SECURITY ISSUE)
+4. User can access platform without approval ❌ (SECURITY ISSUE)
+5. Only when they try to login later do they get blocked ❌ (TOO LATE)
+
+## Root Cause Analysis
+
+### 1. Supabase Auto-Signin Behavior
+```typescript
+// In TaylorUserSignUp.tsx - Current problematic flow
+const { error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    emailRedirectTo: redirectUrl,
+    data: { user_type: isTaylorUser ? 'student' : 'external' }
+  }
+});
+
+// Supabase automatically signs user in after signup
+// This happens regardless of user status in database
+```
+
+### 2. Missing Status Check in AuthContext
+```typescript
+// In AuthContext.tsx - Current flow
+const { data: { subscription } } = supabase.auth.onAuthStateChange(
+  (event, session) => {
+    if (!mounted) return;
+    
+    setSession(session);
+    setUser(session?.user ?? null); // ❌ No status check here
+    setLoading(false);
+  }
+);
+```
+
+### 3. Status Check Only in Login Flow
+```typescript
+// In TaylorUserLogin.tsx - Only checks status during login
+if (profile?.status === 'pending') {
+  await supabase.auth.signOut();
+  toast({
+    title: "Account Pending",
+    description: "Your account is awaiting admin approval.",
+  });
+  return;
+}
+```
+
+## Required Fixes
+
+### 1. Modify AuthContext.tsx - Add Status Check
+
+#### Current Code (Lines 28-40):
+```typescript
+const { data: { subscription } } = supabase.auth.onAuthStateChange(
+  (event, session) => {
+    if (!mounted) return;
+    
+    setSession(session);
+    setUser(session?.user ?? null);
+    setLoading(false);
+    if (event === 'SIGNED_IN') {
+      setUserEventsRefreshTrigger(prev => prev + 1);
+    }
+  }
+);
+```
+
+#### New Code Required:
+```typescript
+const { data: { subscription } } = supabase.auth.onAuthStateChange(
+  async (event, session) => {
+    if (!mounted) return;
+    
+    if (event === 'SIGNED_IN' && session?.user) {
+      // Check user status immediately after sign in
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('status')
+          .eq('user_id', session.user.id)
+          .single();
+
+        if (error) {
+          console.error('Error checking user status:', error);
+          // If we can't check status, sign out for security
+          await supabase.auth.signOut();
+          return;
+        }
+
+        if (profile?.status === 'pending') {
+          // User is pending approval - sign them out immediately
+          await supabase.auth.signOut();
+          toast({
+            title: "Account Pending Approval",
+            description: "Your account requires admin approval before access. You'll receive an email when approved.",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        if (profile?.status === 'blocked') {
+          // User is blocked - sign them out immediately
+          await supabase.auth.signOut();
+          toast({
+            title: "Account Blocked",
+            description: "Your account has been blocked. Please contact support.",
+            variant: "destructive",
+          });
+          return;
+        }
+      } catch (error) {
+        console.error('Error in status check:', error);
+        // If status check fails, sign out for security
+        await supabase.auth.signOut();
+        return;
+      }
+    }
+    
+    setSession(session);
+    setUser(session?.user ?? null);
+    setLoading(false);
+    if (event === 'SIGNED_IN') {
+      setUserEventsRefreshTrigger(prev => prev + 1);
+    }
+  }
+);
+```
+
+### 2. Modify TaylorUserSignUp.tsx - Prevent Auto-Signin for Non-Taylor Users
+
+#### Current Code (Lines 45-75):
+```typescript
+const { error } = await supabase.auth.signUp({
+  email,
+  password,
+  options: {
+    emailRedirectTo: redirectUrl,
+    data: {
+      user_type: isTaylorUser ? 'student' : 'external',
+      dorm: selectedDorm,
+      wing: selectedFloor,
+    }
+  }
+});
+```
+
+#### New Code Required:
+```typescript
+// For non-Taylor users, we need to prevent auto-signin
+if (isTaylorUser) {
+  // Taylor users: Normal signup with auto-signin
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: redirectUrl,
+      data: {
+        user_type: 'student',
+        dorm: selectedDorm,
+        wing: selectedFloor,
+      }
+    }
+  });
+
+  if (error) {
+    toast({
+      title: "Sign Up Error",
+      description: error.message,
+      variant: "destructive",
+    });
+  } else {
+    toast({
+      title: "Verification Code Sent! 📧",
+      description: "Please check your email for a 6-digit verification code.",
+    });
+    setShowOTPVerification(true);
+  }
+} else {
+  // Non-Taylor users: Signup without auto-signin
+  const { error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      emailRedirectTo: redirectUrl,
+      data: {
+        user_type: 'external',
+        dorm: selectedDorm,
+        wing: selectedFloor,
+      }
+    }
+  });
+
+  if (error) {
+    toast({
+      title: "Sign Up Error",
+      description: error.message,
+      variant: "destructive",
+    });
+  } else {
+    // Immediately sign out to prevent auto-access
+    await supabase.auth.signOut();
+    
+    toast({
+      title: "Account Created Successfully! 📝",
+      description: "Your account has been submitted for admin approval.",
+    });
+    setShowApprovalPending(true);
+  }
+}
+```
+
+### 3. Add Import for Toast in AuthContext
+
+#### Add to AuthContext.tsx:
+```typescript
+import { useToast } from "@/hooks/use-toast";
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const { toast } = useToast();
+  // ... rest of component
+}
+```
+
+### 4. Create Status Check Utility Function
+
+#### Create: `src/utils/authStatusCheck.ts`
+```typescript
+import { supabase } from "@/integrations/supabase/client";
+
+export async function checkUserStatus(userId: string) {
+  try {
+    const { data: profile, error } = await supabase
+      .from('profiles')
+      .select('status')
+      .eq('user_id', userId)
+      .single();
+
+    if (error) {
+      console.error('Error checking user status:', error);
+      return { status: 'error', message: 'Could not verify user status' };
+    }
+
+    return { status: profile?.status || 'active' };
+  } catch (error) {
+    console.error('Error in status check:', error);
+    return { status: 'error', message: 'Status check failed' };
+  }
+}
+
+export async function shouldSignOutUser(userId: string) {
+  const result = await checkUserStatus(userId);
+  
+  if (result.status === 'error') {
+    return { shouldSignOut: true, reason: result.message };
+  }
+  
+  if (result.status === 'pending') {
+    return { 
+      shouldSignOut: true, 
+      reason: 'Account pending approval' 
+    };
+  }
+  
+  if (result.status === 'blocked') {
+    return { 
+      shouldSignOut: true, 
+      reason: 'Account blocked' 
+    };
+  }
+  
+  return { shouldSignOut: false };
+}
+```
+
+## Implementation Steps
+
+### Step 1: Update AuthContext.tsx (URGENT)
+1. Add status check logic to `onAuthStateChange`
+2. Add toast import
+3. Test with pending user account
+
+### Step 2: Update TaylorUserSignUp.tsx
+1. Modify signup logic to handle Taylor vs non-Taylor differently
+2. Add immediate signout for non-Taylor users
+3. Test both flows
+
+### Step 3: Create Utility Function
+1. Create `authStatusCheck.ts`
+2. Add proper error handling
+3. Test status checking logic
+
+### Step 4: Test Security Fix
+1. Create non-Taylor account
+2. Verify they get signed out immediately
+3. Verify they can't access platform
+4. Test Taylor user flow still works
+
+## Expected Behavior After Fix
+
+### Non-Taylor User Signup:
+1. User enters email, password
+2. Clicks "Create Account"
+3. Account created with "pending" status ✅
+4. User gets signed out immediately ✅
+5. Shows approval pending message ✅
+6. User cannot access platform ✅
+
+### Taylor User Signup:
+1. User enters email, password, dorm, wing
+2. Clicks "Create Account"
+3. Account created with "active" status ✅
+4. User gets signed in ✅
+5. Goes to OTP verification ✅
+6. Can access platform after verification ✅
+
+### Existing Pending User Login:
+1. User tries to login
+2. Status check runs
+3. User gets signed out immediately ✅
+4. Shows "Account Pending" message ✅
+
+## Security Benefits
+
+1. **Prevents Unauthorized Access**: Pending users can't access platform
+2. **Immediate Protection**: Status check happens on every auth state change
+3. **Consistent Behavior**: Same logic for signup and login
+4. **Clear User Feedback**: Users understand why they can't access
+5. **Admin Control**: Only approved users can access platform
+
+## Testing Checklist
+
+- [ ] Non-Taylor signup immediately signs out user
+- [ ] Non-Taylor signup shows approval pending message
+- [ ] Non-Taylor user cannot access platform after signup
+- [ ] Taylor user signup works normally
+- [ ] Existing pending user gets signed out on login attempt
+- [ ] Existing active user can login normally
+- [ ] Blocked user gets signed out immediately
+- [ ] Error handling works for database issues
+- [ ] Toast messages display correctly
+- [ ] No infinite loops in auth state changes
+
+## Files to Modify
+
+1. `src/contexts/AuthContext.tsx` - Add status check to auth state change
+2. `src/components/auth/TaylorUserSignUp.tsx` - Modify signup flow
+3. `src/utils/authStatusCheck.ts` - Create utility function (new file)
+
+## Dependencies
+
+- Existing Supabase client
+- Existing toast system
+- Existing database schema (no changes needed)
+
+## Notes
+
+- This is a **critical security fix** that should be deployed immediately
+- No database changes required
+- Maintains backward compatibility
+- Improves security posture significantly
+- Prevents unauthorized access to platform 
