@@ -50,13 +50,20 @@ const OrganizationLogin = () => {
       console.log("✅ User authenticated:", data.user.id);
 
       // Step 2: Check organization profile with enhanced error handling
+      console.log("🔍 Looking up organization for user_id:", data.user.id);
+      
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('id, user_id, name, status, contact_email')
         .eq('user_id', data.user.id)
         .single();
 
-      console.log("🏢 Organization lookup result:", { orgData, orgError });
+      console.log("🏢 Organization lookup result:", { 
+        orgData, 
+        orgError,
+        userEmail: data.user.email,
+        userId: data.user.id 
+      });
 
       if (orgError) {
         console.error("❌ Organization lookup failed:", orgError);
