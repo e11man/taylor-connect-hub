@@ -18,6 +18,7 @@ import TestDatabase from "./pages/TestDatabase";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import ContentTest from "./pages/ContentTest";
+import TestEmailVerification from "./pages/TestEmailVerification";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -55,6 +56,7 @@ const App = () => (
                 <Route path="/admin/test" element={<TestDatabase />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/content-test" element={<ContentTest />} />
+                <Route path="/test-email-verification" element={<TestEmailVerification />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
