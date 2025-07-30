@@ -66,7 +66,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
     try {
       const redirectUrl = getEmailConfirmUrl('/');
       
-      // Both Taylor and non-Taylor users should not auto-login until email is verified
+      // Both Taylor and non-Taylor users use standard signup
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -87,7 +87,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
           variant: "destructive",
         });
       } else {
-        // CRITICAL: Sign out immediately to prevent auto-login
+        // Sign out immediately to prevent auto-login
         await supabase.auth.signOut();
         
         if (isTaylorUser) {
