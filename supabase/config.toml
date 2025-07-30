@@ -62,3 +62,6 @@ verify_jwt = false
 
 [functions.send-organization-otp]
 verify_jwt = false
+
+[functions.send-user-verification]
+verify_jwt = false
