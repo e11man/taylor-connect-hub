@@ -66,60 +66,37 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
     try {
       const redirectUrl = getEmailConfirmUrl('/');
       
-      // For non-Taylor users, we need to prevent auto-signin
-      if (isTaylorUser) {
-        // Taylor users: Normal signup with auto-signin
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: {
-              user_type: 'student',
-              dorm: selectedDorm,
-              wing: selectedFloor,
-            }
+      // Both Taylor and non-Taylor users should not auto-login until email is verified
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            user_type: isTaylorUser ? 'student' : 'external',
+            dorm: selectedDorm,
+            wing: selectedFloor,
           }
-        });
+        }
+      });
 
-        if (error) {
-          toast({
-            title: "Sign Up Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        } else {
+      if (error) {
+        toast({
+          title: "Sign Up Error",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        // CRITICAL: Sign out immediately to prevent auto-login
+        await supabase.auth.signOut();
+        
+        if (isTaylorUser) {
           toast({
             title: "Verification Code Sent! 📧",
             description: "Please check your email for a 6-digit verification code.",
           });
           setShowOTPVerification(true);
-        }
-      } else {
-        // Non-Taylor users: Signup without auto-signin
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: redirectUrl,
-            data: {
-              user_type: 'external',
-              dorm: selectedDorm,
-              wing: selectedFloor,
-            }
-          }
-        });
-
-        if (error) {
-          toast({
-            title: "Sign Up Error",
-            description: error.message,
-            variant: "destructive",
-          });
         } else {
-          // Immediately sign out to prevent auto-access
-          await supabase.auth.signOut();
-          
           toast({
             title: "Account Created Successfully! 📝",
             description: "Your account has been submitted for admin approval.",
