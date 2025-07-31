@@ -1,13 +1,13 @@
+import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
-import CallToActionSection from "@/components/sections/CallToActionSection";
-import SearchSection from "@/components/sections/SearchSection";
+import MissionSection from "@/components/sections/MissionSection";
 import OpportunitiesSection from "@/components/sections/OpportunitiesSection";
+import ImpactSection from "@/components/sections/ImpactSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import ContactSection from "@/components/sections/ContactSection";
-import UserDashboard from "@/components/sections/UserDashboard";
-import { useAuth } from "@/contexts/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const Index = () => {
   const { user, loading } = useAuth();
@@ -15,40 +15,27 @@ const Index = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <p className="text-xl text-muted-foreground">Loading...</p>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-xl text-foreground">Loading Community Connect...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-background">
       <Header />
+      
       <main>
         <HeroSection />
-        {user ? (
-          <>
-            <UserDashboard />
-            <div id="search">
-              <SearchSection />
-            </div>
-            <div id="opportunities">
-              <OpportunitiesSection />
-            </div>
-          </>
-        ) : (
-          <>
-            <CallToActionSection />
-            <div id="search">
-              <SearchSection />
-            </div>
-            <div id="opportunities">
-              <OpportunitiesSection />
-            </div>
-            <TestimonialsSection />
-            <ContactSection />
-          </>
-        )}
+        <MissionSection />
+        <OpportunitiesSection />
+        <ImpactSection />
+        <TestimonialsSection />
+        <ContactSection />
       </main>
+      
       <Footer />
     </div>
   );

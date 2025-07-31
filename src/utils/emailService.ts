@@ -1,8 +1,8 @@
 // Direct Resend API implementation for serverless environments
 import { Resend } from 'resend';
 
-// Initialize Resend with API key
-const resend = new Resend(process.env.RESEND_API_KEY || "re_e32x6j2U_Mx5KLTyeAW5oBVYPftpDnH92");
+// Initialize Resend with API key (using VITE_ prefix for browser environment)
+const resend = new Resend(import.meta.env.VITE_RESEND_API_KEY || "re_e32x6j2U_Mx5KLTyeAW5oBVYPftpDnH92");
 
 function generateVerificationCode(): string {
   return Math.floor(100000 + Math.random() * 900000).toString();
@@ -75,4 +75,4 @@ export const sendVerificationCode = async (email: string, code?: string): Promis
     console.error('Failed to send verification code:', error);
     return { success: false };
   }
-}; 
+};

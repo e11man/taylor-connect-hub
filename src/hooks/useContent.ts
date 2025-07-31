@@ -44,61 +44,97 @@ const isCacheStale = (): boolean => {
 
 // Load all content into cache
 const loadContent = async (languageCode: string = 'en', forceRefresh: boolean = false): Promise<void> => {
+  console.log('useContent: loadContent called', { languageCode, forceRefresh, isCacheStale: isCacheStale(), isContentLoaded });
+  
   // If not forcing refresh and cache is still valid, return existing promise or resolve immediately
   if (!forceRefresh && !isCacheStale() && isContentLoaded) {
+    console.log('useContent: Using cached content, returning immediately');
     return Promise.resolve();
   }
 
   // If already loading and not forcing refresh, return existing promise
   if (contentLoadingPromise && !forceRefresh) {
+    console.log('useContent: Content already loading, returning existing promise');
     return contentLoadingPromise;
   }
 
   contentLoadingPromise = (async () => {
     try {
-      console.log('Loading fresh content from Supabase...');
+      console.log('useContent: Loading fresh content from Supabase...');
       const startTime = Date.now();
       
-      const { data, error } = await supabase
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Content loading timeout')), 10000); // 10 second timeout
+      });
+      
+      console.log('useContent: About to query Supabase content table');
+      console.log('useContent: Supabase client:', supabase);
+      console.log('useContent: Supabase URL:', supabase.supabaseUrl);
+      
+      const contentPromise = supabase
         .from('content')
         .select('*')
         .eq('language_code', languageCode);
 
+      const { data, error } = await Promise.race([contentPromise, timeoutPromise]) as any;
+
+      console.log('useContent: Supabase query completed', { dataLength: data?.length, error });
+
       if (error) {
-        console.error('Error loading content:', error);
-        return;
+        console.error('useContent: Error loading content:', error);
+        // Don't return here, continue with fallback content
       }
 
       // Clear existing cache if forcing refresh
       if (forceRefresh) {
+        console.log('useContent: Clearing existing cache for force refresh');
         Object.keys(contentCache).forEach(key => delete contentCache[key]);
       }
 
-      // Populate cache
-      data?.forEach((item: ContentItem) => {
-        const cacheKey = `${item.page}.${item.section}.${item.key}`;
-        contentCache[cacheKey] = item.value;
-      });
+      // Populate cache with data or fallback content
+      if (data && data.length > 0) {
+        console.log('useContent: Populating cache with data from Supabase');
+        data.forEach((item: ContentItem) => {
+          const cacheKey = `${item.page}.${item.section}.${item.key}`;
+          contentCache[cacheKey] = item.value;
+        });
+      } else {
+        console.log('useContent: No data from Supabase, using fallback content');
+        // Populate with fallback content
+        Object.entries(fallbackContent).forEach(([key, value]) => {
+          contentCache[key] = value;
+        });
+      }
 
       isContentLoaded = true;
       lastLoadTime = Date.now();
       
       const loadTime = Date.now() - startTime;
-      console.log(`✅ Content loaded: ${data?.length || 0} items in ${loadTime}ms`);
+      console.log(`✅ useContent: Content loaded: ${data?.length || 0} items in ${loadTime}ms`);
       
       // Debug: Log hero content specifically
       const heroContent = Object.entries(contentCache)
-        .filter(([key]) => key.startsWith('home.hero.'))
+        .filter(([key]) => key.startsWith('homepage.hero.'))
         .reduce((acc, [key, value]) => {
           acc[key] = value;
           return acc;
         }, {} as Record<string, string>);
       
       if (Object.keys(heroContent).length > 0) {
-        console.log('🏠 Hero content loaded:', heroContent);
+        console.log('🏠 useContent: Hero content loaded:', heroContent);
+      } else {
+        console.log('⚠️ useContent: No hero content found in cache');
       }
     } catch (error) {
-      console.error('Error loading content:', error);
+      console.error('useContent: Error loading content:', error);
+      // Use fallback content on error
+      console.log('useContent: Using fallback content due to error');
+      Object.entries(fallbackContent).forEach(([key, value]) => {
+        contentCache[key] = value;
+      });
+      isContentLoaded = true;
+      lastLoadTime = Date.now();
     }
   })();
 
