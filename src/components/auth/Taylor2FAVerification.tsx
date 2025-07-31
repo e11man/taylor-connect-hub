@@ -150,21 +150,9 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
       }
 
       // Send new code via Resend
-      const emailResult = await sendVerificationCode(email);
+      const emailResult = await sendVerificationCode(email, newCode);
       if (!emailResult.success) {
         throw new Error('Failed to send verification code');
-      }
-      
-      // Update with the new code from the email service
-      if (emailResult.code) {
-        const { error: updateError } = await supabase
-          .from('profiles')
-          .update({ verification_code: emailResult.code })
-          .eq('email', email);
-          
-        if (updateError) {
-          throw new Error('Failed to update verification code');
-        }
       }
 
       toast({
