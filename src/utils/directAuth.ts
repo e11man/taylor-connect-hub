@@ -112,11 +112,19 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
     // Send verification code for Taylor users
     if (isTaylorUser && verificationCode) {
       console.log('Sending verification code for Taylor user:', userData.email);
-      const emailSent = await sendVerificationCode(userData.email, verificationCode);
-      console.log('Email sent result:', emailSent);
-      if (!emailSent) {
+      const emailResult = await sendVerificationCode(userData.email);
+      console.log('Email sent result:', emailResult);
+      if (!emailResult.success) {
         // If email fails, still create the account but warn the user
         console.warn('Failed to send verification email, but account was created');
+      } else {
+        // Update the profile with the generated code from the email service
+        if (emailResult.code) {
+          await supabase
+            .from('profiles')
+            .update({ verification_code: emailResult.code })
+            .eq('id', data.id);
+        }
       }
     }
     

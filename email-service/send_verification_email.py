@@ -1,33 +1,21 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
 import resend
 import os
-from dotenv import load_dotenv
+import sys
+import random
+import string
 
-# Load environment variables
-load_dotenv()
+# Get API key from environment variable or use default
+resend.api_key = os.getenv('RESEND_API_KEY', "re_e32x6j2U_Mx5KLTyeAW5oBVYPftpDnH92")
 
-app = Flask(__name__)
-CORS(app)
+def generate_verification_code():
+    """Generate a 6-digit verification code"""
+    return ''.join(random.choices(string.digits, k=6))
 
-# Set up Resend API key
-resend.api_key = os.getenv('RESEND_API_KEY')
-
-@app.route('/api/send-verification-code', methods=['POST'])
-def send_verification_code():
+def send_verification_email(email, verification_code):
+    """Send verification email with 6-digit code"""
     try:
-        data = request.get_json()
-        email = data.get('email')
-        code = data.get('code')
-        
-        if not email or not code:
-            return jsonify({'error': 'Email and code are required'}), 400
-        
-        print(f'Sending verification code to: {email}')
-        
-        # Send email using Resend
         params = {
-            "from": "Taylor Connect Hub <onboarding@resend.dev>",
+            "from": "Taylor Connect <noreply@ellmangroup.org>",
             "to": [email],
             "subject": "Verify Your Taylor Connect Hub Account",
             "html": f"""
@@ -46,7 +34,7 @@ def send_verification_code():
                     
                     <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;">
                         <div style="font-size: 32px; font-weight: bold; color: #00AFCE; letter-spacing: 8px; font-family: 'Courier New', monospace;">
-                            {code}
+                            {verification_code}
                         </div>
                         <p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">Your 6-digit verification code</p>
                     </div>
@@ -73,29 +61,40 @@ def send_verification_code():
             </div>
             """
         }
-        
+
+        print(f"Sending verification email to: {email}")
         email_response = resend.Emails.send(params)
-        print(f'Email sent successfully: {email_response}')
-        
-        return jsonify({
-            'success': True, 
-            'message': 'Verification code sent successfully',
-            'email_id': email_response.get('id')
-        })
-        
+        print("Email sent successfully:", email_response)
+        return True
+
     except Exception as e:
-        print(f'Error sending email: {e}')
-        return jsonify({'error': 'Failed to send verification email'}), 500
+        print("Error type:", type(e).__name__)
+        print("Error message:", str(e))
+        if hasattr(e, 'code'):
+            print(f"Error code: {e.code}")
+        if hasattr(e, 'error_type'):
+            print(f"Error type: {e.error_type}")
+        
+        print("\n--- SOLUTIONS ---")
+        print("1. Verify your domain at https://resend.com/domains")
+        print("2. Check your API key permissions")
+        print("3. Contact Resend support if the issue persists")
+        return False
 
-@app.route('/api/health', methods=['GET'])
-def health_check():
-    return jsonify({
-        'status': 'OK', 
-        'message': 'Python email server is running',
-        'resend_key_available': bool(os.getenv('RESEND_API_KEY'))
-    })
-
-if __name__ == '__main__':
-    print('Python email server starting...')
-    print(f'Resend API key available: {bool(os.getenv("RESEND_API_KEY"))}')
-    app.run(host='0.0.0.0', port=3001, debug=True) 
+if __name__ == "__main__":
+    # Get email from command line argument or use default
+    email = sys.argv[1] if len(sys.argv) > 1 else "josh_ellman@icloud.com"
+    
+    # Generate verification code
+    verification_code = generate_verification_code()
+    
+    # Send email
+    success = send_verification_email(email, verification_code)
+    
+    if success:
+        print(f"Verification code {verification_code} sent to {email}")
+        # Output the code so it can be captured by the calling process
+        print(f"CODE:{verification_code}")
+    else:
+        print(f"Failed to send verification email to {email}")
+        sys.exit(1) 
