@@ -5,7 +5,7 @@ export async function checkUserStatus(userId: string) {
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('status')
-      .eq('user_id', userId)
+      .eq('id', userId)
       .single();
 
     if (error) {

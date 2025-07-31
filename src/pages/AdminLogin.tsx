@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Lock, Mail } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { loginUser } from '@/utils/directAuth';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -55,80 +55,16 @@ const AdminLogin = () => {
         return;
       }
 
-      // Attempt regular authentication
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) {
-        console.error('Auth error:', authError);
-        // If auth fails with a known test email, allow access temporarily
-        if (email === 'admin@taylor.edu') {
-          setError('Please use the test credentials: admin@taylor.edu / admin123');
-        } else {
-          throw new Error('Authentication failed');
-        }
-        return;
+      // Use direct authentication
+      const result = await loginUser(email, password);
+      
+      if (result.error) {
+        throw new Error(result.error.message);
       }
-
-      if (!data?.user) {
-        throw new Error('Authentication failed');
-      }
-
-      // Verify admin role - attempt to query user_roles table
-      try {
-        const { data: roleData, error: roleQueryError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .single();
-
-        if (roleQueryError) {
-          console.error('Role query error:', roleQueryError);
-          
-          // Check if it's a database/schema error
-          if (roleQueryError.message?.includes('schema') || 
-              roleQueryError.code === 'PGRST301' || // RLS violation
-              roleQueryError.code === '42501') { // Insufficient privilege
-            
-            // For development: If user email matches admin email, allow access
-            console.warn('Using fallback admin check method');
-            
-            // Fallback: Check if user email is in a known admin list
-            // This is a temporary workaround for development
-            if (data.user.email === 'admin@taylor.edu') {
-              // User is admin based on email
-            } else {
-              // Show warning but don't block access for now
-              console.warn('Could not verify admin role through database. Please check RLS policies.');
-            }
-          } else {
-            // Re-throw for other types of errors
-            throw roleQueryError;
-          }
-        } else if (roleData?.role === 'admin') {
-          // User has admin role
-        } else {
-          // User exists but is not an admin
-          throw new Error('You do not have admin privileges');
-        }
-      } catch (queryError: any) {
-        console.error('Database query error:', queryError);
-        
-        // If database is not properly configured, show helpful error
-        if (queryError.message?.includes('schema') || queryError.message?.includes('relation')) {
-          setError(errorDatabase);
-        } else if (queryError.message?.includes('admin privileges')) {
-          setError(errorNoPrivileges);
-        } else {
-          // For other errors, check email to provide temporary access
-          if (data.user.email === 'admin@taylor.edu') {
-            // Allow access for known admin email
-          } else {
-            throw new Error('You do not have admin privileges');
-          }
-        }
+      
+      // Check if user has admin role
+      if (result.user?.role !== 'admin') {
+        throw new Error('You do not have admin privileges');
       }
 
       // If we got here, user is authenticated and authorized
@@ -140,20 +76,17 @@ const AdminLogin = () => {
       navigate('/admin/dashboard');
     } catch (error: any) {
       console.error('Admin login error:', error);
-      setIsLoading(false);
       
       let errorMessage = errorInvalidCredentials;
       
-      if (error.message?.includes('Invalid login credentials')) {
+      if (error.message?.includes('Invalid credentials') || error.message?.includes('Invalid login')) {
         errorMessage = errorInvalidCredentials;
-      } else if (error.message?.includes('Email not confirmed')) {
-        errorMessage = errorEmailNotConfirmed;
       } else if (error.message?.includes('admin privileges')) {
         errorMessage = errorNoPrivileges;
-      } else if (error.message?.includes('schema') || error.message?.includes('database')) {
-        errorMessage = errorDatabase;
-      } else if (error.message?.includes('Row Level Security')) {
-        errorMessage = 'Database security configuration error. Please contact system administrator.';
+      } else if (error.message?.includes('Account blocked')) {
+        errorMessage = 'Your account has been blocked. Please contact support.';
+      } else if (error.message?.includes('Account pending')) {
+        errorMessage = 'Your account is pending approval. Please contact support.';
       }
       
       setError(errorMessage);

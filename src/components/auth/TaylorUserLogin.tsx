@@ -3,8 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, EyeOff } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 import { ForgotPasswordModal } from "@/components/modals/ForgotPasswordModal";
 
 interface TaylorUserLoginProps {
@@ -15,55 +15,26 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
 
   const { toast } = useToast();
+  const { signIn } = useAuth();
 
   const handleLogin = async () => {
+    if (!email || !password) return;
+    
+    setIsLoading(true);
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        if (error.message.includes('Email not confirmed')) {
-          toast({
-            title: "Email Not Verified",
-            description: "Please check your email and verify your account with the 6-digit code before signing in.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('Invalid login credentials')) {
-          toast({
-            title: "Invalid Credentials",
-            description: "Please check your email and password.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Login Error",
-            description: error.message,
-            variant: "destructive",
-          });
-        }
+      const result = await signIn(email, password);
+      
+      if (result.error) {
+        toast({
+          title: "Login Failed",
+          description: result.error.message,
+          variant: "destructive",
+        });
       } else {
-        // Check if user account is pending approval
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('status')
-          .eq('user_id', data.user.id)
-          .single();
-
-        if (profile?.status === 'pending') {
-          await supabase.auth.signOut();
-          toast({
-            title: "Account Pending",
-            description: "Your account is awaiting admin approval. Please contact support.",
-            variant: "destructive",
-          });
-          return;
-        }
-
         toast({
           title: "Welcome back! 👋",
           description: "You have successfully logged in.",
@@ -76,6 +47,8 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -117,9 +90,9 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
         <Button 
           onClick={handleLogin} 
           className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
-          disabled={!email || !password}
+          disabled={isLoading || !email || !password}
         >
-          Sign In
+          {isLoading ? "Signing In..." : "Sign In"}
         </Button>
         
         <div className="text-center">

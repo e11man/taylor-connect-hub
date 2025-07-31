@@ -4,12 +4,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, Info } from 'lucide-react';
-import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { getEmailConfirmUrl } from "@/utils/config";
 import { dormAndFloorData } from "@/utils/dormData";
-import { OTPVerification } from "./OTPVerification";
-import { ApprovalPendingMessage } from "./ApprovalPendingMessage";
+import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 
@@ -26,9 +23,11 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
   const [isTaylorUser, setIsTaylorUser] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [showOTPVerification, setShowOTPVerification] = useState(false);
-  const [showApprovalPending, setShowApprovalPending] = useState(false);
   const [showPasswordWarning, setShowPasswordWarning] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const { signUp } = useAuth();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (email.endsWith('@taylor.edu')) {
@@ -37,12 +36,9 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
       setIsTaylorUser(false);
       setSelectedDorm('');
       setSelectedFloor('');
-      // Hide password warning when email changes to non-Taylor
       setShowPasswordWarning(false);
     }
   }, [email]);
-
-  const { toast } = useToast();
 
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
@@ -63,21 +59,15 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
       return;
     }
 
+    setIsLoading(true);
+
     try {
-      const redirectUrl = getEmailConfirmUrl('/');
-      
-      // Both Taylor and non-Taylor users use standard signup
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await signUp({
         email,
         password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            user_type: isTaylorUser ? 'student' : 'external',
-            dorm: selectedDorm,
-            wing: selectedFloor,
-          }
-        }
+        user_type: isTaylorUser ? 'student' : 'external',
+        dorm: selectedDorm,
+        wing: selectedFloor,
       });
 
       if (error) {
@@ -87,22 +77,18 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
           variant: "destructive",
         });
       } else {
-        // Sign out immediately to prevent auto-login
-        await supabase.auth.signOut();
-        
         if (isTaylorUser) {
           toast({
-            title: "Verification Code Sent! 📧",
-            description: "Please check your email for a 6-digit verification code.",
+            title: "Account Created Successfully! 🎉",
+            description: "Welcome to Taylor Connect Hub!",
           });
-          setShowOTPVerification(true);
         } else {
           toast({
             title: "Account Created Successfully! 📝",
             description: "Your account has been submitted for admin approval.",
           });
-          setShowApprovalPending(true);
         }
+        onClose?.();
       }
     } catch (error) {
       toast({
@@ -110,44 +96,13 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
   const dorms = Object.keys(dormAndFloorData);
   const floors = selectedDorm ? dormAndFloorData[selectedDorm as keyof typeof dormAndFloorData] : [];
-
-  const handleVerificationComplete = () => {
-    setShowOTPVerification(false);
-    onClose?.();
-  };
-
-  const handleBackToSignUp = () => {
-    setShowOTPVerification(false);
-  };
-
-  const handleApprovalPendingClose = () => {
-    setShowApprovalPending(false);
-    onClose?.();
-  };
-
-  if (showOTPVerification) {
-    return (
-      <OTPVerification 
-        email={email}
-        onVerificationComplete={handleVerificationComplete}
-        onBack={handleBackToSignUp}
-      />
-    );
-  }
-
-  if (showApprovalPending) {
-    return (
-      <ApprovalPendingMessage 
-        email={email}
-        onClose={handleApprovalPendingClose}
-      />
-    );
-  }
 
   return (
     <div className="w-full max-w-sm mx-auto">
@@ -284,13 +239,14 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
           onClick={handleSignUp} 
           className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
           disabled={
+            isLoading ||
             password !== confirmPassword || 
             !password || 
             !confirmPassword || 
             (isTaylorUser && (!selectedDorm || !selectedFloor))
           }
         >
-          Create Account
+          {isLoading ? "Creating Account..." : "Create Account"}
         </Button>
       </div>
     </div>

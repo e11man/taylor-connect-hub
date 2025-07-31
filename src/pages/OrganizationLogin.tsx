@@ -1,32 +1,30 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import React, { useState } from 'react';
+import { useNavigate, Link } from 'react-router-dom';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useToast } from "@/hooks/use-toast";
+import { useContent } from "@/hooks/useContent";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { Input } from "@/components/ui/input";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
-import { ForgotPasswordModal } from "@/components/modals/ForgotPasswordModal";
-import { DynamicText } from "@/components/content/DynamicText";
-import { useContent, useContentSection } from "@/hooks/useContent";
-import { debugOrganizationLookup, logDebugResults } from "@/utils/debugOrganizationLookup";
+import { loginUser } from '@/utils/directAuth';
 
 const OrganizationLogin = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const { content: formContent } = useContentSection('organizationLogin', 'form');
-  const { content: successTitle } = useContent('organizationLogin', 'messages', 'successTitle', 'Success!');
-  const { content: successDescription } = useContent('organizationLogin', 'messages', 'successDescription', 'Welcome back to your organization dashboard.');
-  const { content: errorTitle } = useContent('organizationLogin', 'messages', 'errorTitle', 'Error');
-  const { content: errorNotOrganization } = useContent('organizationLogin', 'messages', 'errorNotOrganization', 'This account is not registered as an organization');
-  const { content: errorPending } = useContent('organizationLogin', 'messages', 'errorPending', 'Your organization is pending approval. Please wait for admin approval.');
+
+  const { content: pageTitle } = useContent('organizationLogin', 'title', 'default', 'Organization Login');
+  const { content: pageDescription } = useContent('organizationLogin', 'description', 'default', 'Sign in to your organization account');
+  const { content: emailLabel } = useContent('organizationLogin', 'form', 'emailLabel', 'Email');
+  const { content: passwordLabel } = useContent('organizationLogin', 'form', 'passwordLabel', 'Password');
+  const { content: submitButton } = useContent('organizationLogin', 'form', 'submitButton', 'Sign In');
+  const { content: successTitle } = useContent('organizationLogin', 'messages', 'successTitle', 'Welcome Back!');
+  const { content: successDescription } = useContent('organizationLogin', 'messages', 'successDescription', 'Successfully signed in to your organization account.');
+  const { content: errorTitle } = useContent('organizationLogin', 'messages', 'errorTitle', 'Sign In Failed');
+  const { content: errorNotOrganization } = useContent('organizationLogin', 'messages', 'errorNotOrganization', 'This email is not associated with an organization account.');
   const { content: errorBlocked } = useContent('organizationLogin', 'messages', 'errorBlocked', 'Your organization account has been blocked. Please contact support.');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -36,73 +34,23 @@ const OrganizationLogin = () => {
     try {
       console.log("🔑 Starting organization login process for:", email);
       
-      // Step 1: Authenticate user
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Use the new direct authentication system
+      const { data, error } = await loginUser(email, password);
 
       if (error) {
         console.error("❌ Auth error:", error);
-        throw error;
+        throw new Error(error.message);
       }
 
-      console.log("✅ User authenticated:", data.user.id);
-
-      // Step 2: Check organization profile with enhanced error handling
-      console.log("🔍 Looking up organization for user_id:", data.user.id);
-      
-      const { data: orgData, error: orgError } = await supabase
-        .from('organizations')
-        .select('id, user_id, name, contact_email, email_confirmed')
-        .eq('user_id', data.user.id)
-        .maybeSingle();
-
-      console.log("🏢 Organization lookup result:", { 
-        orgData, 
-        orgError,
-        userEmail: data.user.email,
-        userId: data.user.id 
-      });
-
-      if (orgError) {
-        console.error("❌ Organization lookup failed:", orgError);
-        
-        // Run debug process for detailed analysis
-        const debugResults = await debugOrganizationLookup(email);
-        logDebugResults(debugResults, email);
-        
-        await supabase.auth.signOut();
-        
-        if (orgError.code === 'PGRST116') {
-          // No rows returned - organization doesn't exist
-          throw new Error(errorNotOrganization);
-        } else {
-          // Other errors (likely RLS or database issues)
-          throw new Error(`Organization lookup failed: ${orgError.message}`);
-        }
-      }
-
-      if (!orgData) {
-        console.error("❌ No organization data returned");
-        await supabase.auth.signOut();
+      // Check if this is an organization user
+      if (data?.session?.user?.user_type !== 'organization') {
         throw new Error(errorNotOrganization);
       }
 
-      // Step 3: Check email confirmation
-      console.log("📋 Organization email confirmation check:", {
-        emailConfirmed: orgData.email_confirmed
-      });
-      
-      if (!orgData.email_confirmed) {
-        await supabase.auth.signOut();
-        throw new Error("Please verify your email address before logging in. Check your inbox for the verification code.");
-      }
-
       console.log("✅ Organization login successful:", {
-        orgId: orgData.id,
-        orgName: orgData.name,
-        emailConfirmed: orgData.email_confirmed
+        orgId: data.session.user.id,
+        email: data.session.user.email,
+        status: data.session.user.status
       });
 
       toast({
@@ -134,25 +82,13 @@ const OrganizationLogin = () => {
             {/* Header */}
             <div className="text-center mb-8 animate-slide-up">
               <div className="w-16 h-16 bg-[#00AFCE] rounded-2xl flex items-center justify-center mx-auto mb-6">
-                <Lock className="w-8 h-8 text-white" />
+                {/* Removed Lock icon as per new_code */}
               </div>
               <h1 className="text-3xl md:text-4xl font-montserrat font-bold mb-4 text-primary">
-                <DynamicText 
-                  page="organizationLogin" 
-                  section="main" 
-                  contentKey="title"
-                  fallback="Organization Login"
-                  as="span"
-                />
+                {pageTitle}
               </h1>
               <p className="text-lg text-muted-foreground font-montserrat">
-                <DynamicText 
-                  page="organizationLogin" 
-                  section="main" 
-                  contentKey="subtitle"
-                  fallback="Access your organization dashboard"
-                  as="span"
-                />
+                {pageDescription}
               </p>
             </div>
 
@@ -162,22 +98,16 @@ const OrganizationLogin = () => {
                 {/* Email Field */}
                 <div>
                   <label htmlFor="email" className="block text-sm font-montserrat font-semibold text-primary mb-2">
-                    <DynamicText 
-                      page="organizationLogin" 
-                      section="form" 
-                      contentKey="emailLabel"
-                      fallback="Email"
-                      as="span"
-                    />
+                    {emailLabel}
                   </label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    {/* Removed Mail icon as per new_code */}
                     <Input
                       id="email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder={formContent.emailPlaceholder || "Enter your email"}
+                      placeholder="Enter your email"
                       className="pl-10 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
                     />
@@ -187,103 +117,51 @@ const OrganizationLogin = () => {
                 {/* Password Field */}
                 <div>
                   <label htmlFor="password" className="block text-sm font-montserrat font-semibold text-primary mb-2">
-                    <DynamicText 
-                      page="organizationLogin" 
-                      section="form" 
-                      contentKey="passwordLabel"
-                      fallback="Password"
-                      as="span"
-                    />
+                    {passwordLabel}
                   </label>
                   <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    {/* Removed Lock icon as per new_code */}
                     <Input
                       id="password"
-                      type={showPassword ? "text" : "password"}
+                      type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder={formContent.passwordPlaceholder || "Enter your password"}
+                      placeholder="Enter your password"
                       className="pl-10 pr-12 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
                     />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-primary transition-colors"
-                    >
-                      {showPassword ? (
-                        <EyeOff className="w-5 h-5" />
-                      ) : (
-                        <Eye className="w-5 h-5" />
-                      )}
-                    </button>
+                    {/* Removed Show/Hide Password button as per new_code */}
                   </div>
                 </div>
 
                 {/* Forgot Password Link */}
                 <div className="text-right">
-                  <button
-                    type="button"
-                    onClick={() => setForgotPasswordModalOpen(true)}
-                    className="text-sm text-[#00AFCE] hover:text-[#00AFCE]/80 font-montserrat font-medium transition-colors"
-                  >
-                    <DynamicText 
-                      page="organizationLogin" 
-                      section="form" 
-                      contentKey="forgotPassword"
-                      fallback="Forgot your password?"
-                      as="span"
-                    />
-                  </button>
+                  {/* Removed Forgot Password link as per new_code */}
                 </div>
 
                 {/* Submit Button */}
-                <PrimaryButton
+                <Button
                   type="submit"
                   className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? (
-                    <DynamicText 
-                      page="organizationLogin" 
-                      section="form" 
-                      contentKey="signingIn"
-                      fallback="Signing in..."
-                      as="span"
-                    />
+                    "Signing in..."
                   ) : (
-                    <DynamicText 
-                      page="organizationLogin" 
-                      section="form" 
-                      contentKey="submitButton"
-                      fallback="Sign In"
-                      as="span"
-                    />
+                    submitButton
                   )}
-                </PrimaryButton>
+                </Button>
               </form>
 
               {/* Sign Up Link */}
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground font-montserrat">
-                  <DynamicText 
-                    page="organizationLogin" 
-                    section="main" 
-                    contentKey="noAccountText"
-                    fallback="Don't have an account?"
-                    as="span"
-                  />{" "}
+                  Don't have an account?{" "}
                   <Link
                     to="/organization-register"
                     className="text-[#00AFCE] hover:text-[#00AFCE]/80 font-semibold transition-colors"
                   >
-                    <DynamicText 
-                      page="organizationLogin" 
-                      section="main" 
-                      contentKey="signUpLink"
-                      fallback="Sign up"
-                      as="span"
-                    />
+                    Sign up
                   </Link>
                 </p>
               </div>
@@ -294,10 +172,7 @@ const OrganizationLogin = () => {
 
       <Footer />
       
-      <ForgotPasswordModal
-        isOpen={forgotPasswordModalOpen}
-        onClose={() => setForgotPasswordModalOpen(false)}
-      />
+      {/* Removed ForgotPasswordModal as per new_code */}
     </div>
   );
 };

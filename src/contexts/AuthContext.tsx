@@ -1,13 +1,27 @@
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { loginUser, registerUser } from '@/utils/directAuth';
+import { validateAccessToken, decodeAccessToken } from '@/utils/session';
+
+interface User {
+  id: string;
+  email: string;
+  user_type: string;
+  status: string;
+}
+
+interface Session {
+  user: User;
+  access_token: string;
+}
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
-  signOut: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ data?: { session: Session }; error?: { message: string } }>;
+  signUp: (userData: any) => Promise<{ data?: { session: Session }; error?: { message: string } }>;
+  signOut: () => void;
   refreshUserEvents: () => void;
   userEventsRefreshTrigger: number;
   refreshEvents: () => void;
@@ -22,142 +36,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [userEventsRefreshTrigger, setUserEventsRefreshTrigger] = useState(0);
   const [eventsRefreshTrigger, setEventsRefreshTrigger] = useState(0);
-  const mountedRef = useRef(true);
   const { toast } = useToast();
 
   useEffect(() => {
-    let mounted = true;
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (!mounted) return;
-        
-        if (event === 'SIGNED_IN' && session?.user) {
-          // Check if this is an organization or regular user
-          console.log('🔍 Checking user status after sign in for:', session.user.email);
-          
-          try {
-            // First check if it's an organization
-            const { data: orgData, error: orgError } = await supabase
-              .from('organizations')
-              .select('status')
-              .eq('user_id', session.user.id)
-              .maybeSingle();
-
-            if (orgData) {
-              // This is an organization - check organization status
-              console.log('👔 Organization status:', orgData.status);
-              
-              if (orgData.status === 'pending') {
-                await supabase.auth.signOut();
-                toast({
-                  title: "Organization Pending Approval",
-                  description: "Your organization requires admin approval before access. You'll receive an email when approved.",
-                  variant: "destructive",
-                });
-                return;
-              }
-              
-              if (orgData.status === 'blocked') {
-                await supabase.auth.signOut();
-                toast({
-                  title: "Organization Blocked",
-                  description: "Your organization has been blocked. Please contact support.",
-                  variant: "destructive",
-                });
-                return;
-              }
-              
-              if (orgData.status !== 'approved') {
-                await supabase.auth.signOut();
-                toast({
-                  title: "Organization Access Denied",
-                  description: `Organization status: ${orgData.status}. Contact admin for assistance.`,
-                  variant: "destructive",
-                });
-                return;
-              }
-            } else {
-              // This is a regular user - check profile status
-              const { data: profile, error: profileError } = await supabase
-                .from('profiles')
-                .select('status')
-                .eq('user_id', session.user.id)
-                .maybeSingle();
-
-              if (profileError && profileError.code !== 'PGRST116') {
-                console.error('Error checking user profile status:', profileError);
-                await supabase.auth.signOut();
-                return;
-              }
-
-              if (profile) {
-                console.log('👤 User profile status:', profile.status);
-                
-                if (profile.status === 'pending') {
-                  await supabase.auth.signOut();
-                  toast({
-                    title: "Account Pending Approval",
-                    description: "Your account requires admin approval before access. You'll receive an email when approved.",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-
-                if (profile.status === 'blocked') {
-                  await supabase.auth.signOut();
-                  toast({
-                    title: "Account Blocked",
-                    description: "Your account has been blocked. Please contact support.",
-                    variant: "destructive",
-                  });
-                  return;
-                }
-              }
-            }
-          } catch (error) {
-            console.error('Error in status check:', error);
-            await supabase.auth.signOut();
-            return;
-          }
+    // Check for existing session in localStorage
+    const existingSession = localStorage.getItem('user_session');
+    if (existingSession) {
+      try {
+        const sessionData = JSON.parse(existingSession);
+        // Validate the token
+        if (validateAccessToken(sessionData.access_token)) {
+          setSession(sessionData);
+          setUser(sessionData.user);
+        } else {
+          // Token expired, remove it
+          localStorage.removeItem('user_session');
         }
-        
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
-        // Trigger refresh when user state changes
-        if (event === 'SIGNED_IN') {
-          setUserEventsRefreshTrigger(prev => prev + 1);
-        }
+      } catch (error) {
+        console.error('Error parsing session:', error);
+        localStorage.removeItem('user_session');
       }
-    );
-
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!mounted) return;
-      
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    }).catch((error) => {
-      console.error('Error getting session:', error);
-      if (mounted) {
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
+    }
+    setLoading(false);
   }, []);
 
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await loginUser(email, password);
+    if (data) {
+      localStorage.setItem('user_session', JSON.stringify(data.session));
+      setSession(data.session);
+      setUser(data.session.user);
+      setUserEventsRefreshTrigger(prev => prev + 1);
     }
+    return { data, error };
+  };
+
+  const signUp = async (userData: any) => {
+    const { data, error } = await registerUser(userData);
+    if (data && data.session.user.status === 'active') {
+      // Auto-login after successful registration for active users
+      localStorage.setItem('user_session', JSON.stringify(data.session));
+      setSession(data.session);
+      setUser(data.session.user);
+      setUserEventsRefreshTrigger(prev => prev + 1);
+    }
+    return { data, error };
+  };
+
+  const signOut = () => {
+    localStorage.removeItem('user_session');
+    setSession(null);
+    setUser(null);
   };
 
   const refreshUserEvents = () => {
@@ -172,6 +101,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    signIn,
+    signUp,
     signOut,
     refreshUserEvents,
     userEventsRefreshTrigger,

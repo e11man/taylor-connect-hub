@@ -1,0 +1,368 @@
+# Remove Supabase Authentication - Direct Profiles Table Registration
+# This YAML describes the complete removal of Supabase auth and implementation of direct user registration
+
+project: "Taylor Connect Hub"
+component: "Authentication System"
+priority: "HIGH"
+type: "System Overhaul"
+severity: "Medium"
+
+## 🎯 OBJECTIVE
+Remove Supabase authentication entirely and implement direct user registration that saves user data directly to the `profiles` table with encrypted passwords.
+
+## 🚫 WHAT TO REMOVE
+
+### 1. Supabase Auth Dependencies
+- Remove `@supabase/supabase-js` auth methods
+- Remove `supabase.auth.signUp()`
+- Remove `supabase.auth.signIn()`
+- Remove `supabase.auth.signOut()`
+- Remove `supabase.auth.verifyOtp()`
+- Remove `supabase.auth.onAuthStateChange()`
+- Remove `supabase.auth.getSession()`
+
+### 2. Auth-Related Components
+- Remove `OTPVerification.tsx`
+- Remove `OrganizationOTPVerification.tsx`
+- Remove `ApprovalPendingMessage.tsx`
+- Remove email verification flows
+- Remove OTP generation and verification
+
+### 3. Database Triggers
+- Remove `handle_new_user()` function
+- Remove auth trigger on `auth.users` table
+- Remove dependency on `auth.users` table
+
+## ✅ WHAT TO IMPLEMENT
+
+### 1. Direct Registration Function
+```typescript
+// New function to replace supabase.auth.signUp()
+const registerUser = async (userData: {
+  email: string;
+  password: string;
+  user_type: 'student' | 'external' | 'organization';
+  dorm?: string;
+  wing?: string;
+  organization_name?: string;
+  description?: string;
+  website?: string;
+  phone?: string;
+}) => {
+  // Hash password using bcrypt or similar
+  const hashedPassword = await hashPassword(userData.password);
+  
+  // Determine user status
+  const status = userData.email.includes('@taylor.edu') ? 'active' : 'pending';
+  
+  // Insert directly into profiles table
+  const { data, error } = await supabase
+    .from('profiles')
+    .insert({
+      email: userData.email,
+      password_hash: hashedPassword,
+      user_type: userData.user_type,
+      dorm: userData.dorm,
+      wing: userData.wing,
+      status: status,
+      created_at: new Date().toISOString()
+    })
+    .select()
+    .single();
+    
+  return { data, error };
+};
+```
+
+### 2. Direct Login Function
+```typescript
+// New function to replace supabase.auth.signIn()
+const loginUser = async (email: string, password: string) => {
+  // Get user from profiles table
+  const { data: user, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('email', email)
+    .single();
+    
+  if (error || !user) {
+    return { error: { message: 'User not found' } };
+  }
+  
+  // Verify password
+  const isValidPassword = await verifyPassword(password, user.password_hash);
+  
+  if (!isValidPassword) {
+    return { error: { message: 'Invalid password' } };
+  }
+  
+  // Check user status
+  if (user.status === 'pending') {
+    return { error: { message: 'Account pending approval' } };
+  }
+  
+  if (user.status === 'blocked') {
+    return { error: { message: 'Account blocked' } };
+  }
+  
+  // Create session (store in localStorage or context)
+  const session = {
+    user: {
+      id: user.id,
+      email: user.email,
+      user_type: user.user_type,
+      status: user.status
+    },
+    access_token: generateAccessToken(user.id) // Simple JWT or session token
+  };
+  
+  return { data: { session } };
+};
+```
+
+### 3. Updated AuthContext
+```typescript
+// Simplified AuthContext without Supabase auth
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check for existing session in localStorage
+    const existingSession = localStorage.getItem('user_session');
+    if (existingSession) {
+      const session = JSON.parse(existingSession);
+      setSession(session);
+      setUser(session.user);
+    }
+    setLoading(false);
+  }, []);
+
+  const signIn = async (email: string, password: string) => {
+    const { data, error } = await loginUser(email, password);
+    if (data) {
+      localStorage.setItem('user_session', JSON.stringify(data.session));
+      setSession(data.session);
+      setUser(data.session.user);
+    }
+    return { data, error };
+  };
+
+  const signUp = async (userData) => {
+    const { data, error } = await registerUser(userData);
+    if (data) {
+      // Auto-login after successful registration
+      return await signIn(userData.email, userData.password);
+    }
+    return { data, error };
+  };
+
+  const signOut = () => {
+    localStorage.removeItem('user_session');
+    setSession(null);
+    setUser(null);
+  };
+
+  return (
+    <AuthContext.Provider value={{ user, session, loading, signIn, signUp, signOut }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+```
+
+### 4. Updated Database Schema
+```sql
+-- Modify profiles table to include password
+ALTER TABLE profiles ADD COLUMN password_hash TEXT;
+ALTER TABLE profiles ADD COLUMN created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
+-- Remove auth.users dependency
+-- Remove handle_new_user trigger
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+DROP FUNCTION IF EXISTS handle_new_user();
+
+-- Add unique constraint on email
+ALTER TABLE profiles ADD CONSTRAINT profiles_email_unique UNIQUE (email);
+```
+
+### 5. Password Hashing Utility
+```typescript
+// utils/password.ts
+import bcrypt from 'bcryptjs';
+
+export const hashPassword = async (password: string): Promise<string> => {
+  const saltRounds = 12;
+  return await bcrypt.hash(password, saltRounds);
+};
+
+export const verifyPassword = async (password: string, hash: string): Promise<boolean> => {
+  return await bcrypt.compare(password, hash);
+};
+```
+
+### 6. Simple Session Management
+```typescript
+// utils/session.ts
+export const generateAccessToken = (userId: string): string => {
+  // Simple token generation (could use JWT library)
+  return btoa(JSON.stringify({
+    userId,
+    timestamp: Date.now(),
+    expires: Date.now() + (24 * 60 * 60 * 1000) // 24 hours
+  }));
+};
+
+export const validateAccessToken = (token: string): boolean => {
+  try {
+    const decoded = JSON.parse(atob(token));
+    return decoded.expires > Date.now();
+  } catch {
+    return false;
+  }
+};
+```
+
+## 🔄 COMPONENT UPDATES
+
+### 1. TaylorUserSignUp.tsx
+```typescript
+// Replace supabase.auth.signUp with direct registration
+const handleSignUp = async () => {
+  const { data, error } = await signUp({
+    email,
+    password,
+    user_type: isTaylorUser ? 'student' : 'external',
+    dorm: selectedDorm,
+    wing: selectedFloor,
+  });
+
+  if (error) {
+    toast({
+      title: "Sign Up Error",
+      description: error.message,
+      variant: "destructive",
+    });
+  } else {
+    toast({
+      title: "Account Created Successfully! 🎉",
+      description: isTaylorUser 
+        ? "Welcome to Taylor Connect Hub!" 
+        : "Your account has been submitted for admin approval.",
+    });
+    onClose?.();
+  }
+};
+```
+
+### 2. TaylorUserLogin.tsx
+```typescript
+// Replace supabase.auth.signIn with direct login
+const handleLogin = async () => {
+  const { data, error } = await signIn(email, password);
+  
+  if (error) {
+    toast({
+      title: "Login Error",
+      description: error.message,
+      variant: "destructive",
+    });
+  } else {
+    toast({
+      title: "Welcome Back! 👋",
+      description: "Successfully logged in.",
+    });
+    onClose?.();
+  }
+};
+```
+
+### 3. OrganizationRegister.tsx
+```typescript
+// Replace supabase auth with direct registration
+const handleSubmit = async (e: React.FormEvent) => {
+  const { data, error } = await signUp({
+    email: formData.email,
+    password: formData.password,
+    user_type: 'organization',
+    organization_name: formData.organizationName,
+    description: formData.organizationDescription,
+    website: formData.website,
+    phone: formData.phoneNumber,
+  });
+
+  if (error) {
+    toast({
+      title: "Registration failed",
+      description: error.message,
+      variant: "destructive",
+    });
+  } else {
+    toast({
+      title: "Organization Registered! 📝",
+      description: "Your organization has been submitted for admin approval.",
+    });
+    // No OTP verification needed
+  }
+};
+```
+
+## 📦 PACKAGE UPDATES
+
+### Add to package.json:
+```json
+{
+  "dependencies": {
+    "bcryptjs": "^2.4.3"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6"
+  }
+}
+```
+
+## 🗑️ CLEANUP TASKS
+
+### 1. Remove Files:
+- Delete `src/components/auth/OTPVerification.tsx`
+- Delete `src/components/auth/OrganizationOTPVerification.tsx`
+- Delete `src/components/auth/ApprovalPendingMessage.tsx`
+
+### 2. Remove Database Objects:
+- Drop `handle_new_user()` function
+- Drop auth trigger
+- Remove auth.users table dependency
+
+### 3. Update Imports:
+- Remove all `supabase.auth.*` imports
+- Add bcryptjs imports
+- Update AuthContext imports
+
+## 🎯 EXPECTED OUTCOME
+
+After implementation:
+1. **No email verification required** - users can sign up and immediately access the platform
+2. **No OTP codes** - direct registration and login
+3. **Simplified flow** - sign up → immediate access (for Taylor users) or pending approval (for others)
+4. **Direct database access** - all user data stored in profiles table
+5. **Faster registration** - no waiting for emails or verification codes
+
+## ⚠️ SECURITY CONSIDERATIONS
+
+1. **Password hashing** - Use bcryptjs for secure password storage
+2. **Input validation** - Validate all user inputs
+3. **SQL injection protection** - Use Supabase's parameterized queries
+4. **Session management** - Implement proper session expiration
+5. **Rate limiting** - Consider adding rate limiting for registration/login attempts
+
+## 🚀 IMPLEMENTATION ORDER
+
+1. Create password utilities
+2. Update database schema
+3. Create direct registration/login functions
+4. Update AuthContext
+5. Update all auth components
+6. Remove Supabase auth dependencies
+7. Test registration and login flows
+8. Clean up unused files and code 

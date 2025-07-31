@@ -5,8 +5,7 @@ import PrimaryButton from '../components/buttons/PrimaryButton';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import UserAuthModal from '@/components/modals/UserAuthModal';
-import { OrganizationOTPVerification } from '@/components/auth/OrganizationOTPVerification';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useContentSection } from '@/hooks/useContent';
 import { DynamicText } from '@/components/content/DynamicText';
@@ -30,43 +29,8 @@ const OrganizationRegister: React.FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [showOTPVerification, setShowOTPVerification] = useState(false);
   const { toast } = useToast();
-
-  // Generate a random 6-digit OTP
-  const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  };
-
-  // Send OTP via edge function
-  const sendOTP = async (email: string, organizationName: string) => {
-    const otp = generateOTP();
-    
-    try {
-      console.log('🔄 Sending OTP for organization:', organizationName);
-      
-      const { data, error } = await supabase.functions.invoke('send-organization-otp', {
-        body: {
-          email,
-          otp,
-          organizationName
-        }
-      });
-
-      console.log('📧 Edge function response:', { data, error });
-
-      if (error) {
-        console.error('❌ Edge function error:', error);
-        throw new Error(`Failed to send verification email: ${error.message}`);
-      }
-
-      console.log('✅ OTP sent successfully');
-      return otp;
-    } catch (error: any) {
-      console.error('❌ Error sending OTP:', error);
-      throw new Error(`Failed to send verification email: ${error.message || error}`);
-    }
-  };
+  const { signUp } = useAuth();
 
   const validate = () => {
     let newErrors: Record<string, string> = {};
@@ -119,41 +83,37 @@ const OrganizationRegister: React.FC = () => {
       setIsLoading(true);
       
       try {
-        console.log('🔄 Starting organization registration for:', formData.email);
-        
-        // Create user account with organization metadata using Supabase's built-in OTP
-        console.log('👤 Creating Supabase user account with OTP verification...');
-        const { data, error } = await supabase.auth.signUp({
+        const { data, error } = await signUp({
           email: formData.email,
           password: formData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: {
-              user_type: 'organization',
-              organization_name: formData.organizationName,
-              description: formData.organizationDescription,
-              website: formData.website,
-              phone: formData.phoneNumber,
-            }
-          }
+          user_type: 'organization',
+          organization_name: formData.organizationName,
+          description: formData.organizationDescription,
+          website: formData.website,
+          phone: formData.phoneNumber,
         });
 
         if (error) {
-          console.error('❌ Supabase signup error:', error);
-          throw error;
+          throw new Error(error.message);
         }
 
-        console.log('✅ User account created successfully');
+        // Reset form
+        setFormData({
+          organizationName: '',
+          contactName: '',
+          email: '',
+          password: '',
+          confirmPassword: '',
+          organizationDescription: '',
+          website: '',
+          phoneNumber: '',
+        });
         
         toast({
-          title: "Verification Code Sent! 📧",
-          description: "Please check your email for a 6-digit verification code.",
+          title: "Organization Registered Successfully! 🎉",
+          description: "Your organization is now pending admin approval. You'll receive an email when approved.",
         });
-
-        // Show OTP verification step
-        setShowOTPVerification(true);
       } catch (error: any) {
-        console.error('❌ Registration failed:', error);
         toast({
           title: "Registration failed",
           description: error.message || "Failed to create account. Please try again.",
@@ -165,49 +125,9 @@ const OrganizationRegister: React.FC = () => {
     }
   };
 
-  const handleVerificationComplete = () => {
-    // Reset form and go back to registration
-    setFormData({
-      organizationName: '',
-      contactName: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      organizationDescription: '',
-      website: '',
-      phoneNumber: '',
-    });
-    setShowOTPVerification(false);
-    
-    toast({
-      title: "Organization Verified Successfully! 🎉",
-      description: "Your organization is now pending admin approval. You'll receive an email when approved.",
-    });
-  };
 
-  const handleBackToRegistration = () => {
-    setShowOTPVerification(false);
-  };
 
-  // Show OTP verification if in that step
-  if (showOTPVerification) {
-    return (
-      <div className="min-h-screen bg-gray-50 font-montserrat">
-        <Header />
-        <div className="flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-          <div className="max-w-md w-full space-y-8 bg-white p-8 rounded-xl shadow-lg border border-gray-200">
-            <OrganizationOTPVerification
-              email={formData.email}
-              organizationName={formData.organizationName}
-              onVerificationComplete={handleVerificationComplete}
-              onBack={handleBackToRegistration}
-            />
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+
 
   return (
     <div className="min-h-screen bg-gray-50 font-montserrat">
