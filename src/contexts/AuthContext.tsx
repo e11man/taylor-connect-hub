@@ -62,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     const { data, error } = await loginUser(email, password);
-    if (data) {
+    if (data && data.session.access_token) {
       localStorage.setItem('user_session', JSON.stringify(data.session));
       setSession(data.session);
       setUser(data.session.user);
@@ -73,13 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUp = async (userData: any) => {
     const { data, error } = await registerUser(userData);
-    if (data && data.session.user.status === 'active') {
-      // Auto-login after successful registration for active users
-      localStorage.setItem('user_session', JSON.stringify(data.session));
-      setSession(data.session);
-      setUser(data.session.user);
-      setUserEventsRefreshTrigger(prev => prev + 1);
-    }
+    // Don't auto-login after signup - user needs to verify first
     return { data, error };
   };
 

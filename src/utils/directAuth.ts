@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { hashPassword, verifyPassword } from './password';
 import { generateAccessToken } from './session';
+import { sendVerificationCode } from './emailService';
 
 interface UserData {
   email: string;
@@ -32,6 +33,15 @@ interface AuthResponse {
 }
 
 /**
+ * Generate a 6-digit verification code
+ */
+const generateVerificationCode = (): string => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+
+
+/**
  * Register a new user directly to the profiles table
  * @param userData - User registration data
  * @returns Promise<AuthResponse> - Registration result
@@ -41,8 +51,10 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
     // Hash password
     const hashedPassword = await hashPassword(userData.password);
     
-    // Determine user status
-    const status = userData.email.includes('@taylor.edu') ? 'active' : 'pending';
+    // Determine user status and verification requirements
+    const isTaylorUser = userData.email.includes('@taylor.edu');
+    const status = isTaylorUser ? 'pending' : 'pending'; // Both need verification now
+    const verificationCode = isTaylorUser ? generateVerificationCode() : null;
     
     // Prepare profile data
     const profileData: any = {
@@ -52,6 +64,11 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
       status: status,
       created_at: new Date().toISOString()
     };
+
+    // Add verification code for Taylor users
+    if (verificationCode) {
+      profileData.verification_code = verificationCode;
+    }
 
     // Add user-specific fields
     if (userData.user_type === 'student' || userData.user_type === 'external') {
@@ -91,8 +108,30 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
         return { error: { message: orgError.message } };
       }
     }
+
+    // Send verification code for Taylor users
+    if (isTaylorUser && verificationCode) {
+      console.log('Sending verification code for Taylor user:', userData.email);
+      const emailSent = await sendVerificationCode(userData.email, verificationCode);
+      console.log('Email sent result:', emailSent);
+      if (!emailSent) {
+        // If email fails, still create the account but warn the user
+        console.warn('Failed to send verification email, but account was created');
+      }
+    }
     
-    return { data: { session: { user: data, access_token: generateAccessToken(data.id) } } };
+    // Return success but don't auto-login (user needs to verify first)
+    return { 
+      data: { 
+        session: { 
+          user: { 
+            ...data, 
+            status: 'pending' // Always pending until verified
+          }, 
+          access_token: null // No token until verified
+        } 
+      } 
+    };
   } catch (error) {
     return { error: { message: 'Registration failed. Please try again.' } };
   }
@@ -126,6 +165,10 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
     
     // Check user status
     if (user.status === 'pending') {
+      // Check if this is a Taylor user who needs verification
+      if (user.user_type === 'student' && user.verification_code) {
+        return { error: { message: 'Please verify your email address before signing in. Check your email for a verification code.' } };
+      }
       return { error: { message: 'Account pending approval' } };
     }
     

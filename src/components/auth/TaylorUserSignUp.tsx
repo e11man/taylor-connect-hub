@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { dormAndFloorData } from "@/utils/dormData";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-
+import { Taylor2FAVerification } from './Taylor2FAVerification';
 
 interface TaylorUserSignUpProps {
   onClose?: () => void;
@@ -25,6 +25,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showPasswordWarning, setShowPasswordWarning] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [show2FAVerification, setShow2FAVerification] = useState(false);
 
   const { signUp } = useAuth();
   const { toast } = useToast();
@@ -79,16 +80,17 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
       } else {
         if (isTaylorUser) {
           toast({
-            title: "Account Created Successfully! 🎉",
-            description: "Welcome to Taylor Connect Hub!",
+            title: "Account Created Successfully! 📧",
+            description: "Please check your email for a verification code to complete your registration.",
           });
+          setShow2FAVerification(true);
         } else {
           toast({
             title: "Account Created Successfully! 📝",
             description: "Your account has been submitted for admin approval.",
           });
+          onClose?.();
         }
-        onClose?.();
       }
     } catch (error) {
       toast({
@@ -100,6 +102,29 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
       setIsLoading(false);
     }
   };
+
+  const handleVerificationComplete = () => {
+    toast({
+      title: "Account Verified! 🎉",
+      description: "Your account has been successfully verified. You can now sign in!",
+    });
+    onClose?.();
+  };
+
+  const handleBackToSignUp = () => {
+    setShow2FAVerification(false);
+  };
+
+  // Show 2FA verification screen for Taylor users
+  if (show2FAVerification && isTaylorUser) {
+    return (
+      <Taylor2FAVerification
+        email={email}
+        onVerificationComplete={handleVerificationComplete}
+        onBack={handleBackToSignUp}
+      />
+    );
+  }
 
   const dorms = Object.keys(dormAndFloorData);
   const floors = selectedDorm ? dormAndFloorData[selectedDorm as keyof typeof dormAndFloorData] : [];
