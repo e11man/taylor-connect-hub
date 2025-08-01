@@ -1,2 +1,4 @@
 resend==2.11.0
-supabase==2.10.0 
+supabase==2.10.0
+httpx>=0.24.0
+requests>=2.28.0 

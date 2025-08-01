@@ -375,6 +375,33 @@ export type Database = {
         }
         Relationships: []
       }
+      site_stats: {
+        Row: {
+          id: string
+          stat_type: string
+          confirmed_total: number
+          current_estimate: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          stat_type: string
+          confirmed_total?: number
+          current_estimate?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          stat_type?: string
+          confirmed_total?: number
+          current_estimate?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
