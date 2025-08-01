@@ -103,173 +103,182 @@ const Header = () => {
      </button>
    );
 
-  const MobileNav = ({ isOpen, navLinks, closeMenu }: { isOpen: boolean; navLinks: typeof NAV_LINKS; closeMenu: () => void }) => (
-    <aside
-      ref={navRef}
-      className={`fixed inset-0 z-[100] md:hidden ${
-        isOpen ? 'pointer-events-auto' : 'pointer-events-none'
-      }`}
-      aria-modal="true"
-      role="dialog"
-      tabIndex={-1}
-    >
-      {/* Overlay */}
-      <div
-        className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ease-in-out ${
-          isOpen ? 'opacity-100' : 'opacity-0'
+  const MobileNav = ({ isOpen, navLinks, closeMenu }: { isOpen: boolean; navLinks: typeof NAV_LINKS; closeMenu: () => void }) => {
+    const [hasInteracted, setHasInteracted] = useState(false);
+    
+    useEffect(() => {
+      if (isOpen) setHasInteracted(true);
+    }, [isOpen]);
+    
+    return (
+      <aside
+        ref={navRef}
+        className={`fixed inset-0 z-[100] md:hidden ${
+          isOpen ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
-        onClick={closeMenu}
-      />
-      {/* Drawer */}
-      <nav
-        className={`fixed inset-y-0 left-0 w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 transition-all duration-300 ease-in-out bg-white border-r border-gray-200 ${
-          isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
-        }`}
+        aria-modal="true"
+        role="dialog"
+        tabIndex={-1}
       >
-        {/* Close button */}
-        <button
-          className="self-end mb-6 p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition shadow"
-          aria-label="Close menu"
+        {/* Overlay */}
+        <div
+          className={`absolute inset-0 bg-black/60 transition-opacity duration-500 ease-out ${
+            isOpen ? 'opacity-100' : 'opacity-0'
+          }`}
           onClick={closeMenu}
-          tabIndex={isOpen ? 0 : -1}
+        />
+        {/* Drawer */}
+        <nav
+          className={`fixed inset-y-0 right-0 w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 bg-white border-l border-gray-200 rounded-l-2xl ${
+            !hasInteracted ? 'translate-x-full opacity-0' : 
+            isOpen ? 'animate-slide-in-right' : 'animate-slide-out-right'
+          }`}
         >
-          <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M6 6l16 16M6 22L22 6" />
-          </svg>
-        </button>
-        {/* Logo */}
-        <Link
-          to="/"
-          className="flex items-center gap-3 mb-10 font-bold text-primary text-xl tracking-tight"
-          onClick={closeMenu}
-          tabIndex={isOpen ? 0 : -1}
-        >
-          <img src={logo} alt="Community Connect Logo" className="h-12 w-auto" />
-          <span className="text-lg font-montserrat">
+          {/* Close button */}
+          <button
+            className="self-end mb-6 p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition shadow"
+            aria-label="Close menu"
+            onClick={closeMenu}
+            tabIndex={isOpen ? 0 : -1}
+          >
+            <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M6 6l16 16M6 22L22 6" />
+            </svg>
+          </button>
+          {/* Logo */}
+          <Link
+            to="/"
+            className="flex items-center gap-3 mb-10 font-bold text-primary text-xl tracking-tight"
+            onClick={closeMenu}
+            tabIndex={isOpen ? 0 : -1}
+          >
+            <img src={logo} alt="Community Connect Logo" className="h-12 w-auto" />
+            <span className="text-lg font-montserrat">
+              <DynamicText 
+                page="header" 
+                section="brand" 
+                contentKey="name"
+                fallback="Community Connect"
+                as="span"
+              />
+            </span>
+          </Link>
+          {/* Nav links */}
+          <ul className="flex flex-col gap-3 mb-10">
+            {navLinks.map((link) => (
+              <li key={link.href}>
+                {link.isRoute ? (
+                  <Link
+                    to={link.href}
+                    className="block px-4 py-3 rounded-xl font-medium text-base transition-colors duration-200 text-gray-700 hover:bg-gray-100 focus:bg-gray-200 focus:outline-none font-montserrat"
+                    onClick={closeMenu}
+                    tabIndex={isOpen ? 0 : -1}
+                  >
+                    {link.name}
+                  </Link>
+                ) : (
+                  <a
+                    href={link.href}
+                    className="block px-4 py-3 rounded-xl font-medium text-base transition-colors duration-200 text-gray-700 hover:bg-gray-100 focus:bg-gray-200 focus:outline-none font-montserrat"
+                    onClick={closeMenu}
+                    tabIndex={isOpen ? 0 : -1}
+                  >
+                    {link.name}
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+          {/* Auth/CTA Button */}
+          {user ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
+                <User className="w-4 h-4 text-[#00AFCE]" />
+                <span className="text-sm font-medium text-gray-700 truncate">
+                  {user.email}
+                </span>
+              </div>
+              <PrimaryButton
+                onClick={() => {
+                  closeMenu();
+                  setModalOpen(true);
+                }}
+                className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
+              >
+                <DynamicText 
+                  page="header" 
+                  section="buttons" 
+                  contentKey="requestVolunteers"
+                  fallback="Request Volunteers"
+                  as="span"
+                />
+              </PrimaryButton>
+              <button
+                onClick={() => {
+                  closeMenu();
+                  signOut();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 text-base font-semibold bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <DynamicText 
+                  page="header" 
+                  section="buttons" 
+                  contentKey="signOut"
+                  fallback="Sign Out"
+                  as="span"
+                />
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <PrimaryButton
+                onClick={() => {
+                  closeMenu();
+                  setAuthModalOpen(true);
+                }}
+                className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
+              >
+                <DynamicText 
+                  page="header" 
+                  section="buttons" 
+                  contentKey="login"
+                  fallback="Log in"
+                  as="span"
+                />
+              </PrimaryButton>
+              <PrimaryButton
+                onClick={() => {
+                  closeMenu();
+                  setModalOpen(true);
+                }}
+                className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl bg-[#E14F3D] hover:bg-[#C73E2F]"
+              >
+                <DynamicText 
+                  page="header" 
+                  section="buttons" 
+                  contentKey="requestVolunteers"
+                  fallback="Request Volunteers"
+                  as="span"
+                />
+              </PrimaryButton>
+            </div>
+          )}
+          <div className="flex-1" />
+          {/* Footer */}
+          <div className="mt-10 text-xs text-gray-500 text-center">
             <DynamicText 
-              page="header" 
-              section="brand" 
-              contentKey="name"
-              fallback="Community Connect"
+              page="footer" 
+              section="copyright" 
+              contentKey="text"
+              fallback={`© ${new Date().getFullYear()} Community Connect`}
               as="span"
             />
-          </span>
-        </Link>
-        {/* Nav links */}
-        <ul className="flex flex-col gap-3 mb-10">
-          {navLinks.map((link) => (
-            <li key={link.href}>
-              {link.isRoute ? (
-                <Link
-                  to={link.href}
-                  className="block px-4 py-3 rounded-xl font-medium text-base transition-colors duration-200 text-gray-700 hover:bg-gray-100 focus:bg-gray-200 focus:outline-none font-montserrat"
-                  onClick={closeMenu}
-                  tabIndex={isOpen ? 0 : -1}
-                >
-                  {link.name}
-                </Link>
-              ) : (
-                <a
-                  href={link.href}
-                  className="block px-4 py-3 rounded-xl font-medium text-base transition-colors duration-200 text-gray-700 hover:bg-gray-100 focus:bg-gray-200 focus:outline-none font-montserrat"
-                  onClick={closeMenu}
-                  tabIndex={isOpen ? 0 : -1}
-                >
-                  {link.name}
-                </a>
-              )}
-            </li>
-          ))}
-        </ul>
-        {/* Auth/CTA Button */}
-        {user ? (
-          <div className="space-y-3">
-            <div className="flex items-center gap-2 p-3 bg-gray-50 rounded-xl">
-              <User className="w-4 h-4 text-[#00AFCE]" />
-              <span className="text-sm font-medium text-gray-700 truncate">
-                {user.email}
-              </span>
-            </div>
-            <PrimaryButton
-              onClick={() => {
-                closeMenu();
-                setModalOpen(true);
-              }}
-              className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
-            >
-              <DynamicText 
-                page="header" 
-                section="buttons" 
-                contentKey="requestVolunteers"
-                fallback="Request Volunteers"
-                as="span"
-              />
-            </PrimaryButton>
-            <button
-              onClick={() => {
-                closeMenu();
-                signOut();
-              }}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 text-base font-semibold bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <DynamicText 
-                page="header" 
-                section="buttons" 
-                contentKey="signOut"
-                fallback="Sign Out"
-                as="span"
-              />
-            </button>
           </div>
-        ) : (
-          <div className="space-y-3">
-            <PrimaryButton
-              onClick={() => {
-                closeMenu();
-                setAuthModalOpen(true);
-              }}
-              className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
-            >
-              <DynamicText 
-                page="header" 
-                section="buttons" 
-                contentKey="login"
-                fallback="Log in"
-                as="span"
-              />
-            </PrimaryButton>
-            <PrimaryButton
-              onClick={() => {
-                closeMenu();
-                setModalOpen(true);
-              }}
-              className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl bg-[#E14F3D] hover:bg-[#C73E2F]"
-            >
-              <DynamicText 
-                page="header" 
-                section="buttons" 
-                contentKey="requestVolunteers"
-                fallback="Request Volunteers"
-                as="span"
-              />
-            </PrimaryButton>
-          </div>
-        )}
-        <div className="flex-1" />
-        {/* Footer */}
-        <div className="mt-10 text-xs text-gray-500 text-center">
-          <DynamicText 
-            page="footer" 
-            section="copyright" 
-            contentKey="text"
-            fallback={`© ${new Date().getFullYear()} Community Connect`}
-            as="span"
-          />
-        </div>
-      </nav>
-    </aside>
-  );
+        </nav>
+      </aside>
+    );
+  };
 
   return (
     <header
