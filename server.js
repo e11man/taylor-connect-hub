@@ -745,6 +745,216 @@ app.delete('/api/admin/delete-user', async (req, res) => {
   }
 });
 
+// Scheduled event cleanup function
+const performEventCleanup = async () => {
+  try {
+    console.log('🔄 Starting scheduled event cleanup...');
+    
+    // Find events that ended more than 1 hour ago
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    
+    const { data: expiredEvents, error: fetchError } = await supabase
+      .from('events')
+      .select('id, title, estimated_end_time')
+      .lt('estimated_end_time', oneHourAgo);
+
+    if (fetchError) {
+      console.error('❌ Error fetching expired events:', fetchError);
+      return;
+    }
+
+    if (!expiredEvents || expiredEvents.length === 0) {
+      console.log('✅ No expired events found');
+      return;
+    }
+
+    console.log(`🔍 Found ${expiredEvents.length} expired events to clean up`);
+
+    let cleanedEvents = 0;
+    const errors = [];
+
+    for (const event of expiredEvents) {
+      try {
+        console.log(`🧹 Cleaning up event: ${event.title} (${event.id})`);
+
+        // Check if event has any chat messages
+        const { data: chatMessages, error: chatError } = await supabase
+          .from('chat_messages')
+          .select('id')
+          .eq('event_id', event.id);
+
+        if (chatError) {
+          console.error(`❌ Error checking chat messages for event ${event.id}:`, chatError);
+          errors.push(`Chat check failed for ${event.title}: ${chatError.message}`);
+          continue;
+        }
+
+        // If no chat messages, delete the event and all related data
+        if (!chatMessages || chatMessages.length === 0) {
+          console.log(`💬 No chat messages found for event ${event.id}, proceeding with deletion`);
+
+          // 1. Delete user_events (signups)
+          const { error: userEventsError } = await supabase
+            .from('user_events')
+            .delete()
+            .eq('event_id', event.id);
+
+          if (userEventsError) {
+            console.error(`❌ Error deleting user_events for event ${event.id}:`, userEventsError);
+            errors.push(`User events deletion failed for ${event.title}: ${userEventsError.message}`);
+            continue;
+          }
+
+          // 2. Delete the event
+          const { error: eventDeleteError } = await supabase
+            .from('events')
+            .delete()
+            .eq('id', event.id);
+
+          if (eventDeleteError) {
+            console.error(`❌ Error deleting event ${event.id}:`, eventDeleteError);
+            errors.push(`Event deletion failed for ${event.title}: ${eventDeleteError.message}`);
+            continue;
+          }
+
+          console.log(`✅ Successfully cleaned up event: ${event.title}`);
+          cleanedEvents++;
+        } else {
+          console.log(`💬 Event ${event.id} has ${chatMessages.length} chat messages, preserving event`);
+          // Event has chat messages, so we preserve it
+        }
+      } catch (error) {
+        console.error(`❌ Error processing event ${event.id}:`, error);
+        errors.push(`Processing failed for ${event.title}: ${error.message}`);
+      }
+    }
+
+    console.log(`🎉 Event cleanup completed. Cleaned ${cleanedEvents} events.`);
+    
+    if (errors.length > 0) {
+      console.error('⚠️ Errors during cleanup:', errors);
+    }
+    
+  } catch (error) {
+    console.error('❌ Event cleanup error:', error);
+  }
+};
+
+// Run cleanup every hour
+setInterval(performEventCleanup, 60 * 60 * 1000); // 1 hour
+
+// Also run cleanup on server start
+setTimeout(performEventCleanup, 5000); // Run 5 seconds after server start
+
+// Event cleanup endpoint - removes events that ended more than 1 hour ago
+app.post('/api/cleanup-events', async (req, res) => {
+  try {
+    console.log('Starting event cleanup process...');
+    
+    // Find events that ended more than 1 hour ago
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    
+    const { data: expiredEvents, error: fetchError } = await supabase
+      .from('events')
+      .select('id, title, estimated_end_time')
+      .lt('estimated_end_time', oneHourAgo);
+
+    if (fetchError) {
+      console.error('Error fetching expired events:', fetchError);
+      return res.status(500).json({ 
+        error: 'Failed to fetch expired events',
+        details: fetchError.message
+      });
+    }
+
+    if (!expiredEvents || expiredEvents.length === 0) {
+      console.log('No expired events found');
+      return res.json({ 
+        success: true, 
+        message: 'No expired events found',
+        cleanedEvents: 0
+      });
+    }
+
+    console.log(`Found ${expiredEvents.length} expired events to clean up`);
+
+    let cleanedEvents = 0;
+    const errors = [];
+
+    for (const event of expiredEvents) {
+      try {
+        console.log(`Cleaning up event: ${event.title} (${event.id})`);
+
+        // Check if event has any chat messages
+        const { data: chatMessages, error: chatError } = await supabase
+          .from('chat_messages')
+          .select('id')
+          .eq('event_id', event.id);
+
+        if (chatError) {
+          console.error(`Error checking chat messages for event ${event.id}:`, chatError);
+          errors.push(`Chat check failed for ${event.title}: ${chatError.message}`);
+          continue;
+        }
+
+        // If no chat messages, delete the event and all related data
+        if (!chatMessages || chatMessages.length === 0) {
+          console.log(`No chat messages found for event ${event.id}, proceeding with deletion`);
+
+          // 1. Delete user_events (signups)
+          const { error: userEventsError } = await supabase
+            .from('user_events')
+            .delete()
+            .eq('event_id', event.id);
+
+          if (userEventsError) {
+            console.error(`Error deleting user_events for event ${event.id}:`, userEventsError);
+            errors.push(`User events deletion failed for ${event.title}: ${userEventsError.message}`);
+            continue;
+          }
+
+          // 2. Delete the event
+          const { error: eventDeleteError } = await supabase
+            .from('events')
+            .delete()
+            .eq('id', event.id);
+
+          if (eventDeleteError) {
+            console.error(`Error deleting event ${event.id}:`, eventDeleteError);
+            errors.push(`Event deletion failed for ${event.title}: ${eventDeleteError.message}`);
+            continue;
+          }
+
+          console.log(`Successfully cleaned up event: ${event.title}`);
+          cleanedEvents++;
+        } else {
+          console.log(`Event ${event.id} has ${chatMessages.length} chat messages, preserving event`);
+          // Event has chat messages, so we preserve it
+        }
+      } catch (error) {
+        console.error(`Error processing event ${event.id}:`, error);
+        errors.push(`Processing failed for ${event.title}: ${error.message}`);
+      }
+    }
+
+    console.log(`Event cleanup completed. Cleaned ${cleanedEvents} events.`);
+    
+    res.json({ 
+      success: true, 
+      message: `Event cleanup completed. Cleaned ${cleanedEvents} events.`,
+      cleanedEvents,
+      totalExpiredEvents: expiredEvents.length,
+      errors: errors.length > 0 ? errors : undefined
+    });
+
+  } catch (error) {
+    console.error('Event cleanup error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error during event cleanup' 
+    });
+  }
+});
+
 // Contact form endpoint
 app.post('/api/contact-form', async (req, res) => {
   try {

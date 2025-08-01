@@ -13,6 +13,7 @@ import UserAuthModal from "@/components/modals/UserAuthModal";
 import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useSearch } from "@/contexts/SearchContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { filterUpcomingEvents, filterActiveEvents } from '@/utils/eventFilters';
 
 interface Event {
   id: string;
@@ -72,7 +73,10 @@ const OpportunitiesSection = () => {
       if (error) {
         console.error('Error fetching events:', error);
       } else {
-        setEvents(data || []);
+        // Apply filtering: show only upcoming events (not within 12 hours of start)
+        // and filter out expired events
+        const filteredData = filterActiveEvents(filterUpcomingEvents(data || []));
+        setEvents(filteredData);
       }
     } catch (error) {
       console.error('Error fetching events:', error);

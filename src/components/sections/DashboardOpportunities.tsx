@@ -12,6 +12,7 @@ import GroupSignupModal from "@/components/modals/GroupSignupModal";
 import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
+import { filterUpcomingEvents, filterActiveEvents } from '@/utils/eventFilters';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -78,7 +79,10 @@ const DashboardOpportunities = () => {
       if (error) {
         console.error('Error fetching events:', error);
       } else {
-        setEvents(data || []);
+        // Apply filtering: show only upcoming events (not within 12 hours of start)
+        // and filter out expired events
+        const filteredData = filterActiveEvents(filterUpcomingEvents(data || []));
+        setEvents(filteredData);
       }
     } catch (error) {
       console.error('Error fetching events:', error);

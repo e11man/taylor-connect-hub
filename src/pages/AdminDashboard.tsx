@@ -126,6 +126,7 @@ const AdminDashboard = () => {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
   const [editingEvent, setEditingEvent] = useState<Event | null>(null);
+  const [isCleaningUp, setIsCleaningUp] = useState(false);
   
   // Stats for dashboard
   const [stats, setStats] = useState({
@@ -740,6 +741,41 @@ const AdminDashboard = () => {
     }
   };
 
+  const performEventCleanup = async () => {
+    if (!confirm("This will remove all expired events (more than 1 hour after end time) that have no chat messages. Continue?")) return;
+
+    setIsCleaningUp(true);
+    try {
+      const response = await fetch('/api/cleanup-events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Event Cleanup Complete",
+          description: result.message,
+        });
+        await fetchEvents(); // Refresh events list
+      } else {
+        throw new Error(result.error || 'Failed to perform cleanup');
+      }
+    } catch (error) {
+      console.error('Error performing event cleanup:', error);
+      toast({
+        title: "Cleanup Failed",
+        description: error instanceof Error ? error.message : "Failed to perform event cleanup.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsCleaningUp(false);
+    }
+  };
+
   // Filter functions
   const filteredUsers = users.filter(user => 
     user.email.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
@@ -855,6 +891,28 @@ const AdminDashboard = () => {
                   </div>
                 </CardContent>
               </Card>
+            </div>
+
+            {/* Event Cleanup Button */}
+            <div className="flex justify-center mb-6">
+              <Button
+                onClick={performEventCleanup}
+                disabled={isCleaningUp}
+                variant="outline"
+                className="border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300 transition-all"
+              >
+                {isCleaningUp ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mr-2" />
+                    Cleaning Up...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Clean Up Expired Events
+                  </>
+                )}
+              </Button>
             </div>
           </div>
 

@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import { AddressAutocomplete, AddressDetails } from '@/components/ui/address-autocomplete';
 import SafetyGuidelinesModal from '@/components/modals/SafetyGuidelinesModal';
+import { filterUpcomingEvents, filterActiveEvents } from '@/utils/eventFilters';
 
 interface Event {
   id: string;
@@ -119,7 +120,10 @@ const OrganizationDashboard = () => {
       if (eventsError) {
         console.error('Error fetching events:', eventsError);
       } else {
-        setEvents(eventsData || []);
+        // Apply filtering: show only upcoming events (not within 12 hours of start)
+        // and filter out expired events
+        const filteredData = filterActiveEvents(filterUpcomingEvents(eventsData || []));
+        setEvents(filteredData);
       }
     } catch (error) {
       console.error('Error:', error);
