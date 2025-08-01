@@ -59,67 +59,8 @@ const OpportunitiesSection = () => {
     if (user) {
       fetchUserEvents();
       fetchUserRole();
-      // Debug: Test different queries
-      debugUserRoleQueries();
     }
   }, [user, userEventsRefreshTrigger, eventsRefreshTrigger]);
-
-  // Temporary debug function
-  const debugUserRoleQueries = async () => {
-    if (!user) return;
-    
-    console.log('=== DEBUG: Testing user_roles queries ===');
-    
-    // Test 1: Get all records from user_roles
-    try {
-      const { data: allRoles, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .limit(5);
-      
-      console.log('All user_roles records (first 5):', allRoles, error);
-    } catch (err) {
-      console.error('Error fetching all roles:', err);
-    }
-    
-    // Test 2: Try to find current user by user_id
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      console.log('Query by user_id:', data, error);
-    } catch (err) {
-      console.error('Error with user_id query:', err);
-    }
-    
-    // Test 3: Try to find current user by id
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('id', user.id);
-      
-      console.log('Query by id:', data, error);
-    } catch (err) {
-      console.error('Error with id query:', err);
-    }
-    
-    // Test 4: Get column info
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .limit(1);
-      
-      if (data && data.length > 0) {
-        console.log('user_roles table columns:', Object.keys(data[0]));
-      }
-    } catch (err) {
-      console.error('Error getting columns:', err);
-    }
-  };
 
   const fetchEvents = async () => {
     try {
@@ -166,18 +107,36 @@ const OpportunitiesSection = () => {
     try {
       console.log('Fetching user role for user:', user.id);
       
-      const { data, error } = await supabase
-        .from('user_roles')
+      // Try to get role from profiles table first (primary source)
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
         .select('role')
         .eq('user_id', user.id)
         .maybeSingle();
 
-      if (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole('');
-      } else if (data) {
-        console.log('User role fetched:', data.role);
-        setUserRole((data.role?.toLowerCase().trim() as UserRole) || '');
+      if (profileError) {
+        console.error('Error fetching user role from profiles:', profileError);
+        
+        // Fallback to user_roles table if profiles fails
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', user.id)
+          .maybeSingle();
+
+        if (roleError) {
+          console.error('Error fetching user role from user_roles:', roleError);
+          setUserRole('');
+        } else if (roleData) {
+          console.log('User role fetched from user_roles:', roleData.role);
+          setUserRole((roleData.role?.toLowerCase().trim() as UserRole) || '');
+        } else {
+          console.log('No user role found for user');
+          setUserRole('');
+        }
+      } else if (profileData) {
+        console.log('User role fetched from profiles:', profileData.role);
+        setUserRole((profileData.role?.toLowerCase().trim() as UserRole) || '');
       } else {
         console.log('No user role found for user');
         setUserRole('');
@@ -409,8 +368,19 @@ const OpportunitiesSection = () => {
 
                   {/* Show buttons based on user role and signup status */}
                   {(() => {
+                    // Show loading state while fetching user role
+                    if (user && userRoleLoading) {
+                      return (
+                        <div className="w-full bg-gray-100 text-gray-600 text-center py-3 rounded-xl font-semibold min-h-[44px] flex items-center justify-center">
+                          Loading...
+                        </div>
+                      );
+                    }
+
                     const isPAUser = user && userRole === 'pa';
                     const userSignedUp = isSignedUp(event.id);
+                    
+
                     
                     // For PA users
                     if (isPAUser) {
