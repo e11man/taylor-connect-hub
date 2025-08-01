@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Edit2, Trash2, Calendar, MapPin, Users, LogOut, MessageCircle, Clock } from "lucide-react";
+import { Plus, Edit2, Trash2, Calendar, MapPin, Users, LogOut, MessageCircle, Clock, Shield } from "lucide-react";
 import { formatEventDate, formatEventTimeRange } from "@/utils/formatEvent";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import { AddressAutocomplete, AddressDetails } from '@/components/ui/address-autocomplete';
+import SafetyGuidelinesModal from '@/components/modals/SafetyGuidelinesModal';
 
 interface Event {
   id: string;
@@ -54,6 +55,7 @@ const OrganizationDashboard = () => {
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
+  const [safetyGuidelinesModalOpen, setSafetyGuidelinesModalOpen] = useState(false);
   
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -149,6 +151,13 @@ const OrganizationDashboard = () => {
       return;
     }
 
+    // Show safety guidelines modal
+    setSafetyGuidelinesModalOpen(true);
+  };
+
+  const handleSafetyGuidelinesAccept = async () => {
+    if (!organization) return;
+
     try {
       // Combine date and time fields into proper datetime strings
       const eventDate = `${newEvent.date}T${newEvent.arrival_time}:00`;
@@ -174,6 +183,7 @@ const OrganizationDashboard = () => {
 
       setEvents([...events, data]);
       setIsCreateModalOpen(false);
+      setSafetyGuidelinesModalOpen(false);
       setNewEvent({ title: '', description: '', date: '', arrival_time: '', estimated_end_time: '', location: '', max_participants: '6' });
       setSelectedAddress(null); // Clear selected address after creation
       setHasAttemptedSubmit(false);
@@ -690,6 +700,15 @@ const OrganizationDashboard = () => {
           organizationId={selectedEvent.organization_id || organization?.id || ''}
         />
       )}
+
+      {/* Safety Guidelines Modal */}
+      <SafetyGuidelinesModal
+        isOpen={safetyGuidelinesModalOpen}
+        onClose={() => {
+          setSafetyGuidelinesModalOpen(false);
+        }}
+        onAccept={handleSafetyGuidelinesAccept}
+      />
       
       <Footer />
     </div>
