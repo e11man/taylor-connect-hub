@@ -24,7 +24,8 @@ import {
   AlertCircle,
   CheckCircle2,
   Sparkles,
-  Heart
+  Heart,
+  BarChart3
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -45,6 +46,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { ContentManagement } from "@/components/admin/ContentManagement";
+import { Statistics } from "@/components/admin/Statistics";
 import { format } from "date-fns";
 import { Database } from "@/integrations/supabase/types";
 import { formatEventTimeRange } from "@/utils/formatEvent";
@@ -823,7 +825,7 @@ const AdminDashboard = () => {
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5 h-auto p-1 bg-white shadow-sm">
+            <TabsList className="grid w-full grid-cols-6 h-auto p-1 bg-white shadow-sm">
               <TabsTrigger value="users" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
                 <Users className="w-4 h-4 mr-2" />
                 Users
@@ -839,6 +841,10 @@ const AdminDashboard = () => {
               <TabsTrigger value="events" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
                 <Calendar className="w-4 h-4 mr-2" />
                 Events
+              </TabsTrigger>
+              <TabsTrigger value="statistics" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Statistics
               </TabsTrigger>
               <TabsTrigger value="content" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
                 <Sparkles className="w-4 h-4 mr-2" />
@@ -1333,6 +1339,11 @@ const AdminDashboard = () => {
             {/* Content Management Tab */}
             <TabsContent value="content" className="space-y-6">
               <ContentManagement />
+            </TabsContent>
+
+            {/* Statistics Tab */}
+            <TabsContent value="statistics" className="space-y-6">
+              <Statistics />
             </TabsContent>
           </Tabs>
         </div>
