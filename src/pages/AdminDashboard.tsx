@@ -55,6 +55,7 @@ type UserRole = Database["public"]["Enums"]["user_role"];
 
 interface User {
   id: string;
+  user_id?: string; // Added for user_id from profiles
   email: string;
   created_at: string;
   profiles?: {
@@ -451,31 +452,31 @@ const AdminDashboard = () => {
       // First, get the user to check if they have a user_id
       const user = users.find(u => u.id === userId) || pendingUsers.find(u => u.id === userId);
       
-      if (user?.id) {
-        // Update user_roles table
-        const { error } = await supabase
-          .from('user_roles')
-          .upsert({ 
-            user_id: user.id, 
-            role: newRole 
-          }, {
-            onConflict: 'user_id'
-          });
-
-        if (error) throw error;
-      } else {
-        // Direct auth user - update profiles table directly
-        const { error } = await supabase
-          .from('profiles')
-          .update({ role: newRole })
-          .eq('id', userId);
-
-        if (error) throw error;
+      if (!user) {
+        throw new Error('User not found');
       }
+
+      // Update profiles table first
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
+
+      // Update or insert into user_roles table using the actual user_id
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .upsert({ 
+          user_id: user.user_id || user.id, // Use user_id if available, fallback to id
+          role: newRole 
+        });
+
+      if (roleError) throw roleError;
 
       toast({
         title: "Role updated! ✨",
-        description: `User role changed to ${newRole}.`,
+        description: `User role changed to ${newRole}. Changes will be visible after refresh.`,
       });
 
       await fetchUsers();
