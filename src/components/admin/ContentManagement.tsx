@@ -7,9 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Switch } from '@/components/ui/switch';
 import { useContentAdmin } from '@/hooks/useContent';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, Search, Eye, EyeOff } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 interface ContentItem {
@@ -39,6 +40,20 @@ export const ContentManagement = () => {
 
   const { loading, createContent, updateContent, deleteContent, getAllContent } = useContentAdmin();
   const { toast } = useToast();
+
+  // Helper function to check if a field is a boolean field
+  const isBooleanField = (key: string) => {
+    return key.endsWith('_hidden') || key === 'true' || key === 'false';
+  };
+
+  // Helper function to get a user-friendly label for boolean fields
+  const getBooleanFieldLabel = (key: string) => {
+    if (key.endsWith('_hidden')) {
+      const platform = key.replace('_hidden', '');
+      return `Hide ${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
+    }
+    return key;
+  };
 
   // Load content on mount
   useEffect(() => {
@@ -268,7 +283,7 @@ export const ContentManagement = () => {
                           <TableHeader>
                             <TableRow>
                               <TableHead>Key</TableHead>
-                              <TableHead>Value</TableHead>
+                              <TableHead>Value / Status</TableHead>
                               <TableHead className="w-32">Actions</TableHead>
                             </TableRow>
                           </TableHeader>
@@ -276,7 +291,48 @@ export const ContentManagement = () => {
                             {items.map((item) => (
                               <TableRow key={item.id}>
                                 <TableCell className="font-mono text-sm">{item.key}</TableCell>
-                                <TableCell className="max-w-xs truncate">{item.value}</TableCell>
+                                <TableCell className="max-w-xs truncate">
+                                  {isBooleanField(item.key) ? (
+                                    <div className="flex items-center gap-2">
+                                      <Switch
+                                        checked={item.value === 'true'}
+                                        onCheckedChange={async (checked) => {
+                                          const updatedItem = { ...item, value: checked ? 'true' : 'false' };
+                                          const result = await updateContent(updatedItem.id, updatedItem.value);
+                                          if (result.success) {
+                                            toast({
+                                              title: 'Success',
+                                              description: 'Content updated successfully',
+                                            });
+                                            loadContent(); // Refresh the content
+                                          } else {
+                                            toast({
+                                              title: 'Error',
+                                              description: 'Failed to update content',
+                                              variant: 'destructive',
+                                            });
+                                          }
+                                        }}
+                                        className="data-[state=checked]:bg-[#00AFCE]"
+                                      />
+                                      <span className="text-sm text-muted-foreground">
+                                        {item.value === 'true' ? (
+                                          <span className="flex items-center gap-1 text-red-600">
+                                            <EyeOff className="h-3 w-3" />
+                                            Hidden
+                                          </span>
+                                        ) : (
+                                          <span className="flex items-center gap-1 text-green-600">
+                                            <Eye className="h-3 w-3" />
+                                            Visible
+                                          </span>
+                                        )}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    item.value
+                                  )}
+                                </TableCell>
                                 <TableCell>
                                   <div className="flex gap-2">
                                     <Dialog>
@@ -298,13 +354,39 @@ export const ContentManagement = () => {
                                         </DialogHeader>
                                         {editingItem && (
                                           <div className="py-4">
-                                            <Label htmlFor="edit-value">Value</Label>
-                                            <Textarea
-                                              id="edit-value"
-                                              value={editingItem.value}
-                                              onChange={(e) => setEditingItem({ ...editingItem, value: e.target.value })}
-                                              className="mt-2"
-                                            />
+                                            {isBooleanField(editingItem.key) ? (
+                                              <div className="space-y-4">
+                                                <Label className="text-base font-medium">
+                                                  {getBooleanFieldLabel(editingItem.key)}
+                                                </Label>
+                                                <div className="flex items-center gap-3">
+                                                  <Switch
+                                                    checked={editingItem.value === 'true'}
+                                                    onCheckedChange={(checked) => setEditingItem({ ...editingItem, value: checked ? 'true' : 'false' })}
+                                                    className="data-[state=checked]:bg-[#00AFCE]"
+                                                  />
+                                                  <span className="text-sm text-muted-foreground">
+                                                    {editingItem.value === 'true' ? 'Hidden' : 'Visible'}
+                                                  </span>
+                                                </div>
+                                                <p className="text-xs text-muted-foreground">
+                                                  {editingItem.value === 'true' 
+                                                    ? 'This item will be hidden from the website.'
+                                                    : 'This item will be visible on the website.'
+                                                  }
+                                                </p>
+                                              </div>
+                                            ) : (
+                                              <>
+                                                <Label htmlFor="edit-value">Value</Label>
+                                                <Textarea
+                                                  id="edit-value"
+                                                  value={editingItem.value}
+                                                  onChange={(e) => setEditingItem({ ...editingItem, value: e.target.value })}
+                                                  className="mt-2"
+                                                />
+                                              </>
+                                            )}
                                           </div>
                                         )}
                                         <DialogFooter>

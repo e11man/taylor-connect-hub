@@ -1,4 +1,4 @@
-import { Heart } from "lucide-react";
+import { Heart, Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
 import AnimatedSection from "@/components/ui/animated-section";
 import { motion } from "framer-motion";
 import { DynamicText } from "@/components/content/DynamicText";
@@ -10,6 +10,7 @@ const Footer = () => {
   const { content: brandContent } = useContentSection('footer', 'brand');
   const { content: copyrightContent } = useContentSection('footer', 'copyright');
   const { content: partnershipContent } = useContentSection('footer', 'partnership');
+  const { content: socialContent } = useContentSection('footer', 'social');
   
   const footerLinks = [
     { name: linksContent.about || "About", href: "/about" },
@@ -18,6 +19,44 @@ const Footer = () => {
     { name: linksContent.privacy || "Privacy", href: "#" },
     { name: linksContent.terms || "Terms", href: "#" }
   ];
+
+  const socialMediaLinks = [
+    {
+      icon: Facebook,
+      url: socialContent.facebook_url || "#",
+      label: socialContent.facebook_label || "Facebook",
+      color: "hover:bg-blue-600",
+      hidden: socialContent.facebook_hidden === 'true'
+    },
+    {
+      icon: Instagram,
+      url: socialContent.instagram_url || "#",
+      label: socialContent.instagram_label || "Instagram",
+      color: "hover:bg-gradient-to-r from-purple-500 to-pink-500",
+      hidden: socialContent.instagram_hidden === 'true'
+    },
+    {
+      icon: Twitter,
+      url: socialContent.twitter_url || "#",
+      label: socialContent.twitter_label || "Twitter",
+      color: "hover:bg-blue-400",
+      hidden: socialContent.twitter_hidden === 'true'
+    },
+    {
+      icon: Linkedin,
+      url: socialContent.linkedin_url || "#",
+      label: socialContent.linkedin_label || "LinkedIn",
+      color: "hover:bg-blue-700",
+      hidden: socialContent.linkedin_hidden === 'true'
+    },
+    {
+      icon: Youtube,
+      url: socialContent.youtube_url || "#",
+      label: socialContent.youtube_label || "YouTube",
+      color: "hover:bg-red-600",
+      hidden: socialContent.youtube_hidden === 'true'
+    }
+  ].filter(social => !social.hidden); // Filter out hidden platforms
 
   return (
     <footer className="bg-white border-t border-gray-200">
@@ -91,6 +130,82 @@ const Footer = () => {
             </motion.p>
           </div>
 
+          {/* Social Media Section */}
+          {socialMediaLinks.length > 0 && (
+            <motion.div 
+              className="text-center mt-6 pt-6 border-t border-gray-100"
+              initial={{ opacity: 0, y: 10 }}
+              whileInView={{ 
+                opacity: 1, 
+                y: 0,
+                transition: { duration: 0.4, delay: 0.5 }
+              }}
+              viewport={{ once: false }}
+            >
+            <motion.h3 
+              className="text-sm font-montserrat font-semibold text-primary mb-4"
+              initial={{ opacity: 0 }}
+              whileInView={{ 
+                opacity: 1,
+                transition: { duration: 0.4, delay: 0.6 }
+              }}
+              viewport={{ once: false }}
+            >
+              {socialContent.title || "Follow Us"}
+            </motion.h3>
+            
+            <div className="flex justify-center items-center gap-3">
+              {socialMediaLinks.map((social, index) => (
+                <motion.a
+                  key={social.label}
+                  href={social.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`
+                    w-10 h-10 rounded-xl flex items-center justify-center 
+                    bg-gray-100 hover:bg-[#00AFCE] transition-all duration-300 
+                    group relative overflow-hidden
+                    ${social.color}
+                  `}
+                  whileHover={{ 
+                    scale: 1.1,
+                    y: -2,
+                    transition: { duration: 0.2 }
+                  }}
+                  whileTap={{ scale: 0.95 }}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  whileInView={{ 
+                    opacity: 1, 
+                    scale: 1,
+                    transition: { 
+                      duration: 0.3, 
+                      delay: 0.7 + index * 0.1 
+                    }
+                  }}
+                  viewport={{ once: false }}
+                  aria-label={social.label}
+                >
+                  <social.icon className="w-5 h-5 text-gray-600 group-hover:text-white transition-colors duration-300" />
+                  
+                  {/* Tooltip */}
+                  <motion.div
+                    className="absolute -top-10 left-1/2 transform -translate-x-1/2 
+                               bg-gray-800 text-white text-xs px-2 py-1 rounded 
+                               opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                               pointer-events-none whitespace-nowrap z-10"
+                    initial={{ opacity: 0, y: 5 }}
+                    whileHover={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    {social.label}
+                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                  </motion.div>
+                </motion.a>
+              ))}
+            </div>
+            </motion.div>
+          )}
+
           {/* Partnership note with Taylor University logo */}
           <motion.div 
             className="text-center mt-4 pt-4 border-t border-gray-100"
@@ -98,7 +213,7 @@ const Footer = () => {
             whileInView={{ 
               opacity: 1, 
               y: 0,
-              transition: { duration: 0.4, delay: 0.5 }
+              transition: { duration: 0.4, delay: 0.8 }
             }}
             viewport={{ once: false }}
           >
