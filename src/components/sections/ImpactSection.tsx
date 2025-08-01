@@ -1,26 +1,35 @@
 import { Users, Clock, Building } from "lucide-react";
 import { useContentSection } from "@/hooks/useContent";
+import { useStatistics } from "@/hooks/useStatistics";
 
 const ImpactSection = () => {
-  const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
-  
+  const { content: impactContent } = useContentSection('homepage', 'impact');
+  const { statistics, loading: statsLoading } = useStatistics();
+
+  // Helper to get stat value and add + if > 0
+  const getStatValue = (key: string) => {
+    const stat = statistics.find(s => s.key === key);
+    if (!stat) return "0";
+    return stat.total_value > 0 ? stat.total_value.toLocaleString() + "+" : "0";
+  };
+
   const stats = [
-    { 
-      icon: Users, 
-      label: impactContent.volunteers_label || "Active Volunteers", 
-      value: impactContent.volunteers_count || "0",
+    {
+      icon: Users,
+      label: impactContent.volunteers_label || "Active Volunteers",
+      value: getStatValue('active_volunteers'),
       description: "Passionate individuals serving Upland"
     },
-    { 
-      icon: Clock, 
-      label: impactContent.hours_label || "Hours Contributed", 
-      value: impactContent.hours_count || "0",
+    {
+      icon: Clock,
+      label: impactContent.hours_label || "Hours Contributed",
+      value: getStatValue('hours_contributed'),
       description: "Collective time dedicated to service"
     },
-    { 
-      icon: Building, 
-      label: impactContent.organizations_label || "Partner Organizations", 
-      value: impactContent.organizations_count || "0",
+    {
+      icon: Building,
+      label: impactContent.organizations_label || "Partner Organizations",
+      value: getStatValue('partner_organizations'),
       description: "Local organizations making a difference"
     }
   ];
@@ -40,7 +49,7 @@ const ImpactSection = () => {
         {/* Stats Section */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto animate-fade-in" style={{ animationDelay: '0.3s' }}>
           {stats.map((stat, index) => (
-            <div 
+            <div
               key={stat.label}
               className="group relative bg-white border-2 border-gray-200 rounded-3xl p-8 md:p-10 text-center transition-all duration-500 hover:shadow-lg hover:scale-105 hover:border-[#00AFCE] overflow-hidden"
               style={{ animationDelay: `${0.5 + index * 0.1}s` }}

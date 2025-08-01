@@ -182,6 +182,78 @@ app.delete('/api/content', async (req, res) => {
   }
 });
 
+// Statistics API routes
+app.get('/api/statistics', async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_combined_statistics');
+
+    if (error) throw error;
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error fetching statistics:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/statistics/base', async (req, res) => {
+  try {
+    const { key, base_value } = req.body;
+    
+    if (!key || base_value === undefined) {
+      return res.status(400).json({ success: false, error: 'Key and base_value are required' });
+    }
+
+    const { data, error } = await supabase
+      .rpc('update_statistic_base_value', { stat_key: key, new_base_value: base_value });
+
+    if (error) throw error;
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error updating base value:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/statistics/live', async (req, res) => {
+  try {
+    const { key, live_value } = req.body;
+    
+    if (!key || live_value === undefined) {
+      return res.status(400).json({ success: false, error: 'Key and live_value are required' });
+    }
+
+    const { data, error } = await supabase
+      .rpc('update_statistic_live_value', { stat_key: key, new_live_value: live_value });
+
+    if (error) throw error;
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error updating live value:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/statistics/recalculate', async (req, res) => {
+  try {
+    // Trigger recalculation by updating a dummy record
+    const { error } = await supabase
+      .from('statistics')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('key', 'active_volunteers');
+
+    if (error) throw error;
+
+    res.json({ success: true, message: 'Statistics recalculated successfully' });
+  } catch (error) {
+    console.error('Error recalculating statistics:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Email server is running' });
