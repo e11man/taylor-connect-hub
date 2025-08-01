@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 
 interface GroupSignupModalProps {
   isOpen: boolean;
@@ -37,12 +38,14 @@ const GroupSignupModal = ({
   onSignupSuccess 
 }: GroupSignupModalProps) => {
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [selectedUsers, setSelectedUsers] = new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyMyFloor, setShowOnlyMyFloor] = useState(true);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [includeMyself, setIncludeMyself] = useState(false);
+  const [safetyModalOpen, setSafetyModalOpen] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -148,7 +151,7 @@ const GroupSignupModal = ({
     setSelectedUsers(newSelected);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!user) return;
 
     const totalSignups = selectedUsers.size + (includeMyself ? 1 : 0);
@@ -163,6 +166,16 @@ const GroupSignupModal = ({
       return;
     }
 
+    // Show safety guidelines modal first
+    setPendingSubmit(true);
+    setSafetyModalOpen(true);
+  };
+
+  const handleSafetyAccept = async () => {
+    if (!user || !pendingSubmit) return;
+
+    setSafetyModalOpen(false);
+    setPendingSubmit(false);
     setSubmitting(true);
     
     try {
@@ -402,6 +415,16 @@ const GroupSignupModal = ({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Safety Guidelines Modal */}
+    <SafetyGuidelinesModal
+      isOpen={safetyModalOpen}
+      onClose={() => {
+        setSafetyModalOpen(false);
+        setPendingSubmit(false);
+      }}
+      onAccept={handleSafetyAccept}
+    />
   );
 };
 

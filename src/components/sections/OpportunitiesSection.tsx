@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import GroupSignupModal from "@/components/modals/GroupSignupModal";
 import UserAuthModal from "@/components/modals/UserAuthModal";
+import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useSearch } from "@/contexts/SearchContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 
@@ -39,6 +40,8 @@ const OpportunitiesSection = () => {
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [groupSignupModalOpen, setGroupSignupModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [safetyModalOpen, setSafetyModalOpen] = useState(false);
+  const [pendingEventId, setPendingEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [userRole, setUserRole] = useState<UserRole>(null);
   const [userRoleLoading, setUserRoleLoading] = useState(false);
@@ -221,6 +224,18 @@ const OpportunitiesSection = () => {
       });
       return;
     }
+
+    // Show safety guidelines modal first
+    setPendingEventId(eventId);
+    setSafetyModalOpen(true);
+  };
+
+  const handleSafetyAccept = async () => {
+    if (!pendingEventId || !user) return;
+
+    setSafetyModalOpen(false);
+    const eventId = pendingEventId;
+    setPendingEventId(null);
 
     try {
       // Try API route first (with service role key)
@@ -499,6 +514,16 @@ const OpportunitiesSection = () => {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         defaultMode="login"
+      />
+
+      {/* Safety Guidelines Modal */}
+      <SafetyGuidelinesModal
+        isOpen={safetyModalOpen}
+        onClose={() => {
+          setSafetyModalOpen(false);
+          setPendingEventId(null);
+        }}
+        onAccept={handleSafetyAccept}
       />
     </section>
   );
