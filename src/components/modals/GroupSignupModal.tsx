@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 
 interface GroupSignupModalProps {
   isOpen: boolean;
@@ -43,6 +44,8 @@ const GroupSignupModal = ({
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [includeMyself, setIncludeMyself] = useState(false);
+  const [safetyModalOpen, setSafetyModalOpen] = useState(false);
+  const [pendingSubmit, setPendingSubmit] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -148,7 +151,7 @@ const GroupSignupModal = ({
     setSelectedUsers(newSelected);
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!user) return;
 
     const totalSignups = selectedUsers.size + (includeMyself ? 1 : 0);
@@ -163,6 +166,16 @@ const GroupSignupModal = ({
       return;
     }
 
+    // Show safety guidelines modal first
+    setPendingSubmit(true);
+    setSafetyModalOpen(true);
+  };
+
+  const handleSafetyAccept = async () => {
+    if (!user || !pendingSubmit) return;
+
+    setSafetyModalOpen(false);
+    setPendingSubmit(false);
     setSubmitting(true);
     
     try {
@@ -253,7 +266,8 @@ const GroupSignupModal = ({
   const totalSelected = selectedUsers.size + (includeMyself ? 1 : 0);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[90vh] sm:max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader className="px-4 sm:px-6">
           <DialogTitle className="text-lg sm:text-xl font-montserrat font-bold text-primary">
@@ -402,6 +416,17 @@ const GroupSignupModal = ({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Safety Guidelines Modal */}
+    <SafetyGuidelinesModal
+      isOpen={safetyModalOpen}
+      onClose={() => {
+        setSafetyModalOpen(false);
+        setPendingSubmit(false);
+      }}
+      onAccept={handleSafetyAccept}
+    />
+    </>
   );
 };
 
