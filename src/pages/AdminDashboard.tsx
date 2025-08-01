@@ -257,10 +257,11 @@ const AdminDashboard = () => {
       // Instead, we query the profiles table directly which the anon key can access
       // This prevents the "Database error querying schema" error
       
-      // Fetch all profiles (users)
+      // Fetch all profiles (users) - exclude organizations
       const { data: profiles, error: profilesError } = await supabase
         .from('profiles')
         .select('*')
+        .neq('user_type', 'organization') // Exclude organizations from users list
         .order('created_at', { ascending: false });
       
       console.log('Profiles query result:', { profiles, profilesError });
@@ -315,6 +316,7 @@ const AdminDashboard = () => {
       );
 
       console.log(`Found ${activeUsers.length} active users and ${pendingUsersList.length} pending users`);
+      console.log('Pending users details:', pendingUsersList.map(u => ({ email: u.email, user_type: u.profiles?.user_type })));
 
       setUsers(activeUsers);
       setPendingUsers(pendingUsersList);
@@ -397,24 +399,33 @@ const AdminDashboard = () => {
   // User management functions
   const approveUser = async (userId: string) => {
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: 'active' })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: "User approved! 🎉",
-        description: "The user can now access the platform.",
+      const response = await fetch('/api/admin/approve-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          adminId: user?.id
+        }),
       });
 
-      await fetchUsers();
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "User approved! 🎉",
+          description: "The user can now access the platform.",
+        });
+        await fetchUsers();
+      } else {
+        throw new Error(result.error || 'Failed to approve user');
+      }
     } catch (error) {
       console.error('Error approving user:', error);
       toast({
         title: "Error",
-        description: "Failed to approve user.",
+        description: error instanceof Error ? error.message : "Failed to approve user.",
         variant: "destructive",
       });
     }
@@ -424,24 +435,33 @@ const AdminDashboard = () => {
     if (!confirm("Are you sure you want to reject this user?")) return;
 
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ status: 'rejected' })
-        .eq('id', userId);
-
-      if (error) throw error;
-
-      toast({
-        title: "User rejected",
-        description: "The user has been denied access.",
+      const response = await fetch('/api/admin/reject-user', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          adminId: user?.id
+        }),
       });
 
-      await fetchUsers();
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "User rejected",
+          description: "The user has been denied access.",
+        });
+        await fetchUsers();
+      } else {
+        throw new Error(result.error || 'Failed to reject user');
+      }
     } catch (error) {
       console.error('Error rejecting user:', error);
       toast({
         title: "Error",
-        description: "Failed to reject user.",
+        description: error instanceof Error ? error.message : "Failed to reject user.",
         variant: "destructive",
       });
     }
@@ -491,67 +511,36 @@ const AdminDashboard = () => {
   };
 
   const deleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
+    if (!confirm("Are you sure you want to delete this user? This will permanently delete the user account, all their event signups, and if they're an organization, all their events and organization data. This action cannot be undone.")) return;
 
     try {
-      // Get the user to check if they have a user_id
-      const user = users.find(u => u.id === userId) || pendingUsers.find(u => u.id === userId);
-      const errors: string[] = [];
-      
-      if (user?.id) {
-        // Delete user data
-        
-        // Delete user's role
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .delete()
-          .eq('user_id', user.id);
-        
-        if (roleError) errors.push(`Roles: ${roleError.message}`);
-        
-        // Delete user's events participation
-        const { error: eventsError } = await supabase
-          .from('user_events')
-          .delete()
-          .eq('user_id', user.id);
-        
-        if (eventsError) errors.push(`Events: ${eventsError.message}`);
-        
-        // Mark user profile as deleted (soft delete)
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ status: 'deleted' })
-          .eq('user_id', user.id);
-        
-        if (profileError) errors.push(`Profile: ${profileError.message}`);
-      } else {
-        // Direct auth user - delete by profile id
-        
-        // For direct auth users, we just mark the profile as deleted
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({ status: 'deleted' })
-          .eq('id', userId);
-        
-        if (profileError) errors.push(`Profile: ${profileError.message}`);
-      }
-      
-      // If there were errors, show them
-      if (errors.length > 0) {
-        throw new Error(`Failed to fully delete user:\n${errors.join('\n')}`);
-      }
-
-      toast({
-        title: "User marked as deleted",
-        description: "User has been removed from the system.",
+      const response = await fetch('/api/admin/delete-user', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+          adminId: user?.id
+        }),
       });
 
-      await fetchUsers();
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "User deleted",
+          description: "The user and all related data have been permanently removed.",
+        });
+        await fetchUsers();
+      } else {
+        throw new Error(result.error || 'Failed to delete user');
+      }
     } catch (error) {
       console.error('Error deleting user:', error);
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete user. Check your permissions.",
+        description: error instanceof Error ? error.message : "Failed to delete user.",
         variant: "destructive",
       });
     }
@@ -560,27 +549,33 @@ const AdminDashboard = () => {
   // Organization management functions
   const approveOrganization = async (orgId: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('send-admin-approval', {
-        body: {
+      const response = await fetch('/api/admin/approve-organization', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           organizationId: orgId,
-          action: 'approve',
           adminId: user?.id
-        }
+        }),
       });
 
-      if (error) throw error;
+      const result = await response.json();
 
-      toast({
-        title: "Organization approved! 🎊",
-        description: "They can now create events and have been notified via email.",
-      });
-
-      await fetchOrganizations();
+      if (response.ok) {
+        toast({
+          title: "Organization approved! 🎊",
+          description: "They can now create events and have been notified via email.",
+        });
+        await fetchOrganizations();
+      } else {
+        throw new Error(result.error || 'Failed to approve organization');
+      }
     } catch (error) {
       console.error('Error approving organization:', error);
       toast({
         title: "Error",
-        description: "Failed to approve organization.",
+        description: error instanceof Error ? error.message : "Failed to approve organization.",
         variant: "destructive",
       });
     }
@@ -591,28 +586,34 @@ const AdminDashboard = () => {
     if (reason === null) return; // User cancelled
 
     try {
-      const { data, error } = await supabase.functions.invoke('send-admin-approval', {
-        body: {
+      const response = await fetch('/api/admin/reject-organization', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           organizationId: orgId,
-          action: 'reject',
           adminId: user?.id,
           reason: reason || undefined
-        }
+        }),
       });
 
-      if (error) throw error;
+      const result = await response.json();
 
-      toast({
-        title: "Organization rejected",
-        description: "The organization has been denied and notified via email.",
-      });
-
-      await fetchOrganizations();
+      if (response.ok) {
+        toast({
+          title: "Organization rejected",
+          description: "The organization has been denied and notified via email.",
+        });
+        await fetchOrganizations();
+      } else {
+        throw new Error(result.error || 'Failed to reject organization');
+      }
     } catch (error) {
       console.error('Error rejecting organization:', error);
       toast({
         title: "Error",
-        description: "Failed to reject organization.",
+        description: error instanceof Error ? error.message : "Failed to reject organization.",
         variant: "destructive",
       });
     }
@@ -645,31 +646,36 @@ const AdminDashboard = () => {
   };
 
   const deleteOrganization = async (orgId: string) => {
-    if (!confirm("Are you sure? This will also delete all events by this organization.")) return;
+    if (!confirm("Are you sure? This will permanently delete the organization, all its events, user signups, and the user account. This action cannot be undone.")) return;
 
     try {
-      // Delete related events first
-      await supabase.from('events').delete().eq('organization_id', orgId);
-      
-      // Delete organization
-      const { error } = await supabase
-        .from('organizations')
-        .delete()
-        .eq('id', orgId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Organization deleted",
-        description: "The organization and its events have been removed.",
+      const response = await fetch('/api/admin/delete-organization', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          organizationId: orgId,
+          adminId: user?.id
+        }),
       });
 
-      await fetchOrganizations();
+      const result = await response.json();
+
+      if (response.ok) {
+        toast({
+          title: "Organization deleted",
+          description: "The organization and all related data have been permanently removed.",
+        });
+        await fetchOrganizations();
+      } else {
+        throw new Error(result.error || 'Failed to delete organization');
+      }
     } catch (error) {
       console.error('Error deleting organization:', error);
       toast({
         title: "Error",
-        description: "Failed to delete organization.",
+        description: error instanceof Error ? error.message : "Failed to delete organization.",
         variant: "destructive",
       });
     }

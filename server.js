@@ -101,6 +101,650 @@ app.post('/api/send-verification-code', async (req, res) => {
   }
 });
 
+// Admin approval endpoints
+app.post('/api/admin/approve-organization', async (req, res) => {
+  try {
+    const { organizationId, adminId } = req.body;
+
+    if (!organizationId || !adminId) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: organizationId, adminId' 
+      });
+    }
+
+    console.log('Approving organization:', organizationId, 'by admin:', adminId);
+
+    // Check if user is admin using profiles table
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .eq('role', 'admin')
+      .single();
+
+    console.log('Admin check result:', { adminCheck, adminError });
+
+    if (adminError || !adminCheck) {
+      console.log('Admin check failed:', { adminError, adminCheck });
+      return res.status(403).json({ 
+        error: 'Only admins can approve organizations' 
+      });
+    }
+
+    // Get the profile ID for the admin user
+    const { data: adminProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', adminId)
+      .single();
+
+    if (profileError || !adminProfile) {
+      console.error('Error getting admin profile:', profileError);
+      return res.status(500).json({ 
+        error: 'Failed to get admin profile',
+        details: profileError?.message
+      });
+    }
+
+    // Update organization status
+    console.log('Updating organization with ID:', organizationId);
+    
+    const { data: org, error: updateError } = await supabase
+      .from('organizations')
+      .update({
+        status: 'approved',
+        approved_at: new Date().toISOString(),
+        approved_by: adminProfile.id, // Use profiles.id instead of user_id
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', organizationId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating organization:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to approve organization',
+        details: updateError.message
+      });
+    }
+
+    // Also update the corresponding profile status to active
+    console.log('Updating profile status for organization user');
+    const { error: profileUpdateError } = await supabase
+      .from('profiles')
+      .update({ status: 'active' })
+      .eq('id', organization.user_id);
+
+    if (profileUpdateError) {
+      console.error('Error updating profile status:', profileUpdateError);
+      // Don't fail the whole operation, just log the error
+      // The login function will handle this case
+    }
+
+    console.log('Organization update result:', { org, updateError });
+
+    if (updateError) {
+      console.error('Error updating organization:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to approve organization',
+        details: updateError.message
+      });
+    }
+
+    console.log('Organization approved successfully:', org.name);
+    res.json({ 
+      success: true, 
+      message: 'Organization approved successfully',
+      organization: org
+    });
+
+  } catch (error) {
+    console.error('Admin approval error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error' 
+    });
+  }
+});
+
+app.post('/api/admin/reject-organization', async (req, res) => {
+  try {
+    const { organizationId, adminId, reason } = req.body;
+
+    if (!organizationId || !adminId) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: organizationId, adminId' 
+      });
+    }
+
+    console.log('Rejecting organization:', organizationId, 'by admin:', adminId);
+
+    // Check if user is admin using profiles table
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminError || !adminCheck) {
+      return res.status(403).json({ 
+        error: 'Only admins can reject organizations' 
+      });
+    }
+
+    // Get the profile ID for the admin user
+    const { data: adminProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('user_id', adminId)
+      .single();
+
+    if (profileError || !adminProfile) {
+      console.error('Error getting admin profile:', profileError);
+      return res.status(500).json({ 
+        error: 'Failed to get admin profile',
+        details: profileError?.message
+      });
+    }
+
+    // Update organization status
+    const { data: org, error: updateError } = await supabase
+      .from('organizations')
+      .update({
+        status: 'rejected',
+        rejection_reason: reason || 'No reason provided',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', organizationId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating organization:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to reject organization',
+        details: updateError.message
+      });
+    }
+
+    console.log('Organization rejected successfully:', org.name);
+    res.json({ 
+      success: true, 
+      message: 'Organization rejected successfully',
+      organization: org
+    });
+
+  } catch (error) {
+    console.error('Admin rejection error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error' 
+    });
+  }
+});
+
+app.post('/api/admin/approve-user', async (req, res) => {
+  try {
+    const { userId, adminId } = req.body;
+
+    if (!userId || !adminId) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: userId, adminId' 
+      });
+    }
+
+    console.log('Approving user:', userId, 'by admin:', adminId);
+
+    // Check if user is admin using profiles table
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminError || !adminCheck) {
+      return res.status(403).json({ 
+        error: 'Only admins can approve users' 
+      });
+    }
+
+    // Update user status
+    const { data: user, error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        status: 'active',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating user:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to approve user',
+        details: updateError.message
+      });
+    }
+
+    console.log('User approved successfully:', user.email);
+    res.json({ 
+      success: true, 
+      message: 'User approved successfully',
+      user: user
+    });
+
+  } catch (error) {
+    console.error('Admin user approval error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error' 
+    });
+  }
+});
+
+app.post('/api/admin/reject-user', async (req, res) => {
+  try {
+    const { userId, adminId, reason } = req.body;
+
+    if (!userId || !adminId) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: userId, adminId' 
+      });
+    }
+
+    console.log('Rejecting user:', userId, 'by admin:', adminId);
+
+    // Check if user is admin using profiles table
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminError || !adminCheck) {
+      return res.status(403).json({ 
+        error: 'Only admins can reject users' 
+      });
+    }
+
+    // Update user status
+    const { data: user, error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        status: 'blocked',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (updateError) {
+      console.error('Error updating user:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to reject user',
+        details: updateError.message
+      });
+    }
+
+    console.log('User rejected successfully:', user.email);
+    res.json({ 
+      success: true, 
+      message: 'User rejected successfully',
+      user: user
+    });
+
+  } catch (error) {
+    console.error('Admin user rejection error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error' 
+    });
+  }
+});
+
+// Comprehensive organization deletion endpoint
+app.delete('/api/admin/delete-organization', async (req, res) => {
+  try {
+    const { organizationId, adminId } = req.body;
+
+    if (!organizationId || !adminId) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: organizationId, adminId' 
+      });
+    }
+
+    console.log('Deleting organization:', organizationId, 'by admin:', adminId);
+
+    // Check if user is admin using profiles table
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminError || !adminCheck) {
+      return res.status(403).json({ 
+        error: 'Only admins can delete organizations' 
+      });
+    }
+
+    // Get organization details first
+    const { data: organization, error: orgError } = await supabase
+      .from('organizations')
+      .select('user_id, name')
+      .eq('id', organizationId)
+      .single();
+
+    if (orgError || !organization) {
+      return res.status(404).json({ 
+        error: 'Organization not found' 
+      });
+    }
+
+    console.log('Deleting organization:', organization.name, 'with user_id:', organization.user_id);
+
+    // Start transaction-like deletion process
+    // 1. Delete all user_events for events by this organization
+    const { data: events, error: eventsError } = await supabase
+      .from('events')
+      .select('id')
+      .eq('organization_id', organizationId);
+
+    if (eventsError) {
+      console.error('Error fetching events:', eventsError);
+      return res.status(500).json({ 
+        error: 'Failed to fetch organization events',
+        details: eventsError.message
+      });
+    }
+
+    if (events && events.length > 0) {
+      const eventIds = events.map(e => e.id);
+      console.log('Deleting user_events for events:', eventIds);
+      
+      const { error: userEventsError } = await supabase
+        .from('user_events')
+        .delete()
+        .in('event_id', eventIds);
+
+      if (userEventsError) {
+        console.error('Error deleting user_events:', userEventsError);
+        return res.status(500).json({ 
+          error: 'Failed to delete user event signups',
+          details: userEventsError.message
+        });
+      }
+    }
+
+    // 2. Delete all events by this organization
+    console.log('Deleting events for organization');
+    const { error: deleteEventsError } = await supabase
+      .from('events')
+      .delete()
+      .eq('organization_id', organizationId);
+
+    if (deleteEventsError) {
+      console.error('Error deleting events:', deleteEventsError);
+      return res.status(500).json({ 
+        error: 'Failed to delete organization events',
+        details: deleteEventsError.message
+      });
+    }
+
+    // 3. Delete user_roles for the organization user
+    console.log('Deleting user_roles for organization user');
+    const { error: deleteRolesError } = await supabase
+      .from('user_roles')
+      .delete()
+      .eq('user_id', organization.user_id);
+
+    if (deleteRolesError) {
+      console.error('Error deleting user_roles:', deleteRolesError);
+      return res.status(500).json({ 
+        error: 'Failed to delete user roles',
+        details: deleteRolesError.message
+      });
+    }
+
+    // 4. Delete the organization
+    console.log('Deleting organization record');
+    const { error: deleteOrgError } = await supabase
+      .from('organizations')
+      .delete()
+      .eq('id', organizationId);
+
+    if (deleteOrgError) {
+      console.error('Error deleting organization:', deleteOrgError);
+      return res.status(500).json({ 
+        error: 'Failed to delete organization',
+        details: deleteOrgError.message
+      });
+    }
+
+    // 5. Delete the user profile
+    console.log('Deleting user profile');
+    const { error: deleteProfileError } = await supabase
+      .from('profiles')
+      .delete()
+      .eq('user_id', organization.user_id);
+
+    if (deleteProfileError) {
+      console.error('Error deleting profile:', deleteProfileError);
+      return res.status(500).json({ 
+        error: 'Failed to delete user profile',
+        details: deleteProfileError.message
+      });
+    }
+
+    console.log('Organization deletion completed successfully');
+    res.json({ 
+      success: true, 
+      message: 'Organization and all related data deleted successfully',
+      deletedOrganization: organization.name
+    });
+
+  } catch (error) {
+    console.error('Organization deletion error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error' 
+    });
+  }
+});
+
+// Comprehensive user deletion endpoint
+app.delete('/api/admin/delete-user', async (req, res) => {
+  try {
+    const { userId, adminId } = req.body;
+
+    if (!userId || !adminId) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: userId, adminId' 
+      });
+    }
+
+    console.log('Deleting user:', userId, 'by admin:', adminId);
+
+    // Check if user is admin using profiles table
+    const { data: adminCheck, error: adminError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', adminId)
+      .eq('role', 'admin')
+      .single();
+
+    if (adminError || !adminCheck) {
+      return res.status(403).json({ 
+        error: 'Only admins can delete users' 
+      });
+    }
+
+    // Get user details first
+    const { data: userProfile, error: userError } = await supabase
+      .from('profiles')
+      .select('user_id, email, user_type')
+      .eq('id', userId)
+      .single();
+
+    if (userError || !userProfile) {
+      return res.status(404).json({ 
+        error: 'User not found' 
+      });
+    }
+
+    console.log('Deleting user:', userProfile.email, 'with user_id:', userProfile.user_id);
+
+    // If user_id is null, this is a direct auth user - use the profile id as user_id
+    const effectiveUserId = userProfile.user_id || userId;
+
+    // Start transaction-like deletion process
+    // 1. Delete all user_events for this user (only if user_id exists)
+    if (userProfile.user_id) {
+      console.log('Deleting user_events for user');
+      const { error: userEventsError } = await supabase
+        .from('user_events')
+        .delete()
+        .eq('user_id', userProfile.user_id);
+
+      if (userEventsError) {
+        console.error('Error deleting user_events:', userEventsError);
+        return res.status(500).json({ 
+          error: 'Failed to delete user event signups',
+          details: userEventsError.message
+        });
+      }
+    } else {
+      console.log('Skipping user_events deletion - no user_id');
+    }
+
+    // 2. If user is an organization, delete their events and organization
+    if (userProfile.user_type === 'organization') {
+      // Get organization ID
+      const { data: org, error: orgError } = await supabase
+        .from('organizations')
+        .select('id')
+        .eq('user_id', effectiveUserId)
+        .single();
+
+      if (!orgError && org) {
+        // Delete all user_events for events by this organization
+        const { data: events, error: eventsError } = await supabase
+          .from('events')
+          .select('id')
+          .eq('organization_id', org.id);
+
+        if (!eventsError && events && events.length > 0) {
+          const eventIds = events.map(e => e.id);
+          console.log('Deleting user_events for organization events:', eventIds);
+          
+          const { error: orgUserEventsError } = await supabase
+            .from('user_events')
+            .delete()
+            .in('event_id', eventIds);
+
+          if (orgUserEventsError) {
+            console.error('Error deleting organization user_events:', orgUserEventsError);
+            return res.status(500).json({ 
+              error: 'Failed to delete organization event signups',
+              details: orgUserEventsError.message
+            });
+          }
+        }
+
+        // Delete all events by this organization
+        console.log('Deleting organization events');
+        const { error: deleteEventsError } = await supabase
+          .from('events')
+          .delete()
+          .eq('organization_id', org.id);
+
+        if (deleteEventsError) {
+          console.error('Error deleting organization events:', deleteEventsError);
+          return res.status(500).json({ 
+            error: 'Failed to delete organization events',
+            details: deleteEventsError.message
+          });
+        }
+
+        // Delete the organization
+        console.log('Deleting organization record');
+        const { error: deleteOrgError } = await supabase
+          .from('organizations')
+          .delete()
+          .eq('id', org.id);
+
+        if (deleteOrgError) {
+          console.error('Error deleting organization:', deleteOrgError);
+          return res.status(500).json({ 
+            error: 'Failed to delete organization',
+            details: deleteOrgError.message
+          });
+        }
+      }
+    }
+
+    // 3. Delete user_roles for the user (only if user_id exists)
+    if (userProfile.user_id) {
+      console.log('Deleting user_roles for user');
+      const { error: deleteRolesError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userProfile.user_id);
+
+      if (deleteRolesError) {
+        console.error('Error deleting user_roles:', deleteRolesError);
+        return res.status(500).json({ 
+          error: 'Failed to delete user roles',
+          details: deleteRolesError.message
+        });
+      }
+    } else {
+      console.log('Skipping user_roles deletion - no user_id');
+    }
+
+    // 4. Delete the user profile
+    console.log('Deleting user profile');
+    let deleteProfileError;
+    if (userProfile.user_id) {
+      // If user_id exists, delete by user_id
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('user_id', userProfile.user_id);
+      deleteProfileError = error;
+    } else {
+      // If user_id is null, delete by profile id
+      const { error } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+      deleteProfileError = error;
+    }
+
+    if (deleteProfileError) {
+      console.error('Error deleting profile:', deleteProfileError);
+      return res.status(500).json({ 
+        error: 'Failed to delete user profile',
+        details: deleteProfileError.message
+      });
+    }
+
+    console.log('User deletion completed successfully');
+    res.json({ 
+      success: true, 
+      message: 'User and all related data deleted successfully',
+      deletedUser: userProfile.email
+    });
+
+  } catch (error) {
+    console.error('User deletion error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error' 
+    });
+  }
+});
+
 // Contact form endpoint
 app.post('/api/contact-form', async (req, res) => {
   try {

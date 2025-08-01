@@ -165,21 +165,9 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
       return { error: { message: 'Invalid email or password' } };
     }
     
-    // Check user status
-    if (user.status === 'pending') {
-      // Check if this is a Taylor user who needs verification
-      if (user.user_type === 'student' && user.verification_code) {
-        return { error: { message: 'Please verify your email address before signing in. Check your email for a verification code.' } };
-      }
-      return { error: { message: 'Account pending approval' } };
-    }
-    
-    if (user.status === 'blocked') {
-      return { error: { message: 'Account blocked' } };
-    }
-
-    // For organizations, also check organization status
+    // For organizations, check organization status first (not profile status)
     if (user.user_type === 'organization') {
+      // For organizations, the user_id in organizations table references the profile id
       const { data: orgData, error: orgError } = await supabase
         .from('organizations')
         .select('status')
@@ -200,6 +188,26 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
 
       if (orgData.status !== 'approved') {
         return { error: { message: `Organization status: ${orgData.status}. Contact admin for assistance.` } };
+      }
+
+      // If organization is approved, allow login regardless of profile status
+      // Update profile status to active to keep it in sync
+      await supabase
+        .from('profiles')
+        .update({ status: 'active' })
+        .eq('id', user.id);
+    } else {
+      // For non-organization users, check profile status
+      if (user.status === 'pending') {
+        // Check if this is a Taylor user who needs verification
+        if (user.user_type === 'student' && user.verification_code) {
+          return { error: { message: 'Please verify your email address before signing in. Check your email for a verification code.' } };
+        }
+        return { error: { message: 'Account pending approval' } };
+      }
+      
+      if (user.status === 'blocked') {
+        return { error: { message: 'Account blocked' } };
       }
     }
     

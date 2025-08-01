@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useContent } from "@/hooks/useContent";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import { loginUser } from '@/utils/directAuth';
+import { useAuth } from '@/contexts/AuthContext';
 
 const OrganizationLogin = () => {
   const [email, setEmail] = useState('');
@@ -15,6 +15,7 @@ const OrganizationLogin = () => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { signIn } = useAuth();
 
   const { content: pageTitle } = useContent('organizationLogin', 'title', 'default', 'Organization Login');
   const { content: pageDescription } = useContent('organizationLogin', 'description', 'default', 'Sign in to your organization account');
@@ -34,8 +35,8 @@ const OrganizationLogin = () => {
     try {
       console.log("🔑 Starting organization login process for:", email);
       
-      // Use the new direct authentication system
-      const { data, error } = await loginUser(email, password);
+      // Use AuthContext signIn method to properly update session
+      const { data, error } = await signIn(email, password);
 
       if (error) {
         console.error("❌ Auth error:", error);
@@ -58,6 +59,7 @@ const OrganizationLogin = () => {
         description: successDescription,
       });
 
+      // Navigate to organization dashboard
       navigate('/organization-dashboard');
     } catch (error: any) {
       console.error("❌ Organization login failed:", error);
