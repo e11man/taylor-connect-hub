@@ -9,6 +9,7 @@ const Footer = () => {
   const { content: linksContent } = useContentSection('footer', 'links');
   const { content: brandContent } = useContentSection('footer', 'brand');
   const { content: copyrightContent } = useContentSection('footer', 'copyright');
+  const { content: partnershipContent } = useContentSection('footer', 'partnership');
   
   const footerLinks = [
     { name: linksContent.about || "About", href: "/about" },
@@ -103,11 +104,11 @@ const Footer = () => {
           >
             <div className="flex items-center justify-center space-x-2">
               <span className="text-xs text-muted-foreground font-montserrat">
-                In partnership with
+                {partnershipContent.text || "In partnership with"}
               </span>
               <motion.img
                 src={tuLogo}
-                alt="Taylor University"
+                alt={partnershipContent.partner_name || "Taylor University"}
                 className="h-6 w-auto opacity-80 hover:opacity-100 transition-opacity duration-300"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}

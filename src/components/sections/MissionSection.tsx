@@ -1,7 +1,7 @@
 import { useContentSection } from "@/hooks/useContent";
 
 const MissionSection = () => {
-  const { content: missionContent } = useContentSection('about', 'mission');
+  const { content: missionContent } = useContentSection('homepage', 'mission');
   
   return (
     <section id="mission" className="bg-white section-padding">

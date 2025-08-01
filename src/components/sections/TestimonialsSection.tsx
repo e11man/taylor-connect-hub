@@ -9,33 +9,33 @@ import { motion } from "framer-motion";
 import { useContentSection } from "@/hooks/useContent";
 
 const TestimonialsSection = () => {
-  const { content: testimonialsContent } = useContentSection('testimonials', 'main');
-  const { content: testimonial1Content } = useContentSection('testimonials', 'testimonial1');
-  const { content: testimonial2Content } = useContentSection('testimonials', 'testimonial2');
-  const { content: testimonial3Content } = useContentSection('testimonials', 'testimonial3');
+  const { content: testimonialsContent } = useContentSection('homepage', 'testimonials');
+  const { content: testimonial1Content } = useContentSection('homepage', 'testimonials');
+  const { content: testimonial2Content } = useContentSection('homepage', 'testimonials');
+  const { content: testimonial3Content } = useContentSection('homepage', 'testimonials');
 
   const testimonials = [
     {
       id: 1,
-      content: testimonial1Content.content || "Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in our community.",
-      author: testimonial1Content.author || "Sarah Johnson",
-      role: testimonial1Content.role || "Volunteer",
+      content: testimonial1Content.testimonial1_quote || "Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in our community.",
+      author: testimonial1Content.testimonial1_author || "Sarah Johnson",
+      role: testimonial1Content.testimonial1_role || "Volunteer",
       initial: "S",
       highlight: false
     },
     {
       id: 2,
-      content: testimonial2Content.content || "The platform made it so easy to find volunteers for our literacy program. We've been able to reach twice as many students this year.",
-      author: testimonial2Content.author || "Marcus Chen",
-      role: testimonial2Content.role || "Program Director", 
+      content: testimonial2Content.testimonial2_quote || "The platform made it so easy to find volunteers for our literacy program. We've been able to reach twice as many students this year.",
+      author: testimonial2Content.testimonial2_author || "Marcus Chen",
+      role: testimonial2Content.testimonial2_role || "Program Director", 
       initial: "M",
       highlight: false
     },
     {
       id: 3,
-      content: testimonial3Content.content || "I love how the opportunities are categorized and filtered. It's never been easier to find causes I'm passionate about.",
-      author: testimonial3Content.author || "Emma Rodriguez",
-      role: testimonial3Content.role || "Student",
+      content: testimonial3Content.testimonial3_quote || "I love how the opportunities are categorized and filtered. It's never been easier to find causes I'm passionate about.",
+      author: testimonial3Content.testimonial3_author || "Emma Rodriguez",
+      role: testimonial3Content.testimonial3_role || "Student",
       initial: "E",
       highlight: true
     }

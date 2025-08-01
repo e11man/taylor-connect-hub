@@ -11,7 +11,7 @@ import { useContentSection } from "@/hooks/useContent";
 const CallToActionSection = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { user } = useAuth();
-  const { content: ctaContent } = useContentSection('cta', 'main');
+  const { content: ctaContent } = useContentSection('homepage', 'cta');
 
   const handleLoginClick = () => {
     setIsAuthModalOpen(true);

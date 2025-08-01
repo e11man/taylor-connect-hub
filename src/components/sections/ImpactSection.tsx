@@ -1,23 +1,26 @@
 import { Users, Clock, Building } from "lucide-react";
+import { useContentSection } from "@/hooks/useContent";
 
 const ImpactSection = () => {
+  const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
+  
   const stats = [
     { 
       icon: Users, 
-      label: "Volunteers Connected", 
-      value: "0",
+      label: impactContent.volunteers_label || "Active Volunteers", 
+      value: impactContent.volunteers_count || "0",
       description: "Passionate individuals serving Upland"
     },
     { 
       icon: Clock, 
-      label: "Hours Served", 
-      value: "0",
+      label: impactContent.hours_label || "Hours Contributed", 
+      value: impactContent.hours_count || "0",
       description: "Collective time dedicated to service"
     },
     { 
       icon: Building, 
-      label: "Organizations Involved", 
-      value: "0",
+      label: impactContent.organizations_label || "Partner Organizations", 
+      value: impactContent.organizations_count || "0",
       description: "Local organizations making a difference"
     }
   ];

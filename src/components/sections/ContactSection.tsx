@@ -20,6 +20,7 @@ const ContactSection = () => {
   const { toast } = useToast();
   const { content: contactContent } = useContentSection('contact', 'main');
   const { content: contactInfo } = useContentSection('contact', 'info');
+  const { content: contactForm } = useContentSection('contact', 'form');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,19 +50,19 @@ const ContactSection = () => {
       icon: Mail,
       title: "Email Us",
       content: contactInfo.email || "connect@taylor.edu",
-      description: "Send us a message anytime"
+      description: contactInfo.email_description || "Send us a message anytime"
     },
     {
       icon: Phone, 
       title: "Call Us",
       content: contactInfo.phone || "(765) 998-5000",
-      description: "Monday - Friday, 9AM - 5PM"
+      description: contactInfo.phone_description || "Monday - Friday, 9AM - 5PM"
     },
     {
       icon: MapPin,
       title: "Visit Us", 
       content: contactInfo.address || "236 West Reade Avenue, Upland, IN 46989",
-      description: "Taylor University Campus"
+      description: contactInfo.address_description || "Taylor University Campus"
     }
   ];
 
@@ -226,7 +227,7 @@ const ContactSection = () => {
               >
                 <motion.div variants={formFieldVariants}>
                   <label htmlFor="name" className="block text-sm font-montserrat font-semibold text-primary mb-2">
-                    Your Name *
+                    {contactForm.name_label || "Your Name *"}
                   </label>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -248,7 +249,7 @@ const ContactSection = () => {
 
                 <motion.div variants={formFieldVariants}>
                   <label htmlFor="email" className="block text-sm font-montserrat font-semibold text-primary mb-2">
-                    Your Email *
+                    {contactForm.email_label || "Your Email *"}
                   </label>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -270,7 +271,7 @@ const ContactSection = () => {
 
                 <motion.div variants={formFieldVariants}>
                   <label htmlFor="message" className="block text-sm font-montserrat font-semibold text-primary mb-2">
-                    Your Message *
+                    {contactForm.message_label || "Your Message *"}
                   </label>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -303,7 +304,7 @@ const ContactSection = () => {
                       className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 transform transition-all duration-300 hover:shadow-lg"
                     >
                       <Send className="mr-2 w-5 h-5" />
-                      Send Message
+                      {contactForm.send_button || "Send Message"}
                     </PrimaryButton>
                   </motion.div>
                 </motion.div>
