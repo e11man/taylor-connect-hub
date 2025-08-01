@@ -378,22 +378,25 @@ export type Database = {
       site_stats: {
         Row: {
           id: string
-          stat_name: string
-          value: number
+          stat_type: string
+          confirmed_total: number
+          current_estimate: number
           created_at: string
           updated_at: string
         }
         Insert: {
           id?: string
-          stat_name: string
-          value?: number
+          stat_type: string
+          confirmed_total?: number
+          current_estimate?: number
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: string
-          stat_name?: string
-          value?: number
+          stat_type?: string
+          confirmed_total?: number
+          current_estimate?: number
           created_at?: string
           updated_at?: string
         }
