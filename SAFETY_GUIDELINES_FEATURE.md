@@ -15,6 +15,37 @@ This feature implements a mandatory safety guidelines acceptance flow before use
    - Accept/Cancel buttons with proper state management
    - Fallback content for when database content isn't loaded
 
+### Performance Optimizations
+
+The SafetyGuidelinesModal has been optimized for better performance and user experience:
+
+1. **Memoization**
+   - `useMemo` for guidelines array to prevent unnecessary re-renders
+   - `useMemo` for content values with fallbacks
+   - `useMemo` for loading state calculation
+   - `useCallback` for event handlers to maintain stable references
+
+2. **Better UX**
+   - Added backdrop blur for better focus
+   - Gradient header with Shield icon for visual appeal
+   - Hover effects on guidelines for better interactivity
+   - Animated checkmark icon when accepting
+   - Fixed footer with actions always visible
+   - Scrollable content area with proper max-height
+   - Prevents body scroll when modal is open
+
+3. **Visual Enhancements**
+   - Gradient backgrounds and buttons
+   - Smooth transitions and animations
+   - Better spacing and typography
+   - Numbered badges with gradient styling
+   - Hover scale effects for better feedback
+
+4. **Fallback Content**
+   - Centralized `FALLBACK_CONTENT` constant
+   - Immediate display of content (no blank state)
+   - Graceful handling of missing database content
+
 ### Components Modified
 
 1. **OpportunitiesSection** (`src/components/sections/OpportunitiesSection.tsx`)
@@ -82,6 +113,9 @@ Administrators can edit the safety guidelines through the admin console:
 - ✅ Works for both individual and group signups
 - ✅ Only authenticated users can access this flow
 - ✅ Clean, modern UI matching app design patterns
+- ✅ Optimized performance with memoization
+- ✅ Enhanced visual design with gradients and animations
+- ✅ Accessible and keyboard-friendly
 
 ## Technical Notes
 
@@ -89,3 +123,5 @@ Administrators can edit the safety guidelines through the admin console:
 - Integrates with existing modal patterns and UI components
 - Maintains state consistency across modal transitions
 - Properly resets state when modals are closed/reopened
+- Prevents re-renders with React optimization hooks
+- Handles edge cases gracefully with fallback content
