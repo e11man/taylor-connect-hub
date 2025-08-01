@@ -38,7 +38,7 @@ const GroupSignupModal = ({
   onSignupSuccess 
 }: GroupSignupModalProps) => {
   const [users, setUsers] = useState<UserProfile[]>([]);
-  const [selectedUsers, setSelectedUsers] = new Set());
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
   const [showOnlyMyFloor, setShowOnlyMyFloor] = useState(true);
   const [loading, setLoading] = useState(false);
@@ -266,7 +266,8 @@ const GroupSignupModal = ({
   const totalSelected = selectedUsers.size + (includeMyself ? 1 : 0);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <>
+      <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl w-[calc(100vw-2rem)] sm:w-full max-h-[90vh] sm:max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader className="px-4 sm:px-6">
           <DialogTitle className="text-lg sm:text-xl font-montserrat font-bold text-primary">
@@ -425,6 +426,7 @@ const GroupSignupModal = ({
       }}
       onAccept={handleSafetyAccept}
     />
+    </>
   );
 };
 
