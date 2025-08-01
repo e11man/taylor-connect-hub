@@ -3,33 +3,25 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface SecondaryButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "secondary" | "outline" | "ghost";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   children: React.ReactNode;
 }
 
 const SecondaryButton = forwardRef<HTMLButtonElement, SecondaryButtonProps>(
-  ({ className, variant = "secondary", size = "md", loading, children, ...props }, ref) => {
+  ({ className, size = "md", loading, children, ...props }, ref) => {
     const sizeClasses = {
       sm: "px-4 py-2 text-sm",
       md: "px-6 py-3 text-base",
       lg: "px-8 py-4 text-lg"
     };
 
-    const variantClasses = {
-      secondary: "btn-secondary",
-      outline: "btn-outline",
-      ghost: "btn-ghost"
-    };
-
     return (
       <Button
         ref={ref}
-        variant="ghost"
+        variant="secondary"
         className={cn(
           "font-montserrat font-semibold",
-          variantClasses[variant],
           sizeClasses[size],
           loading && "opacity-75 cursor-not-allowed",
           className

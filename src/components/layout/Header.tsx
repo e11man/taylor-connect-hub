@@ -203,7 +203,7 @@ const Header = () => {
                   closeMenu();
                   setModalOpen(true);
                 }}
-                className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
+                className="w-full"
               >
                 <DynamicText 
                   page="header" 

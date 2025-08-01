@@ -301,7 +301,7 @@ const ContactSection = () => {
                       type="submit"
                       size="lg"
                       loading={isSubmitting}
-                      className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 transform transition-all duration-300 hover:shadow-lg"
+                      className="w-full"
                     >
                       <Send className="mr-2 w-5 h-5" />
                       {contactForm.send_button || "Send Message"}

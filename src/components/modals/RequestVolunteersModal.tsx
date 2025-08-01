@@ -57,7 +57,7 @@ const RequestVolunteersModal = ({ isOpen, onClose }: RequestVolunteersModalProps
               Organizations can already post volunteer opportunities
             </p>
             <Link to="/organization-login" onClick={onClose}>
-              <PrimaryButton className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl touch-manipulation">
+              <PrimaryButton className="w-full">
                 Organization Login
               </PrimaryButton>
             </Link>
