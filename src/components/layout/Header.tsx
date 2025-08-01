@@ -106,8 +106,8 @@ const Header = () => {
   const MobileNav = ({ isOpen, navLinks, closeMenu }: { isOpen: boolean; navLinks: typeof NAV_LINKS; closeMenu: () => void }) => (
     <aside
       ref={navRef}
-      className={`fixed inset-0 z-[100] md:hidden transition-all duration-300 ${
-        isOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+      className={`fixed inset-0 z-[100] md:hidden ${
+        isOpen ? 'pointer-events-auto' : 'pointer-events-none'
       }`}
       aria-modal="true"
       role="dialog"
@@ -115,15 +115,15 @@ const Header = () => {
     >
       {/* Overlay */}
       <div
-        className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ${
+        className={`absolute inset-0 bg-black/60 transition-opacity duration-300 ease-in-out ${
           isOpen ? 'opacity-100' : 'opacity-0'
         }`}
         onClick={closeMenu}
       />
       {/* Drawer */}
       <nav
-        className={`absolute top-0 right-0 h-full w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 transition-transform duration-300 rounded-l-2xl bg-white border-l border-gray-200 ${
-          isOpen ? 'translate-x-0' : 'translate-x-full'
+        className={`absolute top-0 right-0 h-full w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 transition-all duration-300 ease-in-out rounded-l-2xl bg-white border-l border-gray-200 ${
+          isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
         }`}
       >
         {/* Close button */}
