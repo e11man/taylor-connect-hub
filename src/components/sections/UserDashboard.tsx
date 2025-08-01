@@ -85,7 +85,7 @@ const UserDashboard = () => {
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('dorm, wing, email')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single();
 
       if (profileError) {
