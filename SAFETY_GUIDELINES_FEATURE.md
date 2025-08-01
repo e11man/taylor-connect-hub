@@ -2,7 +2,9 @@
 
 ## Overview
 
-This feature implements a mandatory safety guidelines acceptance flow before users can sign up for volunteer events. Users must review and accept 5 safety guidelines through a modal popup before their event registration is processed.
+This feature implements a mandatory safety guidelines acceptance flow for both users and organizations:
+- Users must review and accept 5 safety guidelines before signing up for volunteer events
+- Organizations must review and accept the same guidelines before creating new volunteer opportunities
 
 ## Implementation Details
 
@@ -14,6 +16,7 @@ This feature implements a mandatory safety guidelines acceptance flow before use
    - Checkbox for acceptance confirmation
    - Accept/Cancel buttons with proper state management
    - Fallback content for when database content isn't loaded
+   - Fully responsive with mobile-optimized styles
 
 ### Performance Optimizations
 
@@ -49,7 +52,6 @@ The SafetyGuidelinesModal has been optimized for better performance and user exp
 ### Components Modified
 
 1. **OpportunitiesSection** (`src/components/sections/OpportunitiesSection.tsx`)
-   - Added safety modal state management
    - Modified `handleSignUp` to show safety modal first
    - Added `handleSafetyAccept` to process signup after acceptance
    - Only processes event signup after guidelines are accepted
@@ -58,6 +60,12 @@ The SafetyGuidelinesModal has been optimized for better performance and user exp
    - Added safety modal integration for group signups
    - Shows safety guidelines before processing multiple user signups
    - Maintains consistency with individual signup flow
+
+3. **OrganizationDashboard** (`src/pages/OrganizationDashboard.tsx`)
+   - Added safety modal integration for opportunity creation
+   - Modified `handleCreateEvent` to show safety modal before creating
+   - Added `handleSafetyGuidelinesAccept` to process creation after acceptance
+   - Prevents opportunity creation without guideline acceptance
 
 ### Content Structure
 
@@ -86,6 +94,7 @@ Or manually through the admin console by adding content with:
 
 ## User Flow
 
+### For Users (Event Signup)
 1. User clicks "Sign Up" on an event
 2. If not authenticated, auth modal appears first
 3. If authenticated, safety guidelines modal appears
@@ -96,32 +105,38 @@ Or manually through the admin console by adding content with:
 5. Only then is the user registered for the event
 6. If user cancels, no registration occurs
 
+### For Organizations (Opportunity Creation)
+1. Organization clicks "Create New Opportunity"
+2. Organization fills out opportunity details
+3. Upon clicking "Create Opportunity", safety guidelines modal appears
+4. Organization must:
+   - Read the 5 safety guidelines
+   - Check the acceptance checkbox
+   - Click "I Accept and Understand"
+5. Only then is the opportunity created
+6. If organization cancels, opportunity creation is aborted
+
 ## Admin Management
 
 Administrators can edit the safety guidelines through the admin console:
 1. Navigate to Admin Dashboard > Content Management
 2. Filter by page "events" and section "safety"
 3. Edit any guideline text
-4. Changes appear immediately (with cache refresh)
+4. Changes appear immediately (with cache refresh) for both users and organizations
 
 ## Features
 
-- ✅ Modal appears once per signup attempt (not site-wide)
+- ✅ Modal appears once per signup/creation attempt
 - ✅ Guidelines loaded from content table (not hardcoded)
-- ✅ Fallback UI if content hasn't been initialized
-- ✅ Users can cancel without signing up
-- ✅ Works for both individual and group signups
-- ✅ Only authenticated users can access this flow
-- ✅ Clean, modern UI matching app design patterns
-- ✅ Optimized performance with memoization
-- ✅ Enhanced visual design with gradients and animations
-- ✅ Accessible and keyboard-friendly
+- ✅ Reuses same content for both users and organizations
+- ✅ Responsive design for mobile devices
+- ✅ Prevents action without acceptance
+- ✅ Graceful error handling and fallback content
 
 ## Technical Notes
 
-- Uses existing `useContentSection` hook for content loading
-- Integrates with existing modal patterns and UI components
-- Maintains state consistency across modal transitions
-- Properly resets state when modals are closed/reopened
-- Prevents re-renders with React optimization hooks
-- Handles edge cases gracefully with fallback content
+- The same `SafetyGuidelinesModal` component is reused for both users and organizations
+- Content is fetched using the `useContentSection` hook from the central content management system
+- The modal state is managed locally in each parent component
+- Guidelines are fetched from `events.safety.*` content keys
+- Mobile responsive styles are built into the modal component
