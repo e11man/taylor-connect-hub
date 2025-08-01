@@ -394,10 +394,10 @@ const OpportunitiesSection = () => {
                               <button
                                 onClick={() => handleGroupSignup(event)}
                                 className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[44px] touch-manipulation"
-                                data-testid="add-group-button"
+                                data-testid="group-signup-button"
                               >
                                 <Users className="w-4 h-4" />
-                                Add Group
+                                Group Sign Up
                               </button>
                             </>
                           ) : (
@@ -412,10 +412,10 @@ const OpportunitiesSection = () => {
                               <SecondaryButton
                                 onClick={() => handleGroupSignup(event)}
                                 className="w-full min-h-[44px] touch-manipulation"
-                                data-testid="add-group-button"
+                                data-testid="group-signup-button"
                               >
                                 <Users className="w-4 h-4" />
-                                Add Group
+                                Group Sign Up
                               </SecondaryButton>
                             </>
                           )}
