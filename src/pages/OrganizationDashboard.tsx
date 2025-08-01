@@ -385,7 +385,7 @@ const OrganizationDashboard = () => {
               }
             }}>
               <DialogTrigger asChild>
-                <PrimaryButton className="flex items-center gap-2">
+                <PrimaryButton>
                   <Plus className="w-4 h-4" />
                   Add New Opportunity
                 </PrimaryButton>
@@ -518,7 +518,7 @@ const OrganizationDashboard = () => {
             <Card>
               <CardContent className="text-center py-12">
                 <p className="text-muted-foreground mb-4">You haven't created any opportunities yet.</p>
-                <PrimaryButton onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2">
+                <PrimaryButton onClick={() => setIsCreateModalOpen(true)}>
                   <Plus className="w-4 h-4" />
                   Create Your First Opportunity
                 </PrimaryButton>

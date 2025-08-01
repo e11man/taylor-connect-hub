@@ -220,21 +220,20 @@ const TestimonialsSection = () => {
               }}
             >
               <motion.div variants={buttonVariants}>
-                <PrimaryButton 
-                  size="lg" 
-                  className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg min-h-[48px] text-base md:text-lg font-semibold"
-                >
-                  Start Volunteering
-                </PrimaryButton>
-              </motion.div>
-              <motion.div variants={buttonVariants}>
                 <SecondaryButton 
                   size="lg" 
-                  variant="outline" 
-                  className="w-full border-primary text-primary hover:bg-primary hover:text-white transform transition-all duration-300 hover:scale-105 min-h-[48px] text-base md:text-lg font-semibold"
+                  className="w-full min-h-[48px] text-base md:text-lg font-semibold"
                 >
                   Partner With Us
                 </SecondaryButton>
+              </motion.div>
+              <motion.div variants={buttonVariants}>
+                <PrimaryButton 
+                  size="lg" 
+                  className="w-full min-h-[48px] text-base md:text-lg font-semibold"
+                >
+                  Start Volunteering
+                </PrimaryButton>
               </motion.div>
             </motion.div>
           </motion.div>

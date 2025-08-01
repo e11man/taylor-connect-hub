@@ -3,31 +3,25 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface PrimaryButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: "primary" | "secondary";
   size?: "sm" | "md" | "lg";
   loading?: boolean;
   children: React.ReactNode;
 }
 
 const PrimaryButton = forwardRef<HTMLButtonElement, PrimaryButtonProps>(
-  ({ className, variant = "primary", size = "md", loading, children, ...props }, ref) => {
+  ({ className, size = "md", loading, children, ...props }, ref) => {
     const sizeClasses = {
       sm: "px-4 py-2 text-sm",
       md: "px-6 py-3 text-base",
       lg: "px-8 py-4 text-lg"
     };
 
-    const variantClasses = {
-      primary: "btn-primary",
-      secondary: "btn-secondary"
-    };
-
     return (
       <Button
         ref={ref}
+        variant="primary"
         className={cn(
           "font-montserrat font-semibold",
-          variantClasses[variant],
           sizeClasses[size],
           loading && "opacity-75 cursor-not-allowed",
           className

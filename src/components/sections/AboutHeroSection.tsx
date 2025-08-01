@@ -68,21 +68,18 @@ const AboutHeroSection = () => {
               }}
             >
               <motion.div variants={buttonVariants}>
-                <PrimaryButton 
-                  size="lg" 
-                  className="bg-[#00AFCE] hover:bg-[#00AFCE]/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
-                >
-                  {heroContent.ctaButton || 'Find Opportunities'} <ArrowRight className="ml-2 w-5 h-5" />
-                </PrimaryButton>
-              </motion.div>
-              <motion.div variants={buttonVariants}>
                 <SecondaryButton 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-primary text-primary hover:bg-primary hover:text-white transform transition-all duration-300 hover:scale-105"
+                  size="lg"
                 >
                   {heroContent.secondaryButton || 'Learn More'}
                 </SecondaryButton>
+              </motion.div>
+              <motion.div variants={buttonVariants}>
+                <PrimaryButton 
+                  size="lg"
+                >
+                  {heroContent.ctaButton || 'Find Opportunities'} <ArrowRight className="ml-2 w-5 h-5" />
+                </PrimaryButton>
               </motion.div>
             </motion.div>
           </AnimatedSection>

@@ -134,24 +134,21 @@ const HeroSection = () => {
                 variants={buttonVariants}
                 transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                <PrimaryButton 
-                  size="lg" 
-                  className="bg-accent hover:bg-accent/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                <SecondaryButton 
+                  size="lg"
                 >
-                  {ctaButton} <ArrowRight className="ml-2 w-5 h-5" />
-                </PrimaryButton>
+                  {secondaryButton}
+                </SecondaryButton>
               </motion.div>
               <motion.div 
                 variants={buttonVariants}
                 transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.1 }}
               >
-                <SecondaryButton 
-                  size="lg" 
-                  variant="outline" 
-                  className="border-primary text-primary hover:bg-primary hover:text-white transform transition-all duration-300 hover:scale-105"
+                <PrimaryButton 
+                  size="lg"
                 >
-                  {secondaryButton}
-                </SecondaryButton>
+                  {ctaButton} <ArrowRight className="ml-2 w-5 h-5" />
+                </PrimaryButton>
               </motion.div>
             </motion.div>
           </AnimatedSection>
