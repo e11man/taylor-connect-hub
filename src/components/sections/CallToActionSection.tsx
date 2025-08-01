@@ -6,10 +6,12 @@ import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
+import { useContentSection } from "@/hooks/useContent";
 
 const CallToActionSection = () => {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { user } = useAuth();
+  const { content: ctaContent } = useContentSection('cta', 'main');
 
   const handleLoginClick = () => {
     setIsAuthModalOpen(true);
@@ -58,14 +60,13 @@ const CallToActionSection = () => {
           <AnimatedSection variant="slideRight" delay={0.2}>
             <AnimatedText variant="slideUp" delay={0.3}>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold mb-4 md:mb-6 text-primary">
-                Join Our Community
+                {ctaContent.title || 'Join Our Community'}
               </h2>
             </AnimatedText>
             
             <AnimatedText variant="fade" delay={0.4}>
               <p className="text-lg sm:text-xl text-muted-foreground mb-6 md:mb-8 leading-relaxed">
-                Be part of something bigger. Connect with like-minded volunteers 
-                and make a meaningful impact in your local community.
+                {ctaContent.subtitle || 'Be part of something bigger. Connect with like-minded volunteers and make a meaningful impact in your local community.'}
               </p>
             </AnimatedText>
             

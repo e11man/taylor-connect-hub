@@ -85,8 +85,8 @@ if __name__ == "__main__":
     # Get email from command line argument or use default
     email = sys.argv[1] if len(sys.argv) > 1 else "josh_ellman@icloud.com"
     
-    # Generate verification code
-    verification_code = generate_verification_code()
+    # Get verification code from command line argument or generate one
+    verification_code = sys.argv[2] if len(sys.argv) > 2 else generate_verification_code()
     
     # Send email
     success = send_verification_email(email, verification_code)

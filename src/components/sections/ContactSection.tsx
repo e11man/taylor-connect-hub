@@ -8,6 +8,7 @@ import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
+import { useContentSection } from "@/hooks/useContent";
 
 const ContactSection = () => {
   const [formData, setFormData] = useState({
@@ -17,6 +18,8 @@ const ContactSection = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { content: contactContent } = useContentSection('contact', 'main');
+  const { content: contactInfo } = useContentSection('contact', 'info');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,24 +44,24 @@ const ContactSection = () => {
     }));
   };
 
-  const contactInfo = [
+  const contactInfoData = [
     {
       icon: Mail,
       title: "Email Us",
-      content: "hello@communityconnect.org",
+      content: contactInfo.email || "connect@taylor.edu",
       description: "Send us a message anytime"
     },
     {
       icon: Phone, 
       title: "Call Us",
-      content: "(555) 123-4567",
+      content: contactInfo.phone || "(765) 998-5000",
       description: "Monday - Friday, 9AM - 5PM"
     },
     {
       icon: MapPin,
       title: "Visit Us", 
-      content: "1846 South Main Street",
-      description: "Upland, CA 91784"
+      content: contactInfo.address || "236 West Reade Avenue, Upland, IN 46989",
+      description: "Taylor University Campus"
     }
   ];
 
@@ -78,14 +81,13 @@ const ContactSection = () => {
           <div className="text-center mb-12">
             <AnimatedText variant="blur" delay={0.2}>
               <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-                Get In Touch
+                {contactContent.title || 'Get In Touch'}
               </h2>
             </AnimatedText>
             
             <AnimatedText variant="fade" delay={0.3}>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Have questions or want to learn more about our volunteer opportunities? 
-                Send us a message and we'll get back to you soon.
+                {contactContent.description || 'Have questions or want to learn more about our volunteer opportunities? Send us a message and we\'ll get back to you soon.'}
               </p>
             </AnimatedText>
           </div>
@@ -112,7 +114,7 @@ const ContactSection = () => {
                 }
               }}
             >
-              {contactInfo.map((info, index) => (
+              {contactInfoData.map((info, index) => (
                 <AnimatedCard
                   key={info.title}
                   index={index}

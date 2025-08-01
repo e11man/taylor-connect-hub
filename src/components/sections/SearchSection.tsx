@@ -8,19 +8,22 @@ import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
 import { useSearch } from "@/contexts/SearchContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useContentSection } from "@/hooks/useContent";
 
 const SearchSection = () => {
   const { query, activeCategory, setQuery, setActiveCategory, clearSearch } = useSearch();
   const isMobile = useIsMobile();
+  const { content: searchContent } = useContentSection('search', 'main');
+  const { content: categoriesContent } = useContentSection('search', 'categories');
 
   const categories = [
-    { id: "all", name: "All" },
-    { id: "community", name: "Community" },
-    { id: "education", name: "Education" },
-    { id: "environment", name: "Environment" },
-    { id: "health", name: "Health" },
-    { id: "fundraising", name: "Fundraising" },
-    { id: "other", name: "Other" }
+    { id: "all", name: categoriesContent.all || "All" },
+    { id: "community", name: categoriesContent.community || "Community" },
+    { id: "education", name: categoriesContent.education || "Education" },
+    { id: "environment", name: categoriesContent.environment || "Environment" },
+    { id: "health", name: categoriesContent.health || "Health" },
+    { id: "fundraising", name: categoriesContent.fundraising || "Fundraising" },
+    { id: "other", name: categoriesContent.other || "Other" }
   ];
 
   return (
@@ -31,13 +34,13 @@ const SearchSection = () => {
           <div className="text-center mb-8 sm:mb-12 px-4 sm:px-0">
             <AnimatedText variant="blur" delay={0.2}>
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold mb-4 sm:mb-6 text-primary">
-                Find Your Perfect Volunteer Opportunity
+                {searchContent.title || 'Find Your Perfect Volunteer Opportunity'}
               </h2>
             </AnimatedText>
             
             <AnimatedText variant="fade" delay={0.3}>
               <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                Search and filter opportunities based on your interests, skills, and availability.
+                {searchContent.subtitle || 'Search and filter opportunities based on your interests, skills, and availability.'}
               </p>
             </AnimatedText>
           </div>
@@ -75,7 +78,7 @@ const SearchSection = () => {
               >
                 <Input
                   type="text"
-                  placeholder="Search by title, description, or category..."
+                  placeholder={searchContent.placeholder || "Search by title, description, or category..."}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="pl-10 sm:pl-12 pr-12 sm:pr-4 py-4 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl border-2 border-gray-200 focus:border-[#00AFCE] bg-white transition-all duration-300 hover:shadow-md focus:shadow-lg min-h-[48px] sm:min-h-[56px]"

@@ -4,8 +4,11 @@ import SecondaryButton from "@/components/buttons/SecondaryButton";
 import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
+import { useContentSection } from "@/hooks/useContent";
 
 const AboutHeroSection = () => {
+  const { content: heroContent } = useContentSection('about', 'hero');
+  
   const buttonVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { 
@@ -29,7 +32,7 @@ const AboutHeroSection = () => {
                   transition={{ duration: 0.5, delay: 0.3 }}
                   viewport={{ once: false }}
                 >
-                  Make the
+                  {heroContent.titleLine1 || 'Make the'}
                 </motion.span>
                 <motion.span 
                   className="block text-secondary"
@@ -38,14 +41,14 @@ const AboutHeroSection = () => {
                   transition={{ duration: 0.5, delay: 0.4 }}
                   viewport={{ once: false }}
                 >
-                  Connection
+                  {heroContent.titleLine2 || 'Connection'}
                 </motion.span>
               </h1>
             </AnimatedText>
             
             <AnimatedText variant="slideUp" delay={0.5}>
               <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed text-muted-foreground">
-                Connect with meaningful opportunities that create lasting impact in Upland.
+                {heroContent.subtitle || 'Connect with meaningful opportunities that create lasting impact in Upland.'}
               </p>
             </AnimatedText>
 
@@ -69,7 +72,7 @@ const AboutHeroSection = () => {
                   size="lg" 
                   className="bg-[#00AFCE] hover:bg-[#00AFCE]/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
                 >
-                  Find Opportunities <ArrowRight className="ml-2 w-5 h-5" />
+                  {heroContent.ctaButton || 'Find Opportunities'} <ArrowRight className="ml-2 w-5 h-5" />
                 </PrimaryButton>
               </motion.div>
               <motion.div variants={buttonVariants}>
@@ -78,7 +81,7 @@ const AboutHeroSection = () => {
                   variant="outline" 
                   className="border-primary text-primary hover:bg-primary hover:text-white transform transition-all duration-300 hover:scale-105"
                 >
-                  Learn More
+                  {heroContent.secondaryButton || 'Learn More'}
                 </SecondaryButton>
               </motion.div>
             </motion.div>

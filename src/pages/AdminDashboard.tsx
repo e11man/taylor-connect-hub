@@ -156,13 +156,12 @@ const AdminDashboard = () => {
     }
 
     try {
-      // FIX: Add proper error handling for database queries
-      // Wrap in try-catch to handle schema access errors gracefully
-      const { data: roleData, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .maybeSingle(); // Use maybeSingle instead of single to handle no results gracefully
+      // Check admin role in profiles table (where our admin users are stored)
+      const { data: profileData, error } = await supabase
+        .from('profiles')
+        .select('role, status')
+        .eq('email', user.email)
+        .maybeSingle();
 
       // Check for specific database errors
       if (error) {
@@ -186,11 +185,21 @@ const AdminDashboard = () => {
         return;
       }
 
-      // Verify admin role
-      if (!roleData || roleData.role !== 'admin') {
+      // Verify admin role and active status
+      if (!profileData || profileData.role !== 'admin') {
         toast({
           title: "Access Denied",
           description: "You don't have admin privileges.",
+          variant: "destructive",
+        });
+        navigate('/');
+        return;
+      }
+
+      if (profileData.status !== 'active') {
+        toast({
+          title: "Account Not Active",
+          description: "Your account is not active. Please contact support.",
           variant: "destructive",
         });
         navigate('/');

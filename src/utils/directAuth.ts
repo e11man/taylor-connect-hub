@@ -21,8 +21,9 @@ interface AuthResponse {
       user: {
         id: string;
         email: string;
-        user_type: string;
+        user_type?: string;
         status: string;
+        role?: string;
       };
       access_token: string;
     };
@@ -95,6 +96,7 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
         description: userData.description || '',
         website: userData.website || '',
         phone: userData.phone || '',
+        contact_email: userData.email, // Add required contact_email field
         status: 'pending' // Organizations always need approval
       };
 
@@ -148,7 +150,7 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
     // Get user from profiles table
     const { data: user, error } = await supabase
       .from('profiles')
-      .select('*')
+      .select('id, email, password_hash, user_type, status, role, dorm, wing, verification_code, created_at, updated_at, user_id')
       .eq('email', email)
       .single();
       
@@ -206,8 +208,9 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
       user: {
         id: user.id,
         email: user.email,
-        user_type: user.user_type,
-        status: user.status
+        user_type: user.user_type || 'student',
+        status: user.status,
+        role: user.role || 'user' // Include role field for admin authentication
       },
       access_token: generateAccessToken(user.id)
     };

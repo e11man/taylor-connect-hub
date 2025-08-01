@@ -35,26 +35,6 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      // Check for test admin credentials first
-      if (email === 'admin@taylor.edu' && password === 'admin123') {
-        // Create temporary session
-        const tempSession = {
-          user: { id: 'temp-admin', email: 'admin@taylor.edu', role: 'admin' },
-          access_token: 'temp-admin-token',
-          token_type: 'bearer',
-          expires_in: 3600
-        };
-        sessionStorage.setItem('temp_admin_session', JSON.stringify(tempSession));
-        
-        toast({
-          title: successMessage,
-          description: successDescription,
-        });
-        
-        navigate('/admin/dashboard');
-        return;
-      }
-
       // Use direct authentication
       const result = await loginUser(email, password);
       
@@ -63,8 +43,18 @@ const AdminLogin = () => {
       }
       
       // Check if user has admin role
-      if (result.user?.role !== 'admin') {
+      if (result.data?.session?.user?.role !== 'admin') {
         throw new Error('You do not have admin privileges');
+      }
+      
+      // Check if user status is active
+      if (result.data?.session?.user?.status !== 'active') {
+        throw new Error('Account not active. Please contact support.');
+      }
+
+      // Store the session in localStorage (same as AuthContext)
+      if (result.data?.session?.access_token) {
+        localStorage.setItem('user_session', JSON.stringify(result.data.session));
       }
 
       // If we got here, user is authenticated and authorized
@@ -73,7 +63,8 @@ const AdminLogin = () => {
         description: successDescription,
       });
       
-      navigate('/admin/dashboard');
+      // Force a page reload to ensure AuthContext picks up the new session
+      window.location.href = '/admin/dashboard';
     } catch (error: any) {
       console.error('Admin login error:', error);
       

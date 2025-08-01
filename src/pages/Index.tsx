@@ -4,7 +4,6 @@ import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
 import MissionSection from "@/components/sections/MissionSection";
 import OpportunitiesSection from "@/components/sections/OpportunitiesSection";
-import ImpactSection from "@/components/sections/ImpactSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import ContactSection from "@/components/sections/ContactSection";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -31,7 +30,6 @@ const Index = () => {
         <HeroSection />
         <MissionSection />
         <OpportunitiesSection />
-        <ImpactSection />
         <TestimonialsSection />
         <ContactSection />
       </main>
