@@ -120,57 +120,81 @@ export const ContentManagement = () => {
       return;
     }
 
-    const result = await supabase
-      .from('content')
-      .insert([
-        {
-          page: newContent.page,
-          section: newContent.section,
-          key: newContent.key,
-          value: newContent.value,
-          language_code: newContent.language_code,
-        },
-      ])
-      .select()
-      .single();
+    try {
+      console.log('Creating new content:', newContent);
+      
+      const { data, error } = await supabase
+        .from('content')
+        .insert([
+          {
+            page: newContent.page,
+            section: newContent.section,
+            key: newContent.key,
+            value: newContent.value,
+            language_code: newContent.language_code,
+          },
+        ])
+        .select();
 
-    if (result.error) {
+      if (error) {
+        console.error('ContentManagement: Error creating content:', error);
+        toast({
+          title: 'Error',
+          description: `Failed to create content: ${error.message}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      console.log('Create successful, data:', data);
+      
       toast({
-        title: 'Error',
-        description: `Failed to create content: ${result.error.message}`,
-        variant: 'destructive',
-      });
-    } else {
-      toast({
-        title: 'Success',
-        description: 'Content created successfully',
+        title: 'Success! ✅',
+        description: `"${newContent.key}" has been created successfully`,
       });
       setIsCreateModalOpen(false);
       setNewContent({ page: '', section: '', key: '', value: '', language_code: 'en' });
-      loadContent();
+      await loadContent();
+    } catch (error) {
+      console.error('ContentManagement: Unexpected error creating content:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create content. Please try again.',
+        variant: 'destructive',
+      });
     }
   };
 
   const handleUpdate = async () => {
     if (!editingItem) return;
 
-    const result = await supabase
+    console.log('🔧 UPDATE DEBUG:');
+    console.log('- ID:', editingItem.id);
+    console.log('- New value:', editingItem.value);
+    console.log('- Supabase URL:', supabase.supabaseUrl);
+
+    const { data, error } = await supabase
       .from('content')
       .update({ value: editingItem.value })
       .eq('id', editingItem.id)
-      .select()
-      .single();
+      .select();
 
-    if (result.error) {
+    console.log('🔧 UPDATE RESULT:');
+    console.log('- Data:', data);
+    console.log('- Error:', error);
+
+    if (error) {
+      console.error('❌ UPDATE FAILED:', error);
       toast({
         title: 'Error',
-        description: `Failed to update content: ${result.error.message}`,
+        description: `Failed to update: ${error.message}`,
         variant: 'destructive',
       });
     } else {
+      console.log('✅ UPDATE SUCCESS:', data);
       toast({
         title: 'Success',
-        description: 'Content updated successfully',
+        description: 'Content updated',
       });
       setEditingItem(null);
       loadContent();
@@ -178,25 +202,39 @@ export const ContentManagement = () => {
   };
 
   const handleDelete = async (id: string) => {
-    const result = await supabase
-      .from('content')
-      .delete()
-      .eq('id', id)
-      .select()
-      .single();
+    try {
+      console.log('Deleting content with ID:', id);
+      
+      const { data, error } = await supabase
+        .from('content')
+        .delete()
+        .eq('id', id)
+        .select();
 
-    if (result.error) {
+      if (error) {
+        console.error('ContentManagement: Error deleting content:', error);
+        toast({
+          title: 'Error',
+          description: `Failed to delete content: ${error.message}`,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      console.log('Delete successful, data:', data);
+      
+      toast({
+        title: 'Success! ✅',
+        description: 'Content has been deleted successfully',
+      });
+      await loadContent();
+    } catch (error) {
+      console.error('ContentManagement: Unexpected error deleting content:', error);
       toast({
         title: 'Error',
-        description: `Failed to delete content: ${result.error.message}`,
+        description: 'Failed to delete content. Please try again.',
         variant: 'destructive',
       });
-    } else {
-      toast({
-        title: 'Success',
-        description: 'Content deleted successfully',
-      });
-      loadContent();
     }
   };
 
