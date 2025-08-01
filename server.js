@@ -182,6 +182,107 @@ app.delete('/api/content', async (req, res) => {
   }
 });
 
+// Event signup API routes - bypass RLS using service role key
+app.post('/api/event-signup', async (req, res) => {
+  try {
+    const { user_id, event_id, signed_up_by } = req.body;
+    
+    if (!user_id || !event_id) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    // Check if already signed up
+    const { data: existing, error: checkError } = await supabase
+      .from('user_events')
+      .select('id')
+      .eq('user_id', user_id)
+      .eq('event_id', event_id)
+      .single();
+
+    if (existing) {
+      return res.status(400).json({ success: false, error: 'Already signed up for this event' });
+    }
+
+    // Check event capacity
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('max_participants')
+      .eq('id', event_id)
+      .single();
+
+    if (eventError) throw eventError;
+
+    if (event.max_participants) {
+      const { count, error: countError } = await supabase
+        .from('user_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', event_id);
+
+      if (countError) throw countError;
+      
+      if (count >= event.max_participants) {
+        return res.status(400).json({ success: false, error: 'Event is full' });
+      }
+    }
+
+    // Insert signup
+    const { data, error } = await supabase
+      .from('user_events')
+      .insert({
+        user_id,
+        event_id,
+        signed_up_by: signed_up_by || user_id
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error signing up for event:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.get('/api/user-events/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const { data, error } = await supabase
+      .from('user_events')
+      .select('*, events(*)')
+      .eq('user_id', userId);
+
+    if (error) throw error;
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('Error fetching user events:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/event-signup', async (req, res) => {
+  try {
+    const { user_id, event_id } = req.query;
+    
+    if (!user_id || !event_id) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    const { error } = await supabase
+      .from('user_events')
+      .delete()
+      .eq('user_id', user_id)
+      .eq('event_id', event_id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error canceling event signup:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Email server is running' });

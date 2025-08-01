@@ -223,26 +223,40 @@ const OpportunitiesSection = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('user_events')
-        .insert([{ user_id: user.id, event_id: eventId }]);
+      // Try API route first (with service role key)
+      const response = await fetch(`${import.meta.env.DEV ? 'http://localhost:3001' : ''}/api/event-signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          user_id: user.id,
+          event_id: eventId
+        })
+      });
 
-      if (error) {
-        toast({
-          title: "Error",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Success!",
-          description: "You have successfully signed up for this event.",
-        });
-        fetchUserEvents();
-        fetchEventSignupCounts();
-        // Trigger refresh in other components (like UserDashboard)
-        refreshUserEvents();
+      if (!response.ok) {
+        // Fallback to direct Supabase call if API is not available
+        const { error } = await supabase
+          .from('user_events')
+          .insert([{ user_id: user.id, event_id: eventId }]);
+
+        if (error) {
+          toast({
+            title: "Error",
+            description: error.message,
+            variant: "destructive",
+          });
+          return;
+        }
       }
+
+      toast({
+        title: "Success!",
+        description: "You have successfully signed up for this event.",
+      });
+      fetchUserEvents();
+      fetchEventSignupCounts();
+      // Trigger refresh in other components (like UserDashboard)
+      refreshUserEvents();
     } catch (error) {
       toast({
         title: "Error",
