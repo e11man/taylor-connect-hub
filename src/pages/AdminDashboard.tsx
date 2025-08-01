@@ -62,6 +62,7 @@ interface User {
     wing: string | null;
     status: string;
     profile_id?: string; // Added for profile_id
+    role?: UserRole; // Added for role from profiles table
   };
   user_roles?: {
     role: UserRole;
@@ -285,14 +286,16 @@ const AdminDashboard = () => {
         const role = roles?.find(r => r.user_id === profile.user_id);
         
         return {
-          id: profile.user_id,
+          id: profile.id, // Use profile.id instead of profile.user_id
+          user_id: profile.user_id, // Keep user_id for role management
           email: profile.email || '',
           created_at: profile.created_at,
           profiles: {
             dorm: profile.dorm,
             wing: profile.wing,
             status: profile.status || 'active',
-            profile_id: profile.id // Keep track of profile id for updates
+            profile_id: profile.id, // Keep track of profile id for updates
+            role: profile.role // Include role from profiles table
           },
           user_roles: role ? [{
             role: role.role as UserRole
@@ -396,7 +399,7 @@ const AdminDashboard = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ status: 'active' })
-        .eq('user_id', userId);
+        .eq('id', userId);
 
       if (error) throw error;
 
@@ -423,7 +426,7 @@ const AdminDashboard = () => {
       const { error } = await supabase
         .from('profiles')
         .update({ status: 'rejected' })
-        .eq('user_id', userId);
+        .eq('id', userId);
 
       if (error) throw error;
 
@@ -445,16 +448,30 @@ const AdminDashboard = () => {
 
   const updateUserRole = async (userId: string, newRole: UserRole) => {
     try {
-      const { error } = await supabase
-        .from('user_roles')
-        .upsert({ 
-          user_id: userId, 
-          role: newRole 
-        }, {
-          onConflict: 'user_id'
-        });
+      // First, get the user to check if they have a user_id
+      const user = users.find(u => u.id === userId) || pendingUsers.find(u => u.id === userId);
+      
+      if (user?.user_id) {
+        // Old auth user - update user_roles table
+        const { error } = await supabase
+          .from('user_roles')
+          .upsert({ 
+            user_id: user.user_id, 
+            role: newRole 
+          }, {
+            onConflict: 'user_id'
+          });
 
-      if (error) throw error;
+        if (error) throw error;
+      } else {
+        // Direct auth user - update profiles table directly
+        const { error } = await supabase
+          .from('profiles')
+          .update({ role: newRole })
+          .eq('id', userId);
+
+        if (error) throw error;
+      }
 
       toast({
         title: "Role updated! ✨",
@@ -476,36 +493,47 @@ const AdminDashboard = () => {
     if (!confirm("Are you sure you want to delete this user? This action cannot be undone.")) return;
 
     try {
-      // FIX: Cannot use supabase.auth.admin.deleteUser() with anon key
-      // Instead, we'll mark the user as deleted in our tables
-      // Actual auth user deletion should be done via a server-side API route
-      
-      // Start a transaction-like operation
+      // Get the user to check if they have a user_id
+      const user = users.find(u => u.id === userId) || pendingUsers.find(u => u.id === userId);
       const errors: string[] = [];
       
-      // Delete user's role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-      
-      if (roleError) errors.push(`Roles: ${roleError.message}`);
-      
-      // Delete user's events participation
-      const { error: eventsError } = await supabase
-        .from('user_events')
-        .delete()
-        .eq('user_id', userId);
-      
-      if (eventsError) errors.push(`Events: ${eventsError.message}`);
-      
-      // Mark user profile as deleted (soft delete)
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ status: 'deleted' })
-        .eq('user_id', userId);
-      
-      if (profileError) errors.push(`Profile: ${profileError.message}`);
+      if (user?.user_id) {
+        // Old auth user - delete by user_id
+        
+        // Delete user's role
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', user.user_id);
+        
+        if (roleError) errors.push(`Roles: ${roleError.message}`);
+        
+        // Delete user's events participation
+        const { error: eventsError } = await supabase
+          .from('user_events')
+          .delete()
+          .eq('user_id', user.user_id);
+        
+        if (eventsError) errors.push(`Events: ${eventsError.message}`);
+        
+        // Mark user profile as deleted (soft delete)
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ status: 'deleted' })
+          .eq('user_id', user.user_id);
+        
+        if (profileError) errors.push(`Profile: ${profileError.message}`);
+      } else {
+        // Direct auth user - delete by profile id
+        
+        // For direct auth users, we just mark the profile as deleted
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({ status: 'deleted' })
+          .eq('id', userId);
+        
+        if (profileError) errors.push(`Profile: ${profileError.message}`);
+      }
       
       // If there were errors, show them
       if (errors.length > 0) {
@@ -514,7 +542,7 @@ const AdminDashboard = () => {
 
       toast({
         title: "User marked as deleted",
-        description: "User has been removed from the system. Contact support to fully delete the auth account.",
+        description: "User has been removed from the system.",
       });
 
       await fetchUsers();
@@ -939,7 +967,7 @@ const AdminDashboard = () => {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   <Select
-                                    value={user.user_roles?.[0]?.role || 'user'}
+                                    value={user.user_roles?.[0]?.role || user.profiles?.role || 'user'}
                                     onValueChange={(value: UserRole) => updateUserRole(user.id, value)}
                                   >
                                     <SelectTrigger className="w-32">
@@ -1405,7 +1433,7 @@ const AdminDashboard = () => {
                 <div>
                   <Label>Role</Label>
                   <Select
-                    value={editingUser.user_roles?.[0]?.role || 'user'}
+                    value={editingUser.user_roles?.[0]?.role || editingUser.profiles?.role || 'user'}
                     onValueChange={(value: UserRole) => {
                       updateUserRole(editingUser.id, value);
                     }}
