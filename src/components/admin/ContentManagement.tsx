@@ -30,6 +30,11 @@ export const ContentManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
+  
+  // Debug: Log when editingItem changes
+  useEffect(() => {
+    console.log('editingItem changed:', editingItem);
+  }, [editingItem]);
   const [newContent, setNewContent] = useState({
     page: '',
     section: '',
@@ -317,17 +322,20 @@ export const ContentManagement = () => {
                                 )}
                               </TableCell>
                               <TableCell>
-                                <div className="flex gap-2">
-                                  <Dialog open={editingItem?.id === item.id} onOpenChange={setEditingItem}>
-                                    <DialogTrigger asChild>
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={() => setEditingItem({ ...item })}
-                                      >
-                                        <Pencil className="h-3 w-3" />
-                                      </Button>
-                                    </DialogTrigger>
+                                                                 <div className="flex gap-2">
+                                   <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
+                                     <DialogTrigger asChild>
+                                       <Button
+                                         variant="outline"
+                                         size="sm"
+                                         onClick={() => {
+                                           console.log('Edit button clicked for item:', item);
+                                           setEditingItem({ ...item });
+                                         }}
+                                       >
+                                         <Pencil className="h-3 w-3" />
+                                       </Button>
+                                     </DialogTrigger>
                                     <DialogContent>
                                       <DialogHeader>
                                         <DialogTitle>Edit Content</DialogTitle>
