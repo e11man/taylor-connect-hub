@@ -122,8 +122,8 @@ const Header = () => {
       />
       {/* Drawer */}
       <nav
-        className={`absolute top-0 right-0 h-full w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 transition-all duration-300 ease-in-out rounded-l-2xl bg-white border-l border-gray-200 ${
-          isOpen ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+        className={`fixed inset-y-0 left-0 w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 transition-all duration-300 ease-in-out bg-white border-r border-gray-200 ${
+          isOpen ? 'translate-x-0 opacity-100' : '-translate-x-full opacity-0'
         }`}
       >
         {/* Close button */}
