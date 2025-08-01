@@ -20,12 +20,12 @@ export const useStatistics = () => {
 
     // Subscribe to real-time updates
     const channel = supabase
-      .channel('site_stats_changes')
+      .channel('statistics_changes')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
-          table: 'site_stats' 
+          table: 'statistics' 
         }, 
         () => {
           fetchStatistics();
@@ -41,8 +41,8 @@ export const useStatistics = () => {
   const fetchStatistics = async () => {
     try {
       const { data, error } = await supabase
-        .from('site_stats')
-        .select('stat_type, confirmed_total, current_estimate');
+        .from('statistics')
+        .select('key, base_value, live_value');
 
       if (error) throw error;
 
@@ -54,14 +54,14 @@ export const useStatistics = () => {
         };
 
         data.forEach(stat => {
-          // Use current_estimate if available and greater than confirmed_total, otherwise use confirmed_total
-          const value = stat.current_estimate > stat.confirmed_total 
-            ? stat.current_estimate 
-            : stat.confirmed_total;
+          // Use live_value if available and greater than base_value, otherwise use base_value
+          const value = stat.live_value > stat.base_value 
+            ? stat.live_value 
+            : stat.base_value;
           
           const formattedValue = new Intl.NumberFormat('en-US').format(value);
           
-          switch (stat.stat_type) {
+          switch (stat.key) {
             case 'active_volunteers':
               stats.active_volunteers = formattedValue;
               break;

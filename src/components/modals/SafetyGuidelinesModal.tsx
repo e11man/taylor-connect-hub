@@ -69,10 +69,10 @@ const SafetyGuidelinesModal: React.FC<SafetyGuidelinesModalProps> = ({
 
   // Memoized content values with fallbacks
   const { title, subtitle, acceptButtonText, cancelButtonText } = useMemo(() => ({
-    title: content.guidelines_title || FALLBACK_CONTENT.guidelines_title,
-    subtitle: content.guidelines_subtitle || FALLBACK_CONTENT.guidelines_subtitle,
-    acceptButtonText: content.accept_button || FALLBACK_CONTENT.accept_button,
-    cancelButtonText: content.cancel_button || FALLBACK_CONTENT.cancel_button
+    title: content.content?.guidelines_title || FALLBACK_CONTENT.guidelines_title,
+    subtitle: content.content?.guidelines_subtitle || FALLBACK_CONTENT.guidelines_subtitle,
+    acceptButtonText: content.content?.accept_button || FALLBACK_CONTENT.accept_button,
+    cancelButtonText: content.content?.cancel_button || FALLBACK_CONTENT.cancel_button
   }), [content]);
 
   // Prevent body scroll when modal is open

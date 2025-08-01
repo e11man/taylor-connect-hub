@@ -451,12 +451,12 @@ const AdminDashboard = () => {
       // First, get the user to check if they have a user_id
       const user = users.find(u => u.id === userId) || pendingUsers.find(u => u.id === userId);
       
-      if (user?.user_id) {
-        // Old auth user - update user_roles table
+      if (user?.id) {
+        // Update user_roles table
         const { error } = await supabase
           .from('user_roles')
           .upsert({ 
-            user_id: user.user_id, 
+            user_id: user.id, 
             role: newRole 
           }, {
             onConflict: 'user_id'
@@ -497,14 +497,14 @@ const AdminDashboard = () => {
       const user = users.find(u => u.id === userId) || pendingUsers.find(u => u.id === userId);
       const errors: string[] = [];
       
-      if (user?.user_id) {
-        // Old auth user - delete by user_id
+      if (user?.id) {
+        // Delete user data
         
         // Delete user's role
         const { error: roleError } = await supabase
           .from('user_roles')
           .delete()
-          .eq('user_id', user.user_id);
+          .eq('user_id', user.id);
         
         if (roleError) errors.push(`Roles: ${roleError.message}`);
         
@@ -512,7 +512,7 @@ const AdminDashboard = () => {
         const { error: eventsError } = await supabase
           .from('user_events')
           .delete()
-          .eq('user_id', user.user_id);
+          .eq('user_id', user.id);
         
         if (eventsError) errors.push(`Events: ${eventsError.message}`);
         
@@ -520,7 +520,7 @@ const AdminDashboard = () => {
         const { error: profileError } = await supabase
           .from('profiles')
           .update({ status: 'deleted' })
-          .eq('user_id', user.user_id);
+          .eq('user_id', user.id);
         
         if (profileError) errors.push(`Profile: ${profileError.message}`);
       } else {

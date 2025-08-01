@@ -51,7 +51,7 @@ export const Statistics = () => {
 
       // Fetch directly from Supabase
       const { data, error } = await supabase
-        .from('site_stats')
+        .from('statistics')
         .select('*');
 
       if (error) throw error;
@@ -72,18 +72,18 @@ export const Statistics = () => {
 
       if (data) {
         data.forEach(stat => {
-          switch (stat.stat_type) {
+          switch (stat.key) {
             case 'active_volunteers':
-              statsData.recorded.active_volunteers = stat.confirmed_total;
-              statsData.live.active_volunteers = stat.current_estimate;
+              statsData.recorded.active_volunteers = stat.base_value;
+              statsData.live.active_volunteers = stat.live_value;
               break;
             case 'hours_contributed':
-              statsData.recorded.hours_contributed = stat.confirmed_total;
-              statsData.live.hours_contributed = stat.current_estimate;
+              statsData.recorded.hours_contributed = stat.base_value;
+              statsData.live.hours_contributed = stat.live_value;
               break;
             case 'partner_organizations':
-              statsData.recorded.partner_organizations = stat.confirmed_total;
-              statsData.live.partner_organizations = stat.current_estimate;
+              statsData.recorded.partner_organizations = stat.base_value;
+              statsData.live.partner_organizations = stat.live_value;
               break;
           }
         });
@@ -199,21 +199,21 @@ export const Statistics = () => {
 
     try {
       // Update directly in Supabase
-      const updateField = editingState.fieldType === 'confirmed' ? 'confirmed_total' : 'current_estimate';
+      const updateField = editingState.fieldType === 'confirmed' ? 'base_value' : 'live_value';
       
       console.log('Updating statistics:', {
-        stat_type: editingState.statType,
+        key: editingState.statType,
         field: updateField,
         value: value
       });
 
       const { data, error } = await supabase
-        .from('site_stats')
+        .from('statistics')
         .update({ 
           [updateField]: value,
           updated_at: new Date().toISOString()
         })
-        .eq('stat_type', editingState.statType)
+        .eq('key', editingState.statType)
         .select();
 
       if (error) {

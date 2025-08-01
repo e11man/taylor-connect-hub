@@ -70,7 +70,6 @@ const loadContent = async (languageCode: string = 'en', forceRefresh: boolean = 
       
       console.log('useContent: About to query Supabase content table');
       console.log('useContent: Supabase client:', supabase);
-      console.log('useContent: Supabase URL:', supabase.supabaseUrl);
       
       const contentPromise = supabase
         .from('content')
