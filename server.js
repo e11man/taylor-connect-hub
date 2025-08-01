@@ -16,7 +16,10 @@ const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:8080', 'http://127.0.0.1:8080'],
+  credentials: true
+}));
 app.use(express.json());
 
 // Email sending endpoint using Python script
@@ -95,6 +98,96 @@ app.post('/api/send-verification-code', async (req, res) => {
   } catch (error) {
     console.error('Server error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Contact form endpoint
+app.post('/api/contact-form', async (req, res) => {
+  try {
+    const { name, email, message } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !message) {
+      return res.status(400).json({ 
+        error: 'Missing required fields: name, email, message' 
+      });
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ 
+        error: 'Invalid email format' 
+      });
+    }
+
+    console.log('Sending contact form email from:', name, email);
+
+    // Call the contact form handler script
+    const pythonScriptPath = path.join(process.cwd(), 'database-service', 'contact_form_handler.py');
+    
+    return new Promise((resolve) => {
+      // Set up environment to use the virtual environment
+      const env = { ...process.env };
+      const venvPath = path.join(process.cwd(), 'database-service', 'venv');
+      env.PYTHONPATH = path.join(venvPath, 'lib', 'python3.13', 'site-packages');
+      env.VIRTUAL_ENV = venvPath;
+      env.PATH = path.join(venvPath, 'bin') + ':' + env.PATH;
+      
+      // Use the virtual environment's Python directly
+      const venvPythonPath = path.join(venvPath, 'bin', 'python');
+      const pythonProcess = spawn(venvPythonPath, [
+        pythonScriptPath, 
+        'send', 
+        name, 
+        email, 
+        message,
+        '--production'
+      ], { env });
+      
+      let output = '';
+      let errorOutput = '';
+      
+      pythonProcess.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+      
+      pythonProcess.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+      
+      pythonProcess.on('close', (code) => {
+        if (code === 0) {
+          console.log('Contact form email sent successfully via Python script');
+          res.json({ 
+            success: true, 
+            message: 'Contact form submitted successfully' 
+          });
+          resolve();
+        } else {
+          console.error('Contact form handler error:', errorOutput);
+          res.status(500).json({ 
+            error: 'Failed to send contact form email',
+            details: errorOutput
+          });
+          resolve();
+        }
+      });
+      
+      pythonProcess.on('error', (error) => {
+        console.error('Failed to start contact form handler:', error);
+        res.status(500).json({ 
+          error: 'Failed to process contact form' 
+        });
+        resolve();
+      });
+    });
+
+  } catch (error) {
+    console.error('Contact form API error:', error);
+    res.status(500).json({ 
+      error: 'Internal server error' 
+    });
   }
 });
 
