@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { X } from "lucide-react";
 import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import { Link } from "react-router-dom";
 
 interface RequestVolunteersModalProps {
@@ -57,9 +57,9 @@ const RequestVolunteersModal = ({ isOpen, onClose }: RequestVolunteersModalProps
               Organizations can already post volunteer opportunities
             </p>
             <Link to="/organization-login" onClick={onClose}>
-              <PrimaryButton className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl touch-manipulation">
+              <UnifiedButton variant="primary" className="w-full py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl touch-manipulation" ariaLabel="Login to organization dashboard">
                 Organization Login
-              </PrimaryButton>
+              </UnifiedButton>
             </Link>
           </div>
 
@@ -71,16 +71,18 @@ const RequestVolunteersModal = ({ isOpen, onClose }: RequestVolunteersModalProps
             <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 font-montserrat">
               Get in touch and we'll let you know when individual requests are available
             </p>
-            <PrimaryButton 
-              className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl touch-manipulation"
+            <UnifiedButton 
+              variant="primary"
+              className="w-full py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl touch-manipulation"
               onClick={() => {
                 const subject = encodeURIComponent('Notify me when individual volunteer requests are available');
                 const body = encodeURIComponent(`Hi Community Connect team,\n\nI'm interested in being notified when individual volunteer requests become available on your platform.\n\nPlease add me to your notification list.\n\nThank you!\n\nBest regards`);
                 window.location.href = `mailto:hello@communityconnect.org?subject=${subject}&body=${body}`;
               }}
+              ariaLabel="Email for more information about individual volunteer requests"
             >
               Email for More Info
-            </PrimaryButton>
+            </UnifiedButton>
           </div>
 
           {/* Close Button */}

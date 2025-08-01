@@ -144,24 +144,6 @@
     @apply py-8 lg:py-12;
   }
 
-  /* Button base styles */
-  .btn-base {
-    @apply inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-lg transition-smooth focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .btn-primary {
-    @apply btn-base bg-accent text-accent-foreground hover:bg-accent/90 focus:ring-accent;
-  }
-
-  .btn-secondary {
-    @apply btn-base bg-secondary text-secondary-foreground hover:bg-secondary/90 focus:ring-secondary;
-  }
-
-  .btn-outline {
-    @apply btn-base border-2 border-primary text-primary bg-background hover:bg-primary hover:text-primary-foreground focus:ring-primary;
-  }
-
-  .btn-ghost {
-    @apply btn-base text-primary hover:bg-primary/10 focus:ring-primary;
-  }
+  /* Unified button styles - now handled by the UnifiedButton component */
+  /* Legacy button classes are deprecated and should be replaced with UnifiedButton */
 }

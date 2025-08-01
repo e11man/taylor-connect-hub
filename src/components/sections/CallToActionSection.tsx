@@ -1,6 +1,6 @@
 import { useState } from "react";
 import communityGarden from "@/assets/community-garden.jpg";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import UserAuthModal from "@/components/modals/UserAuthModal";
 import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedText from "@/components/ui/animated-text";
@@ -90,16 +90,17 @@ const CallToActionSection = () => {
                 }}
                 viewport={{ once: false }}
               >
-                <PrimaryButton
-                  className="bg-secondary hover:bg-secondary/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                <UnifiedButton
+                  variant="secondary"
                   onClick={() => {
                     // Navigate to commitments page or open modal if commitments are managed via modal
                     // For now, let's just log a message or open a placeholder modal
                     alert("Viewing my commitments!");
                   }}
+                  ariaLabel="View my volunteer commitments"
                 >
                   View My Commitments
-                </PrimaryButton>
+                </UnifiedButton>
               </motion.div>
             ) : (
               <motion.div
@@ -156,12 +157,13 @@ const CallToActionSection = () => {
                   }}
                   viewport={{ once: false }}
                 >
-                  <PrimaryButton
-                    className="bg-secondary hover:bg-secondary/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                  <UnifiedButton
+                    variant="secondary"
                     onClick={handleLoginClick}
+                    ariaLabel="Log in to your account"
                   >
                     Log In
-                  </PrimaryButton>
+                  </UnifiedButton>
                 </motion.div>
               </motion.div>
             )}

@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Send, Mail, Phone, MapPin } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import { useToast } from "@/hooks/use-toast";
 import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedCard from "@/components/ui/animated-card";
@@ -297,15 +297,17 @@ const ContactSection = () => {
                     whileTap={{ scale: 0.95 }}
                     transition={{ duration: 0.2 }}
                   >
-                    <PrimaryButton
-                      type="submit"
+                    <UnifiedButton
+                      variant="primary"
                       size="lg"
                       loading={isSubmitting}
-                      className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 transform transition-all duration-300 hover:shadow-lg"
+                      type="submit"
+                      className="w-full"
+                      ariaLabel="Send contact message"
                     >
                       <Send className="mr-2 w-5 h-5" />
                       {contactForm.send_button || "Send Message"}
-                    </PrimaryButton>
+                    </UnifiedButton>
                   </motion.div>
                 </motion.div>
               </motion.form>

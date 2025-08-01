@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Building2, User2, AlignLeft, Globe, Phone, Loader2, Info } from 'lucide-react';
-import PrimaryButton from '../components/buttons/PrimaryButton';
+import UnifiedButton from '../components/buttons/UnifiedButton';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import UserAuthModal from '@/components/modals/UserAuthModal';
@@ -416,10 +416,13 @@ const OrganizationRegister: React.FC = () => {
           </div>
 
           {/* Register Button */}
-          <PrimaryButton
+          <UnifiedButton
+            variant="primary"
             type="submit"
             className="w-full py-3 sm:py-4 mt-6 text-lg font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
             disabled={isLoading}
+            loading={isLoading}
+            ariaLabel="Register organization account"
           >
             {isLoading ? (
               <span className="flex items-center justify-center">
@@ -435,7 +438,7 @@ const OrganizationRegister: React.FC = () => {
                 as="span"
               />
             )}
-          </PrimaryButton>
+          </UnifiedButton>
 
           {/* Sign In Link */}
           <div className="text-center text-sm mt-4">

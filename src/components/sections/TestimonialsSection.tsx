@@ -1,6 +1,5 @@
 import { Quote } from "lucide-react";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
-import SecondaryButton from "@/components/buttons/SecondaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
@@ -220,21 +219,24 @@ const TestimonialsSection = () => {
               }}
             >
               <motion.div variants={buttonVariants}>
-                <PrimaryButton 
+                <UnifiedButton 
+                  variant="primary"
                   size="lg" 
-                  className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg min-h-[48px] text-base md:text-lg font-semibold"
+                  className="w-full"
+                  ariaLabel="Start volunteering with our community"
                 >
                   Start Volunteering
-                </PrimaryButton>
+                </UnifiedButton>
               </motion.div>
               <motion.div variants={buttonVariants}>
-                <SecondaryButton 
+                <UnifiedButton 
+                  variant="secondary"
                   size="lg" 
-                  variant="outline" 
-                  className="w-full border-primary text-primary hover:bg-primary hover:text-white transform transition-all duration-300 hover:scale-105 min-h-[48px] text-base md:text-lg font-semibold"
+                  className="w-full"
+                  ariaLabel="Partner with our organization"
                 >
                   Partner With Us
-                </SecondaryButton>
+                </UnifiedButton>
               </motion.div>
             </motion.div>
           </motion.div>

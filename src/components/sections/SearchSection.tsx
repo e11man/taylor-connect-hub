@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Search, Filter, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";

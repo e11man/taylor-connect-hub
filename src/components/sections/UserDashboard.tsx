@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
 import { ChangeDormModal } from "@/components/modals/ChangeDormModal";
 import { UpdatePasswordModal } from "@/components/modals/UpdatePasswordModal";

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Calendar, MapPin, Users, MessageCircle, Search, Clock } from "lucide-react";
 import { formatEventDate, formatEventTime, formatEventTimeRange, formatParticipants } from "@/utils/formatEvent";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -402,13 +402,15 @@ const OpportunitiesSection = () => {
                             </>
                           ) : (
                             <>
-                              <PrimaryButton 
+                              <UnifiedButton 
+                                variant="primary"
                                 onClick={() => handleSignUp(event.id)}
-                                className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90 min-h-[44px] touch-manipulation"
+                                className="w-full min-h-[44px] touch-manipulation"
                                 disabled={userEvents.length >= 2}
+                                ariaLabel="Sign up for this volunteer opportunity"
                               >
                                 Sign Up
-                              </PrimaryButton>
+                              </UnifiedButton>
                               <button
                                 onClick={() => handleGroupSignup(event)}
                                 className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[44px] touch-manipulation"
@@ -431,13 +433,15 @@ const OpportunitiesSection = () => {
                             Signed Up ✓
                           </div>
                         ) : (
-                          <PrimaryButton 
+                          <UnifiedButton 
+                            variant="primary"
                             onClick={() => handleSignUp(event.id)}
-                            className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90 min-h-[44px] touch-manipulation"
+                            className="w-full min-h-[44px] touch-manipulation"
                             disabled={userEvents.length >= 2 && userRole !== 'pa'}
+                            ariaLabel="Sign up for this volunteer opportunity"
                           >
                             {userEvents.length >= 2 && userRole !== 'pa' ? 'Max Reached' : 'Sign Up'}
-                          </PrimaryButton>
+                          </UnifiedButton>
                         )}
                       </>
                     );

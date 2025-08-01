@@ -4,8 +4,7 @@ import { Plus, Edit2, Trash2, Calendar, MapPin, Users, LogOut, MessageCircle, Cl
 import { formatEventDate, formatEventTimeRange } from "@/utils/formatEvent";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
-import SecondaryButton from "@/components/buttons/SecondaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -375,10 +374,10 @@ const OrganizationDashboard = () => {
               }
             }}>
               <DialogTrigger asChild>
-                <PrimaryButton className="flex items-center gap-2">
+                <UnifiedButton variant="primary" className="flex items-center gap-2" ariaLabel="Add new volunteer opportunity">
                   <Plus className="w-4 h-4" />
                   Add New Opportunity
-                </PrimaryButton>
+                </UnifiedButton>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
@@ -475,7 +474,8 @@ const OrganizationDashboard = () => {
                     {hasAttemptedSubmit && parseInt(newEvent.max_participants) < 6 && <p className="text-xs text-red-600 mt-1">Minimum 6 volunteers required</p>}
                   </div>
                   <div className="flex gap-2 pt-4">
-                    <PrimaryButton 
+                    <UnifiedButton 
+                      variant="primary"
                       onClick={handleCreateEvent}
                       disabled={
                         !newEvent.title ||
@@ -488,15 +488,20 @@ const OrganizationDashboard = () => {
                         newEvent.arrival_time >= newEvent.estimated_end_time
                       }
                       className="flex-1"
+                      ariaLabel="Create new volunteer opportunity"
                     >
                       Create Opportunity
-                    </PrimaryButton>
-                    <SecondaryButton onClick={() => {
-                      setIsCreateModalOpen(false);
-                      setHasAttemptedSubmit(false);
-                    }}>
+                    </UnifiedButton>
+                    <UnifiedButton 
+                      variant="secondary"
+                      onClick={() => {
+                        setIsCreateModalOpen(false);
+                        setHasAttemptedSubmit(false);
+                      }}
+                      ariaLabel="Cancel creating opportunity"
+                    >
                       Cancel
-                    </SecondaryButton>
+                    </UnifiedButton>
                   </div>
                 </div>
               </DialogContent>
@@ -508,10 +513,10 @@ const OrganizationDashboard = () => {
             <Card>
               <CardContent className="text-center py-12">
                 <p className="text-muted-foreground mb-4">You haven't created any opportunities yet.</p>
-                <PrimaryButton onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2">
+                <UnifiedButton variant="primary" onClick={() => setIsCreateModalOpen(true)} className="flex items-center gap-2" ariaLabel="Create your first volunteer opportunity">
                   <Plus className="w-4 h-4" />
                   Create Your First Opportunity
-                </PrimaryButton>
+                </UnifiedButton>
               </CardContent>
             </Card>
           ) : (
@@ -661,16 +666,22 @@ const OrganizationDashboard = () => {
                   />
                 </div>
                 <div className="flex gap-2 pt-4">
-                  <PrimaryButton 
+                  <UnifiedButton 
+                    variant="primary"
                     onClick={handleEditEvent}
                     disabled={!newEvent.title || !newEvent.description || !newEvent.date || !selectedAddress}
                     className="flex-1"
+                    ariaLabel="Update volunteer opportunity"
                   >
                     Update Opportunity
-                  </PrimaryButton>
-                  <SecondaryButton onClick={() => setIsEditModalOpen(false)}>
+                  </UnifiedButton>
+                  <UnifiedButton 
+                    variant="secondary"
+                    onClick={() => setIsEditModalOpen(false)}
+                    ariaLabel="Cancel editing opportunity"
+                  >
                     Cancel
-                  </SecondaryButton>
+                  </UnifiedButton>
                 </div>
               </div>
             </DialogContent>

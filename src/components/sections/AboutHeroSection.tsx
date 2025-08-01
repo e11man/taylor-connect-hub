@@ -1,6 +1,5 @@
 import { ArrowRight } from "lucide-react";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
-import SecondaryButton from "@/components/buttons/SecondaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
@@ -68,21 +67,22 @@ const AboutHeroSection = () => {
               }}
             >
               <motion.div variants={buttonVariants}>
-                <PrimaryButton 
+                <UnifiedButton 
+                  variant="primary"
                   size="lg" 
-                  className="bg-[#00AFCE] hover:bg-[#00AFCE]/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                  ariaLabel="Find volunteer opportunities"
                 >
                   {heroContent.ctaButton || 'Find Opportunities'} <ArrowRight className="ml-2 w-5 h-5" />
-                </PrimaryButton>
+                </UnifiedButton>
               </motion.div>
               <motion.div variants={buttonVariants}>
-                <SecondaryButton 
+                <UnifiedButton 
+                  variant="secondary"
                   size="lg" 
-                  variant="outline" 
-                  className="border-primary text-primary hover:bg-primary hover:text-white transform transition-all duration-300 hover:scale-105"
+                  ariaLabel="Learn more about our platform"
                 >
                   {heroContent.secondaryButton || 'Learn More'}
-                </SecondaryButton>
+                </UnifiedButton>
               </motion.div>
             </motion.div>
           </AnimatedSection>

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LogOut, User } from "lucide-react";
 import logo from "@/assets/logo.svg";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import RequestVolunteersModal from "@/components/modals/RequestVolunteersModal";
 import UserAuthModal from "@/components/modals/UserAuthModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -224,12 +224,14 @@ const Header = () => {
           </div>
         ) : (
           <div className="space-y-3">
-            <PrimaryButton
+            <UnifiedButton
+              variant="secondary"
               onClick={() => {
                 closeMenu();
                 setAuthModalOpen(true);
               }}
-              className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl"
+              className="w-full"
+              ariaLabel="Log in to your account"
             >
               <DynamicText 
                 page="header" 
@@ -238,13 +240,15 @@ const Header = () => {
                 fallback="Log in"
                 as="span"
               />
-            </PrimaryButton>
-            <PrimaryButton
+            </UnifiedButton>
+            <UnifiedButton
+              variant="primary"
               onClick={() => {
                 closeMenu();
                 setModalOpen(true);
               }}
-              className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl bg-[#E14F3D] hover:bg-[#C73E2F]"
+              className="w-full"
+              ariaLabel="Request volunteers for your organization"
             >
               <DynamicText 
                 page="header" 
@@ -253,7 +257,7 @@ const Header = () => {
                 fallback="Request Volunteers"
                 as="span"
               />
-            </PrimaryButton>
+            </UnifiedButton>
           </div>
         )}
         <div className="flex-1" />
@@ -322,12 +326,10 @@ const Header = () => {
                     {user.email}
                   </span>
                 </div>
-                <PrimaryButton
+                <UnifiedButton
+                  variant="primary"
                   onClick={() => setModalOpen(true)}
-                  className="shadow-sm hover:shadow-md whitespace-nowrap text-white"
-                  style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
-                  onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
-                  onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
+                  ariaLabel="Request volunteers for your organization"
                 >
                   <DynamicText 
                     page="header" 
@@ -336,7 +338,7 @@ const Header = () => {
                     fallback="Request Volunteers"
                     as="span"
                   />
-                </PrimaryButton>
+                </UnifiedButton>
                 <button
                   onClick={signOut}
                   className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-[#E14F3D] transition-colors"
@@ -347,9 +349,10 @@ const Header = () => {
               </>
             ) : (
               <>
-                <PrimaryButton
+                <UnifiedButton
+                  variant="secondary"
                   onClick={() => setAuthModalOpen(true)}
-                  className="shadow-sm hover:shadow-md whitespace-nowrap"
+                  ariaLabel="Log in to your account"
                 >
                   <DynamicText 
                     page="header" 
@@ -358,13 +361,11 @@ const Header = () => {
                     fallback="Log in"
                     as="span"
                   />
-                </PrimaryButton>
-                <PrimaryButton
+                </UnifiedButton>
+                <UnifiedButton
+                  variant="primary"
                   onClick={() => setModalOpen(true)}
-                  className="shadow-sm hover:shadow-md whitespace-nowrap text-white"
-                  style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
-                  onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
-                  onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
+                  ariaLabel="Request volunteers for your organization"
                 >
                   <DynamicText 
                     page="header" 
@@ -373,21 +374,20 @@ const Header = () => {
                     fallback="Request Volunteers"
                     as="span"
                   />
-                </PrimaryButton>
+                </UnifiedButton>
               </>
             )}
           </div>
         </nav>
 
         {/* Mobile: Auth/CTA + Hamburger */}
-        <div className="md:hidden flex items-center gap-2">
+        <div className="md:hidden flex items-center gap-3">
           {user ? (
-            <PrimaryButton
+            <UnifiedButton
+              variant="primary"
+              size="sm"
               onClick={() => setModalOpen(true)}
-              className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap text-white"
-              style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
-              onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
-              onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
+              ariaLabel="Request volunteers for your organization"
             >
               <DynamicText 
                 page="header" 
@@ -396,11 +396,13 @@ const Header = () => {
                 fallback="Request Volunteers"
                 as="span"
               />
-            </PrimaryButton>
+            </UnifiedButton>
           ) : (
-            <PrimaryButton
+            <UnifiedButton
+              variant="secondary"
+              size="sm"
               onClick={() => setAuthModalOpen(true)}
-              className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
+              ariaLabel="Log in to your account"
             >
               <DynamicText 
                 page="header" 
@@ -409,7 +411,7 @@ const Header = () => {
                 fallback="Log in"
                 as="span"
               />
-            </PrimaryButton>
+            </UnifiedButton>
           )}
           <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
         </div>

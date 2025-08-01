@@ -1,6 +1,5 @@
 import { ArrowRight, Users, Clock, Building } from "lucide-react";
-import PrimaryButton from "@/components/buttons/PrimaryButton";
-import SecondaryButton from "@/components/buttons/SecondaryButton";
+import UnifiedButton from "@/components/buttons/UnifiedButton";
 import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
@@ -141,24 +140,25 @@ const HeroSection = () => {
                 variants={buttonVariants}
                 transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
               >
-                <PrimaryButton 
+                <UnifiedButton 
+                  variant="primary"
                   size="lg" 
-                  className="bg-accent hover:bg-accent/90 transform transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                  ariaLabel="Get started with volunteering"
                 >
                   {ctaButton} <ArrowRight className="ml-2 w-5 h-5" />
-                </PrimaryButton>
+                </UnifiedButton>
               </motion.div>
               <motion.div 
                 variants={buttonVariants}
                 transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94], delay: 0.1 }}
               >
-                <SecondaryButton 
+                <UnifiedButton 
+                  variant="secondary"
                   size="lg" 
-                  variant="outline" 
-                  className="border-primary text-primary hover:bg-primary hover:text-white transform transition-all duration-300 hover:scale-105"
+                  ariaLabel="Learn more about our platform"
                 >
                   {secondaryButton}
-                </SecondaryButton>
+                </UnifiedButton>
               </motion.div>
             </motion.div>
           </AnimatedSection>
