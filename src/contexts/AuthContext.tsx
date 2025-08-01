@@ -2,6 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useRef } from 'r
 import { useToast } from '@/hooks/use-toast';
 import { loginUser, registerUser } from '@/utils/directAuth';
 import { validateAccessToken, decodeAccessToken } from '@/utils/session';
+import { useNavigate } from 'react-router-dom';
 
 interface User {
   id: string;
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userEventsRefreshTrigger, setUserEventsRefreshTrigger] = useState(0);
   const [eventsRefreshTrigger, setEventsRefreshTrigger] = useState(0);
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check for existing session in localStorage
@@ -68,6 +70,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(data.session);
       setUser(data.session.user);
       setUserEventsRefreshTrigger(prev => prev + 1);
+      
+      // Redirect regular users (students and external users) to dashboard
+      // Don't redirect organizations or admins - they have their own flows
+      const userType = data.session.user.user_type;
+      const userRole = data.session.user.role;
+      
+      if (userType === 'student' || userType === 'external') {
+        // Only redirect if user is active
+        if (data.session.user.status === 'active') {
+          navigate('/dashboard');
+        }
+      }
+      // Organizations and admins will handle their own redirection in their respective login components
     }
     return { data, error };
   };

@@ -24,6 +24,23 @@ const Header = () => {
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   
+  // Check if user can request volunteers (only organizations and admins)
+  // Students and external users should NOT see this button, even if they have admin role
+  const canRequestVolunteers = user && (
+    user.user_type === 'organization' || 
+    (user.role === 'admin' && user.user_type !== 'student' && user.user_type !== 'external')
+  );
+  
+  // Debug: Log user info to help troubleshoot
+  if (user) {
+    console.log('Current user:', {
+      email: user.email,
+      user_type: user.user_type,
+      role: user.role,
+      canRequestVolunteers: canRequestVolunteers
+    });
+  }
+  
   const NAV_LINKS = [
     { name: navContent.home || "Home", href: "/", isRoute: true },
     { name: navContent.about || "About", href: "/about", isRoute: true },
@@ -218,21 +235,23 @@ const Header = () => {
                   {user.email}
                 </span>
               </div>
-              <PrimaryButton
-                onClick={() => {
-                  closeMenu();
-                  setModalOpen(true);
-                }}
-                className="w-full"
-              >
-                <DynamicText 
-                  page="header" 
-                  section="buttons" 
-                  contentKey="requestVolunteers"
-                  fallback="Request Volunteers"
-                  as="span"
-                />
-              </PrimaryButton>
+              {canRequestVolunteers && (
+                <PrimaryButton
+                  onClick={() => {
+                    closeMenu();
+                    setModalOpen(true);
+                  }}
+                  className="w-full"
+                >
+                  <DynamicText 
+                    page="header" 
+                    section="buttons" 
+                    contentKey="requestVolunteers"
+                    fallback="Request Volunteers"
+                    as="span"
+                  />
+                </PrimaryButton>
+              )}
               <Link
                 to="/dashboard"
                 onClick={() => {
@@ -388,65 +407,69 @@ const Header = () => {
                     </div>
                   )}
                 </div>
-                <PrimaryButton
-                  onClick={() => setModalOpen(true)}
-                  className="shadow-sm hover:shadow-md whitespace-nowrap"
-                >
-                  <DynamicText 
-                    page="header" 
-                    section="buttons" 
-                    contentKey="requestVolunteers"
-                    fallback="Request Volunteers"
-                    as="span"
-                  />
-                </PrimaryButton>
+                {canRequestVolunteers && (
+                  <PrimaryButton
+                    onClick={() => setModalOpen(true)}
+                    className="shadow-sm hover:shadow-md whitespace-nowrap"
+                  >
+                    <DynamicText 
+                      page="header" 
+                      section="buttons" 
+                      contentKey="requestVolunteers"
+                      fallback="Request Volunteers"
+                      as="span"
+                    />
+                  </PrimaryButton>
+                )}
               </>
-            ) : (
-              <>
-                <SecondaryButton
-                  onClick={() => setAuthModalOpen(true)}
-                  className="shadow-sm hover:shadow-md whitespace-nowrap"
-                >
-                  <DynamicText 
-                    page="header" 
-                    section="buttons" 
-                    contentKey="login"
-                    fallback="Log in"
-                    as="span"
-                  />
-                </SecondaryButton>
-                <PrimaryButton
-                  onClick={() => setModalOpen(true)}
-                  className="shadow-sm hover:shadow-md whitespace-nowrap"
-                >
-                  <DynamicText 
-                    page="header" 
-                    section="buttons" 
-                    contentKey="requestVolunteers"
-                    fallback="Request Volunteers"
-                    as="span"
-                  />
-                </PrimaryButton>
-              </>
-            )}
+                          ) : (
+                <>
+                  <SecondaryButton
+                    onClick={() => setAuthModalOpen(true)}
+                    className="shadow-sm hover:shadow-md whitespace-nowrap"
+                  >
+                    <DynamicText 
+                      page="header" 
+                      section="buttons" 
+                      contentKey="login"
+                      fallback="Log in"
+                      as="span"
+                    />
+                  </SecondaryButton>
+                  <PrimaryButton
+                    onClick={() => setModalOpen(true)}
+                    className="shadow-sm hover:shadow-md whitespace-nowrap"
+                  >
+                    <DynamicText 
+                      page="header" 
+                      section="buttons" 
+                      contentKey="requestVolunteers"
+                      fallback="Request Volunteers"
+                      as="span"
+                    />
+                  </PrimaryButton>
+                </>
+              )}
           </div>
         </nav>
 
         {/* Mobile: Auth/CTA + Hamburger */}
         <div className="md:hidden flex items-center gap-2">
           {user ? (
-            <PrimaryButton
-              onClick={() => setModalOpen(true)}
-              className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
-            >
-              <DynamicText 
-                page="header" 
-                section="buttons" 
-                contentKey="requestVolunteers"
-                fallback="Request Volunteers"
-                as="span"
-              />
-            </PrimaryButton>
+            canRequestVolunteers ? (
+              <PrimaryButton
+                onClick={() => setModalOpen(true)}
+                className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
+              >
+                <DynamicText 
+                  page="header" 
+                  section="buttons" 
+                  contentKey="requestVolunteers"
+                  fallback="Request Volunteers"
+                  as="span"
+                />
+              </PrimaryButton>
+            ) : null
           ) : (
             <SecondaryButton
               onClick={() => setAuthModalOpen(true)}

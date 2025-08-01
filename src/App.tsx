@@ -39,37 +39,37 @@ const queryClient = new QueryClient({
 const App = () => (
   <ErrorBoundary>
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <SearchProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+      <BrowserRouter>
+        <AuthProvider>
+          <SearchProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Sonner />
               <ContentProvider>
-              <Routes>
-                <Route path="/" element={<Index />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/organization-login" element={<OrganizationLogin />} />
-                <Route path="/organization-register" element={<OrganizationRegister />} />
-                <Route path="/organization-dashboard" element={<OrganizationDashboard />} />
-                <Route path="/admin" element={<AdminLogin />} />
-                <Route path="/admin/login" element={<AdminLogin />} />
-                <Route path="/admin/dashboard" element={<AdminDashboard />} />
-                <Route path="/admin/test" element={<TestDatabase />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/content-test" element={<ContentTest />} />
-                <Route path="/test-email-verification" element={<TestEmailVerification />} />
-                <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </ContentProvider>
-          </BrowserRouter>
-        </TooltipProvider>
-      </SearchProvider>
-    </AuthProvider>
-  </QueryClientProvider>
-</ErrorBoundary>
+                <Routes>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/organization-login" element={<OrganizationLogin />} />
+                  <Route path="/organization-register" element={<OrganizationRegister />} />
+                  <Route path="/organization-dashboard" element={<OrganizationDashboard />} />
+                  <Route path="/admin" element={<AdminLogin />} />
+                  <Route path="/admin/login" element={<AdminLogin />} />
+                  <Route path="/admin/dashboard" element={<AdminDashboard />} />
+                  <Route path="/admin/test" element={<TestDatabase />} />
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  <Route path="/content-test" element={<ContentTest />} />
+                  <Route path="/test-email-verification" element={<TestEmailVerification />} />
+                  <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
+                  {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </ContentProvider>
+            </TooltipProvider>
+          </SearchProvider>
+        </AuthProvider>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;

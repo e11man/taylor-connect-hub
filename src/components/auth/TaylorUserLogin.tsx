@@ -39,6 +39,7 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
           title: "Welcome back! 👋",
           description: "You have successfully logged in.",
         });
+        // Redirection is now handled automatically in AuthContext
         onClose?.();
       }
     } catch (error) {
