@@ -565,6 +565,7 @@ const DashboardOpportunities = () => {
           setPendingEventId(null);
         }}
         onAccept={handleSafetyAccept}
+        userType="volunteer"
       />
 
       <GroupSignupModal

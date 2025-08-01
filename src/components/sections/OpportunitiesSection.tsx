@@ -447,6 +447,7 @@ const OpportunitiesSection = () => {
           setPendingEventId(null);
         }}
         onAccept={handleSafetyAccept}
+        userType="volunteer"
       />
     </section>
   );

@@ -426,6 +426,7 @@ const GroupSignupModal = ({
         setPendingSubmit(false);
       }}
       onAccept={handleSafetyAccept}
+      userType="volunteer"
     />
     </>
   );

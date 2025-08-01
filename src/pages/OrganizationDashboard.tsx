@@ -708,6 +708,7 @@ const OrganizationDashboard = () => {
           setSafetyGuidelinesModalOpen(false);
         }}
         onAccept={handleSafetyGuidelinesAccept}
+        userType="organization"
       />
       
       <Footer />
