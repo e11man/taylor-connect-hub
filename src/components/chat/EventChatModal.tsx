@@ -15,7 +15,7 @@ interface ChatMessage {
   user_id: string | null;
   organization_id: string | null;
   created_at: string;
-  organizations?: { name: string };
+  organization_name: string | null;
 }
 
 interface EventChatModalProps {
@@ -96,13 +96,7 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
 
   const fetchMessages = async () => {
     const { data, error } = await supabase
-      .from('chat_messages')
-      .select(`
-        *,
-        organizations (name)
-      `)
-      .eq('event_id', eventId)
-      .order('created_at', { ascending: true });
+      .rpc('get_chat_messages', { p_event_id: eventId });
 
     if (error) {
       toast({
@@ -122,20 +116,14 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
     setLoading(true);
     
     try {
-      const messageData: any = {
-        event_id: eventId,
-        message: newMessage.trim(),
-        is_anonymous: !isHost, // Only hosts are not anonymous
-      };
-
-      if (isHost && userOrganization) {
-        messageData.organization_id = userOrganization.id;
-      }
-      // Regular users and anonymous users don't set user_id
-
       const { error } = await supabase
-        .from('chat_messages')
-        .insert(messageData);
+        .rpc('insert_chat_message', {
+          p_event_id: eventId,
+          p_message: newMessage.trim(),
+          p_is_anonymous: !isHost, // Only hosts are not anonymous
+          p_user_id: user?.id || null,
+          p_organization_id: isHost && userOrganization ? userOrganization.id : null
+        });
 
       if (error) throw error;
 
@@ -160,7 +148,7 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
 
   const formatMessageSender = (message: ChatMessage) => {
     if (message.organization_id) {
-      return `${message.organizations?.name || 'Organization'} (Host)`;
+      return `${message.organization_name || 'Organization'} (Host)`;
     } else if (message.is_anonymous || !message.user_id) {
       return 'Anonymous';
     } else {
