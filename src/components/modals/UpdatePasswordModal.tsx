@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { verifyPassword, hashPassword } from '@/utils/password';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 
 interface UpdatePasswordModalProps {
@@ -21,6 +23,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
@@ -68,21 +71,34 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
       return;
     }
 
+    if (!user?.id) {
+      toast({
+        title: "Error",
+        description: "Could not verify current user",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
     try {
-      // First, verify the current password by trying to sign in
-      const { data: currentUser } = await supabase.auth.getUser();
-      if (!currentUser.user?.email) {
-        throw new Error("Could not verify current user");
+      // Step 1: Get the current password hash from the database
+      const { data: currentHashData, error: hashError } = await supabase
+        .rpc('get_user_password_hash', { p_user_id: user.id });
+
+      if (hashError) {
+        toast({
+          title: "Error",
+          description: "Could not verify current user",
+          variant: "destructive",
+        });
+        return;
       }
 
-      // Verify current password
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: currentUser.user.email,
-        password: currentPassword,
-      });
-
-      if (signInError) {
+      // Step 2: Verify the current password on the client side
+      const isCurrentPasswordValid = await verifyPassword(currentPassword, currentHashData);
+      
+      if (!isCurrentPasswordValid) {
         toast({
           title: "Error",
           description: "Current password is incorrect",
@@ -91,15 +107,20 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
         return;
       }
 
-      // Update password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
-      });
+      // Step 3: Hash the new password
+      const newPasswordHash = await hashPassword(newPassword);
+
+      // Step 4: Update the password hash in the database
+      const { error: updateError } = await supabase
+        .rpc('update_user_password_hash', {
+          p_user_id: user.id,
+          p_new_password_hash: newPasswordHash
+        });
 
       if (updateError) {
         toast({
           title: "Error",
-          description: updateError.message,
+          description: "Failed to update password",
           variant: "destructive",
         });
       } else {
