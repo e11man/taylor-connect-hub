@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Loader2, RefreshCw, TrendingUp, Users, Clock, Building2, Edit2, Save, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface StatisticsData {
   recorded: {
@@ -38,6 +39,7 @@ export const Statistics = () => {
   });
   const [isSaving, setIsSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const editingContainerRef = useRef<HTMLDivElement>(null);
 
   const fetchStatistics = async (showRefreshToast = false) => {
     try {
@@ -47,19 +49,53 @@ export const Statistics = () => {
         setIsLoading(true);
       }
 
-      const response = await fetch('/api/statistics');
-      const data = await response.json();
+      // Fetch directly from Supabase
+      const { data, error } = await supabase
+        .from('site_stats')
+        .select('*');
 
-      if (data.success) {
-        setStatistics(data.data);
-        if (showRefreshToast) {
-          toast({
-            title: "Statistics refreshed",
-            description: "Values have been updated from the database",
-          });
-        }
-      } else {
-        throw new Error(data.error || 'Failed to fetch statistics');
+      if (error) throw error;
+
+      // Transform the data into our expected format
+      const statsData: StatisticsData = {
+        recorded: {
+          active_volunteers: 2500,
+          hours_contributed: 5000,
+          partner_organizations: 50,
+        },
+        live: {
+          active_volunteers: 2500,
+          hours_contributed: 5000,
+          partner_organizations: 50,
+        },
+      };
+
+      if (data) {
+        data.forEach(stat => {
+          switch (stat.stat_type) {
+            case 'active_volunteers':
+              statsData.recorded.active_volunteers = stat.confirmed_total;
+              statsData.live.active_volunteers = stat.current_estimate;
+              break;
+            case 'hours_contributed':
+              statsData.recorded.hours_contributed = stat.confirmed_total;
+              statsData.live.hours_contributed = stat.current_estimate;
+              break;
+            case 'partner_organizations':
+              statsData.recorded.partner_organizations = stat.confirmed_total;
+              statsData.live.partner_organizations = stat.current_estimate;
+              break;
+          }
+        });
+      }
+
+      setStatistics(statsData);
+      
+      if (showRefreshToast) {
+        toast({
+          title: "Statistics refreshed",
+          description: "Values have been updated from the database",
+        });
       }
     } catch (error) {
       console.error('Error fetching statistics:', error);
@@ -95,8 +131,29 @@ export const Statistics = () => {
   useEffect(() => {
     // Focus input when editing starts
     if (editingState.statType && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
+      // Use setTimeout to ensure the input is rendered first
+      setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          inputRef.current.select();
+        }
+      }, 0);
+    }
+  }, [editingState.statType, editingState.fieldType]);
+
+  useEffect(() => {
+    // Handle clicks outside to cancel editing
+    const handleClickOutside = (event: MouseEvent) => {
+      if (editingState.statType && editingContainerRef.current && !editingContainerRef.current.contains(event.target as Node)) {
+        cancelEditing();
+      }
+    };
+
+    if (editingState.statType) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
     }
   }, [editingState.statType]);
 
@@ -141,35 +198,45 @@ export const Statistics = () => {
     setIsSaving(true);
 
     try {
-      const response = await fetch('/api/statistics', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          stat_type: editingState.statType,
-          field_type: editingState.fieldType,
-          value: value
-        }),
+      // Update directly in Supabase
+      const updateField = editingState.fieldType === 'confirmed' ? 'confirmed_total' : 'current_estimate';
+      
+      console.log('Updating statistics:', {
+        stat_type: editingState.statType,
+        field: updateField,
+        value: value
       });
 
-      const data = await response.json();
+      const { data, error } = await supabase
+        .from('site_stats')
+        .update({ 
+          [updateField]: value,
+          updated_at: new Date().toISOString()
+        })
+        .eq('stat_type', editingState.statType)
+        .select();
 
-      if (data.success) {
-        setStatistics(data.data);
-        toast({
-          title: "Success",
-          description: "Statistics updated successfully",
-        });
-        cancelEditing();
-      } else {
-        throw new Error(data.error || 'Failed to update statistics');
+      if (error) {
+        console.error('Supabase update error:', error);
+        throw error;
       }
-    } catch (error) {
+
+      console.log('Update successful:', data);
+
+      // Refresh statistics
+      await fetchStatistics();
+      
+      toast({
+        title: "Success",
+        description: "Statistics updated successfully",
+      });
+      
+      cancelEditing();
+    } catch (error: any) {
       console.error('Error updating statistics:', error);
       toast({
         title: "Error",
-        description: "Failed to update statistics. Please try again.",
+        description: error.message || "Failed to update statistics. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -179,10 +246,18 @@ export const Statistics = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       saveValue();
     } else if (e.key === 'Escape') {
+      e.preventDefault();
       cancelEditing();
     }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Only allow digits
+    const value = e.target.value.replace(/[^\d]/g, '');
+    setEditingState(prev => ({ ...prev, value }));
   };
 
   if (isLoading) {
@@ -247,16 +322,19 @@ export const Statistics = () => {
               )}
             </div>
             {isEditingConfirmed ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" ref={editingContainerRef}>
                 <Input
                   ref={inputRef}
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={editingState.value}
-                  onChange={(e) => setEditingState({ ...editingState, value: e.target.value })}
+                  onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   className="h-9 w-32"
-                  min="0"
                   disabled={isSaving}
+                  placeholder="0"
+                  autoComplete="off"
                 />
                 <Button
                   size="sm"
@@ -296,16 +374,19 @@ export const Statistics = () => {
               )}
             </div>
             {isEditingEstimate ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" ref={editingContainerRef}>
                 <Input
                   ref={inputRef}
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={editingState.value}
-                  onChange={(e) => setEditingState({ ...editingState, value: e.target.value })}
+                  onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   className="h-9 w-32"
-                  min="0"
                   disabled={isSaving}
+                  placeholder="0"
+                  autoComplete="off"
                 />
                 <Button
                   size="sm"
