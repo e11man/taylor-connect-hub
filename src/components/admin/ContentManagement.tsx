@@ -123,30 +123,32 @@ export const ContentManagement = () => {
     try {
       console.log('Creating new content:', newContent);
       
-      const { data, error } = await supabase
-        .from('content')
-        .insert([
-          {
-            page: newContent.page,
-            section: newContent.section,
-            key: newContent.key,
-            value: newContent.value,
-            language_code: newContent.language_code,
-          },
-        ])
-        .select();
+      // Use the Python API endpoint
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? '/api/content' 
+        : 'http://localhost:3001/api/content';
+      
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          page: newContent.page,
+          section: newContent.section,
+          key: newContent.key,
+          value: newContent.value,
+          language_code: newContent.language_code,
+        }),
+      });
 
-      if (error) {
-        console.error('ContentManagement: Error creating content:', error);
-        toast({
-          title: 'Error',
-          description: `Failed to create content: ${error.message}`,
-          variant: 'destructive',
-        });
-        return;
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to create content');
       }
 
-      console.log('Create successful, data:', data);
+      console.log('Create successful, data:', result.data);
       
       toast({
         title: 'Success! ✅',
@@ -155,11 +157,11 @@ export const ContentManagement = () => {
       setIsCreateModalOpen(false);
       setNewContent({ page: '', section: '', key: '', value: '', language_code: 'en' });
       await loadContent();
-    } catch (error) {
-      console.error('ContentManagement: Unexpected error creating content:', error);
+    } catch (error: any) {
+      console.error('ContentManagement: Error creating content:', error);
       toast({
         title: 'Error',
-        description: 'Failed to create content. Please try again.',
+        description: `Failed to create content: ${error.message}`,
         variant: 'destructive',
       });
     }
@@ -171,33 +173,45 @@ export const ContentManagement = () => {
     console.log('🔧 UPDATE DEBUG:');
     console.log('- ID:', editingItem.id);
     console.log('- New value:', editingItem.value);
-    console.log('- Supabase URL:', supabase.supabaseUrl);
 
-    const { data, error } = await supabase
-      .from('content')
-      .update({ value: editingItem.value })
-      .eq('id', editingItem.id)
-      .select();
+    try {
+      // Use the Python API endpoint
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? '/api/content' 
+        : 'http://localhost:3001/api/content';
+      
+      const response = await fetch(apiUrl, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: editingItem.id,
+          value: editingItem.value
+        }),
+      });
 
-    console.log('🔧 UPDATE RESULT:');
-    console.log('- Data:', data);
-    console.log('- Error:', error);
+      const result = await response.json();
+      console.log('🔧 UPDATE RESULT:', result);
 
-    if (error) {
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to update content');
+      }
+
+      console.log('✅ UPDATE SUCCESS:', result.data);
+      toast({
+        title: 'Success',
+        description: 'Content updated successfully',
+      });
+      setEditingItem(null);
+      await loadContent();
+    } catch (error: any) {
       console.error('❌ UPDATE FAILED:', error);
       toast({
         title: 'Error',
         description: `Failed to update: ${error.message}`,
         variant: 'destructive',
       });
-    } else {
-      console.log('✅ UPDATE SUCCESS:', data);
-      toast({
-        title: 'Success',
-        description: 'Content updated',
-      });
-      setEditingItem(null);
-      loadContent();
     }
   };
 
@@ -205,34 +219,33 @@ export const ContentManagement = () => {
     try {
       console.log('Deleting content with ID:', id);
       
-      const { data, error } = await supabase
-        .from('content')
-        .delete()
-        .eq('id', id)
-        .select();
+      // Use the Python API endpoint
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? '/api/content' 
+        : 'http://localhost:3001/api/content';
+      
+      const response = await fetch(`${apiUrl}?id=${id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) {
-        console.error('ContentManagement: Error deleting content:', error);
-        toast({
-          title: 'Error',
-          description: `Failed to delete content: ${error.message}`,
-          variant: 'destructive',
-        });
-        return;
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to delete content');
       }
 
-      console.log('Delete successful, data:', data);
+      console.log('Delete successful');
       
       toast({
         title: 'Success! ✅',
         description: 'Content has been deleted successfully',
       });
       await loadContent();
-    } catch (error) {
-      console.error('ContentManagement: Unexpected error deleting content:', error);
+    } catch (error: any) {
+      console.error('ContentManagement: Error deleting content:', error);
       toast({
         title: 'Error',
-        description: 'Failed to delete content. Please try again.',
+        description: `Failed to delete content: ${error.message}`,
         variant: 'destructive',
       });
     }
