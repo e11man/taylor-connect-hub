@@ -10,6 +10,9 @@ import { NotificationPreferences } from "@/components/settings/NotificationPrefe
 import { ChangeDormModal } from "@/components/modals/ChangeDormModal";
 import { UpdatePasswordModal } from "@/components/modals/UpdatePasswordModal";
 import { EventChatModal } from "@/components/chat/EventChatModal";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import DashboardOpportunities from "./DashboardOpportunities";
 
 interface UserEvent {
   id: string;
@@ -37,7 +40,7 @@ const UserDashboard = () => {
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'events' | 'settings'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'opportunities' | 'settings'>('events');
   const [changeDormModalOpen, setChangeDormModalOpen] = useState(false);
   const [updatePasswordModalOpen, setUpdatePasswordModalOpen] = useState(false);
   const [chatModalOpen, setChatModalOpen] = useState(false);
@@ -138,29 +141,35 @@ const UserDashboard = () => {
 
   if (loading) {
     return (
-      <section className="bg-white section-padding">
-        <div className="container-custom">
-          <div className="text-center">
-            <p className="text-xl text-muted-foreground">Loading your dashboard...</p>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <section className="bg-white section-padding">
+          <div className="container-custom">
+            <div className="text-center">
+              <p className="text-xl text-muted-foreground">Loading your dashboard...</p>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+        <Footer />
+      </div>
     );
   }
 
   return (
-    <section className="bg-white section-padding">
+    <div className="min-h-screen bg-background">
+      <Header />
+      <section className="bg-white section-padding">
       <div className="container-custom max-w-4xl">
         {/* Tab Navigation */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-montserrat font-bold mb-4 sm:mb-6 text-primary">
+        <div className="mb-4 sm:mb-6 lg:mb-8">
+          <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-montserrat font-bold mb-3 sm:mb-4 lg:mb-6 text-primary">
             My Dashboard
           </h1>
           
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4">
             <button
               onClick={() => setActiveTab('events')}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all text-sm sm:text-base ${
+              className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all text-xs sm:text-sm lg:text-base ${
                 activeTab === 'events' 
                   ? 'bg-[#00AFCE] text-white' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
@@ -169,14 +178,24 @@ const UserDashboard = () => {
               My Events
             </button>
             <button
+              onClick={() => setActiveTab('opportunities')}
+              className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all text-xs sm:text-sm lg:text-base ${
+                activeTab === 'opportunities' 
+                  ? 'bg-[#00AFCE] text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              Browse Opportunities
+            </button>
+            <button
               onClick={() => setActiveTab('settings')}
-              className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-2 text-sm sm:text-base ${
+              className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm lg:text-base ${
                 activeTab === 'settings' 
                   ? 'bg-[#00AFCE] text-white' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
-              <Settings className="w-4 h-4" />
+              <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
               Settings
             </button>
           </div>
@@ -303,6 +322,8 @@ const UserDashboard = () => {
               )}
             </div>
           </>
+        ) : activeTab === 'opportunities' ? (
+          <DashboardOpportunities />
         ) : (
           <NotificationPreferences />
         )}
@@ -333,7 +354,9 @@ const UserDashboard = () => {
           organizationId="" // We may need to add organization_id to the UserEvent interface and fetch it
         />
       )}
-    </section>
+      </section>
+      <Footer />
+    </div>
   );
 };
 

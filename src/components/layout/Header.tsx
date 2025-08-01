@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, ChevronDown } from "lucide-react";
 import logo from "@/assets/logo.svg";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
@@ -14,6 +14,7 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const { user, signOut } = useAuth();
   const { content: navContent } = useContentSection('header', 'nav');
@@ -30,6 +31,12 @@ const Header = () => {
     { name: navContent.contact || "Contact", href: isHomePage ? "#contact" : "/#contact", isRoute: false }
   ];
 
+  // Add dashboard link for logged-in users
+  const USER_NAV_LINKS = user ? [
+    ...NAV_LINKS,
+    { name: "Dashboard", href: "/dashboard", isRoute: true }
+  ] : NAV_LINKS;
+
   // Lock scroll when mobile nav is open
   useEffect(() => {
     if (mobileOpen) {
@@ -39,6 +46,18 @@ const Header = () => {
     }
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuOpen && !(event.target as Element).closest('.user-menu')) {
+        setUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [userMenuOpen]);
 
   // Trap focus inside mobile nav when open (accessibility)
   useEffect(() => {
@@ -214,6 +233,16 @@ const Header = () => {
                   as="span"
                 />
               </PrimaryButton>
+              <Link
+                to="/dashboard"
+                onClick={() => {
+                  closeMenu();
+                }}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 text-base font-semibold bg-[#00AFCE] text-white hover:bg-[#00AFCE]/90 rounded-xl transition-colors"
+              >
+                <User className="w-4 h-4" />
+                Dashboard
+              </Link>
               <button
                 onClick={() => {
                   closeMenu();
@@ -303,7 +332,7 @@ const Header = () => {
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
           <ul className="flex gap-6">
-            {NAV_LINKS.map(link => (
+            {USER_NAV_LINKS.map(link => (
               <li key={link.href}>
                 {link.isRoute ? (
                   <Link
@@ -326,11 +355,38 @@ const Header = () => {
           <div className="flex items-center gap-3">
             {user ? (
               <>
-                <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg">
-                  <User className="w-4 h-4 text-[#00AFCE]" />
-                  <span className="text-sm font-medium text-gray-700 max-w-32 truncate">
-                    {user.email}
-                  </span>
+                <div className="relative user-menu">
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center gap-2 px-3 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+                  >
+                    <User className="w-4 h-4 text-[#00AFCE]" />
+                    <span className="text-sm font-medium text-gray-700 max-w-32 truncate">
+                      {user.email}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
+                  
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setUserMenuOpen(false)}
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Dashboard
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          signOut();
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
+                      >
+                        Sign Out
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <PrimaryButton
                   onClick={() => setModalOpen(true)}
@@ -344,13 +400,6 @@ const Header = () => {
                     as="span"
                   />
                 </PrimaryButton>
-                <button
-                  onClick={signOut}
-                  className="flex items-center gap-2 px-3 py-2 text-gray-600 hover:text-[#E14F3D] transition-colors"
-                  title="Sign Out"
-                >
-                  <LogOut className="w-4 h-4" />
-                </button>
               </>
             ) : (
               <>
@@ -417,7 +466,7 @@ const Header = () => {
       </div>
       <MobileNav
         isOpen={mobileOpen}
-        navLinks={NAV_LINKS}
+        navLinks={USER_NAV_LINKS}
         closeMenu={() => setMobileOpen(false)}
       />
       <RequestVolunteersModal
