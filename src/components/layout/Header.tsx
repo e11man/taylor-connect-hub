@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { LogOut, User } from "lucide-react";
 import logo from "@/assets/logo.svg";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
+import SecondaryButton from "@/components/buttons/SecondaryButton";
 import RequestVolunteersModal from "@/components/modals/RequestVolunteersModal";
 import UserAuthModal from "@/components/modals/UserAuthModal";
 import { useAuth } from "@/contexts/AuthContext";
@@ -232,7 +233,7 @@ const Header = () => {
             </div>
           ) : (
             <div className="space-y-3">
-              <PrimaryButton
+              <SecondaryButton
                 onClick={() => {
                   closeMenu();
                   setAuthModalOpen(true);
@@ -246,13 +247,13 @@ const Header = () => {
                   fallback="Log in"
                   as="span"
                 />
-              </PrimaryButton>
+              </SecondaryButton>
               <PrimaryButton
                 onClick={() => {
                   closeMenu();
                   setModalOpen(true);
                 }}
-                className="w-full py-3 text-base font-semibold shadow-md hover:shadow-lg rounded-xl bg-[#E14F3D] hover:bg-[#C73E2F]"
+                className="w-full"
               >
                 <DynamicText 
                   page="header" 
@@ -333,10 +334,7 @@ const Header = () => {
                 </div>
                 <PrimaryButton
                   onClick={() => setModalOpen(true)}
-                  className="shadow-sm hover:shadow-md whitespace-nowrap text-white"
-                  style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
-                  onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
-                  onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
+                  className="shadow-sm hover:shadow-md whitespace-nowrap"
                 >
                   <DynamicText 
                     page="header" 
@@ -356,7 +354,7 @@ const Header = () => {
               </>
             ) : (
               <>
-                <PrimaryButton
+                <SecondaryButton
                   onClick={() => setAuthModalOpen(true)}
                   className="shadow-sm hover:shadow-md whitespace-nowrap"
                 >
@@ -367,13 +365,10 @@ const Header = () => {
                     fallback="Log in"
                     as="span"
                   />
-                </PrimaryButton>
+                </SecondaryButton>
                 <PrimaryButton
                   onClick={() => setModalOpen(true)}
-                  className="shadow-sm hover:shadow-md whitespace-nowrap text-white"
-                  style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
-                  onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
-                  onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
+                  className="shadow-sm hover:shadow-md whitespace-nowrap"
                 >
                   <DynamicText 
                     page="header" 
@@ -393,10 +388,7 @@ const Header = () => {
           {user ? (
             <PrimaryButton
               onClick={() => setModalOpen(true)}
-              className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap text-white"
-              style={{backgroundColor: '#E14F3D', borderColor: '#E14F3D'}}
-              onMouseEnter={(e) => {e.currentTarget.style.backgroundColor = '#C73E2F'}}
-              onMouseLeave={(e) => {e.currentTarget.style.backgroundColor = '#E14F3D'}}
+              className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
             >
               <DynamicText 
                 page="header" 
@@ -407,7 +399,7 @@ const Header = () => {
               />
             </PrimaryButton>
           ) : (
-            <PrimaryButton
+            <SecondaryButton
               onClick={() => setAuthModalOpen(true)}
               className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
             >
@@ -418,7 +410,7 @@ const Header = () => {
                 fallback="Log in"
                 as="span"
               />
-            </PrimaryButton>
+            </SecondaryButton>
           )}
           <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
         </div>
