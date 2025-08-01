@@ -779,10 +779,10 @@ const AdminDashboard = () => {
       <main className="section-padding">
         <div className="container-custom">
           {/* Header Section */}
-          <div className="mb-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+          <div className="mb-6 md:mb-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-4 mb-8 md:mb-6">
               <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-2 flex items-center gap-2">
                   Admin Console
                   <Shield className="w-8 h-8 text-[#00AFCE]" />
                 </h1>
@@ -793,7 +793,7 @@ const AdminDashboard = () => {
               <Button 
                 onClick={handleLogout}
                 variant="outline"
-                className="group hover:border-red-500 transition-all"
+                className="group hover:border-red-500 transition-all w-full sm:w-auto"
               >
                 <Shield className="w-4 h-4 mr-2 group-hover:text-red-500 transition-colors" />
                 Exit Admin
@@ -801,12 +801,12 @@ const AdminDashboard = () => {
             </div>
 
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10 md:mb-8">
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("users")}>
-                <CardContent className="p-6">
+                <CardContent className="p-6 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Total Users</p>
+                      <p className="text-sm text-muted-foreground mb-1">Total Users</p>
                       <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
                     </div>
                     <Users className="w-8 h-8 text-[#00AFCE]" />
@@ -815,10 +815,10 @@ const AdminDashboard = () => {
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("pending")}>
-                <CardContent className="p-6">
+                <CardContent className="p-6 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Pending</p>
+                      <p className="text-sm text-muted-foreground mb-1">Pending</p>
                       <p className="text-2xl font-bold text-orange-600">{stats.pendingApprovals}</p>
                     </div>
                     <Clock className="w-8 h-8 text-orange-500" />
@@ -827,10 +827,10 @@ const AdminDashboard = () => {
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("orgs")}>
-                <CardContent className="p-6">
+                <CardContent className="p-6 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Active Orgs</p>
+                      <p className="text-sm text-muted-foreground mb-1">Active Orgs</p>
                       <p className="text-2xl font-bold text-gray-900">{stats.activeOrgs}</p>
                     </div>
                     <Building2 className="w-8 h-8 text-[#00AFCE]" />
@@ -839,10 +839,10 @@ const AdminDashboard = () => {
               </Card>
 
               <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("events")}>
-                <CardContent className="p-6">
+                <CardContent className="p-6 md:p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm text-muted-foreground">Events</p>
+                      <p className="text-sm text-muted-foreground mb-1">Events</p>
                       <p className="text-2xl font-bold text-gray-900">{stats.upcomingEvents}</p>
                     </div>
                     <Calendar className="w-8 h-8 text-[#00AFCE]" />
@@ -853,60 +853,62 @@ const AdminDashboard = () => {
           </div>
 
           {/* Main Content Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6 h-auto p-1 bg-white shadow-sm">
-              <TabsTrigger value="users" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
-                <Users className="w-4 h-4 mr-2" />
-                Users
-              </TabsTrigger>
-              <TabsTrigger value="pending" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
-                <UserCheck className="w-4 h-4 mr-2" />
-                Pending
-              </TabsTrigger>
-              <TabsTrigger value="orgs" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
-                <Building2 className="w-4 h-4 mr-2" />
-                Orgs
-              </TabsTrigger>
-              <TabsTrigger value="events" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
-                <Calendar className="w-4 h-4 mr-2" />
-                Events
-              </TabsTrigger>
-              <TabsTrigger value="statistics" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
-                <BarChart3 className="w-4 h-4 mr-2" />
-                Statistics
-              </TabsTrigger>
-              <TabsTrigger value="content" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3">
-                <Sparkles className="w-4 h-4 mr-2" />
-                Content
-              </TabsTrigger>
-            </TabsList>
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 md:space-y-6">
+            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
+              <TabsList className="inline-flex min-w-full sm:grid sm:w-full sm:grid-cols-6 h-auto p-1 bg-white shadow-sm">
+                <TabsTrigger value="users" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
+                  <Users className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Users</span>
+                </TabsTrigger>
+                <TabsTrigger value="pending" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
+                  <UserCheck className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Pending</span>
+                </TabsTrigger>
+                <TabsTrigger value="orgs" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
+                  <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Orgs</span>
+                </TabsTrigger>
+                <TabsTrigger value="events" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
+                  <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Events</span>
+                </TabsTrigger>
+                <TabsTrigger value="statistics" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
+                  <BarChart3 className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Statistics</span>
+                </TabsTrigger>
+                <TabsTrigger value="content" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
+                  <Sparkles className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span>Content</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* Users Tab */}
             <TabsContent value="users" className="space-y-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="pb-4 md:pb-6">
+                  <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
                     <Users className="w-5 h-5" />
                     User Management
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="mt-2">
                     Manage active users, roles, and permissions
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex gap-4 items-center justify-between">
-                      <div className="flex gap-2 items-center flex-1">
-                        <div className="relative flex-1 max-w-sm">
+                <CardContent className="pt-2">
+                  <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-1 w-full sm:w-auto">
+                        <div className="relative flex-1 w-full sm:max-w-sm">
                           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                           <Input
                             placeholder="Search by email, dorm, or wing..."
                             value={userSearchTerm}
                             onChange={(e) => setUserSearchTerm(e.target.value)}
-                            className="pl-10"
+                            className="pl-10 w-full"
                           />
                         </div>
-                        <Badge variant="secondary" className="px-3 py-1">
+                        <Badge variant="secondary" className="px-3 py-1 whitespace-nowrap">
                           {filteredUsers.length} users
                         </Badge>
                       </div>
@@ -914,7 +916,7 @@ const AdminDashboard = () => {
                         variant="outline"
                         size="sm"
                         onClick={() => fetchUsers()}
-                        className="gap-2"
+                        className="gap-2 w-full sm:w-auto"
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -924,10 +926,10 @@ const AdminDashboard = () => {
                     </div>
 
                     {filteredUsers.length === 0 ? (
-                      <div className="text-center py-12">
+                      <div className="text-center py-16 md:py-12">
                         <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-lg mb-2">No users found</p>
-                        <p className="text-gray-400 text-sm">
+                        <p className="text-gray-400 text-sm px-4">
                           {userSearchTerm ? "Try adjusting your search" : "Users will appear here once they sign up"}
                         </p>
                       </div>
@@ -935,43 +937,50 @@ const AdminDashboard = () => {
                       <div className="space-y-4">
                         {filteredUsers.map((user) => (
                           <Card key={user.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-4 flex-1">
-                                  <Avatar>
+                            <CardContent className="p-4 sm:p-6">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 w-full">
+                                  <Avatar className="flex-shrink-0">
                                     <AvatarFallback className="bg-[#00AFCE] text-white">
                                       {user.email.charAt(0).toUpperCase()}
                                     </AvatarFallback>
                                   </Avatar>
-                                  <div className="flex-1">
-                                    <p className="font-semibold">{user.email}</p>
-                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold truncate">{user.email}</p>
+                                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground mt-1">
                                       {user.profiles?.dorm && (
                                         <span className="flex items-center gap-1">
-                                          <Building className="w-3 h-3" />
-                                          {user.profiles.dorm} {user.profiles.wing && `- Wing ${user.profiles.wing}`}
+                                          <Building className="w-3 h-3 flex-shrink-0" />
+                                          <span className="truncate">{user.profiles.dorm} {user.profiles.wing && `- Wing ${user.profiles.wing}`}</span>
                                         </span>
                                       )}
                                       <span className="flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
-                                        Joined {format(new Date(user.created_at), 'MMM d, yyyy')}
+                                        <Clock className="w-3 h-3 flex-shrink-0" />
+                                        <span className="whitespace-nowrap">Joined {format(new Date(user.created_at), 'MMM d, yyyy')}</span>
                                       </span>
-                                      <Badge 
-                                        variant={user.profiles?.status === 'active' ? 'default' : 
-                                                user.profiles?.status === 'pending' ? 'secondary' : 'destructive'} 
-                                        className="ml-2"
-                                      >
-                                        {user.profiles?.status || 'active'}
-                                      </Badge>
                                     </div>
+                                    <Badge 
+                                      variant={user.profiles?.status === 'active' ? 'default' : 
+                                              user.profiles?.status === 'pending' ? 'secondary' : 'destructive'} 
+                                      className="mt-2 sm:hidden"
+                                    >
+                                      {user.profiles?.status || 'active'}
+                                    </Badge>
                                   </div>
+                                  <Badge 
+                                    variant={user.profiles?.status === 'active' ? 'default' : 
+                                            user.profiles?.status === 'pending' ? 'secondary' : 'destructive'} 
+                                    className="hidden sm:inline-flex"
+                                  >
+                                    {user.profiles?.status || 'active'}
+                                  </Badge>
                                 </div>
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
                                   <Select
                                     value={user.user_roles?.[0]?.role || user.profiles?.role || 'user'}
                                     onValueChange={(value: UserRole) => updateUserRole(user.id, value)}
                                   >
-                                    <SelectTrigger className="w-32">
+                                    <SelectTrigger className="w-full sm:w-32">
                                       <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
@@ -980,21 +989,24 @@ const AdminDashboard = () => {
                                       <SelectItem value="admin">Admin</SelectItem>
                                     </SelectContent>
                                   </Select>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setEditingUser(user)}
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => deleteUser(user.id)}
-                                    className="hover:text-red-600"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </Button>
+                                  <div className="flex gap-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setEditingUser(user)}
+                                      className="h-9 w-9"
+                                    >
+                                      <Edit2 className="w-4 h-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => deleteUser(user.id)}
+                                      className="hover:text-red-600 h-9 w-9"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                             </CardContent>
@@ -1009,21 +1021,21 @@ const AdminDashboard = () => {
 
             {/* Pending Tab */}
             <TabsContent value="pending" className="space-y-6">
-              <div className="space-y-6">
+              <div className="space-y-8">
                 {/* Pending Users */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                  <CardHeader className="pb-4 md:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
                       <UserPlus className="w-5 h-5" />
                       Pending User Approvals
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="mt-2">
                       Review and approve new user registrations
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-2">
                     {pendingUsers.length === 0 ? (
-                      <div className="text-center py-12">
+                      <div className="text-center py-16 md:py-12">
                         <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
                         <p className="text-gray-500 text-lg mb-2">All caught up!</p>
                         <p className="text-gray-400 text-sm">No pending user approvals</p>
@@ -1032,28 +1044,28 @@ const AdminDashboard = () => {
                       <div className="space-y-4">
                         {pendingUsers.map((user) => (
                           <Card key={user.id} className="border-orange-200 bg-orange-50">
-                            <CardContent className="p-6">
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-semibold">{user.email}</p>
-                                  <div className="flex items-center gap-4 text-sm text-muted-foreground mt-1">
+                            <CardContent className="p-4 sm:p-6">
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                <div className="w-full sm:w-auto">
+                                  <p className="font-semibold text-lg">{user.email}</p>
+                                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground mt-2">
                                     {user.profiles?.dorm && (
                                       <span className="flex items-center gap-1">
-                                        <Building className="w-3 h-3" />
-                                        {user.profiles.dorm} {user.profiles.wing && `- ${user.profiles.wing}`}
+                                        <Building className="w-3 h-3 flex-shrink-0" />
+                                        <span>{user.profiles.dorm} {user.profiles.wing && `- ${user.profiles.wing}`}</span>
                                       </span>
                                     )}
                                     <span className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3" />
-                                      Applied {format(new Date(user.created_at), 'MMM d, yyyy')}
+                                      <Clock className="w-3 h-3 flex-shrink-0" />
+                                      <span className="whitespace-nowrap">Applied {format(new Date(user.created_at), 'MMM d, yyyy')}</span>
                                     </span>
                                   </div>
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-3 w-full sm:w-auto">
                                   <Button
                                     size="sm"
                                     onClick={() => approveUser(user.id)}
-                                    className="bg-green-600 hover:bg-green-700"
+                                    className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-initial"
                                   >
                                     <Check className="w-4 h-4 mr-1" />
                                     Approve
@@ -1062,7 +1074,7 @@ const AdminDashboard = () => {
                                     size="sm"
                                     variant="outline"
                                     onClick={() => rejectUser(user.id)}
-                                    className="hover:bg-red-50 hover:text-red-600 hover:border-red-600"
+                                    className="hover:bg-red-50 hover:text-red-600 hover:border-red-600 flex-1 sm:flex-initial"
                                   >
                                     <X className="w-4 h-4 mr-1" />
                                     Reject
@@ -1079,18 +1091,18 @@ const AdminDashboard = () => {
 
                 {/* Pending Organizations */}
                 <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
+                  <CardHeader className="pb-4 md:pb-6">
+                    <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
                       <Building className="w-5 h-5" />
                       Pending Organization Approvals
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="mt-2">
                       Review and approve new organization registrations
                     </CardDescription>
                   </CardHeader>
-                  <CardContent>
+                  <CardContent className="pt-2">
                     {pendingOrganizations.length === 0 ? (
-                      <div className="text-center py-12">
+                      <div className="text-center py-16 md:py-12">
                         <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
                         <p className="text-gray-500 text-lg mb-2">All caught up!</p>
                         <p className="text-gray-400 text-sm">No pending organization approvals</p>
@@ -1099,18 +1111,18 @@ const AdminDashboard = () => {
                       <div className="space-y-4">
                         {pendingOrganizations.map((org) => (
                           <Card key={org.id} className="border-orange-200 bg-orange-50">
-                            <CardContent className="p-6">
+                            <CardContent className="p-4 sm:p-6">
                               <div className="space-y-4">
-                                <div className="flex items-start justify-between">
-                                  <div>
+                                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
+                                  <div className="flex-1">
                                     <h3 className="font-semibold text-lg">{org.name}</h3>
                                     <p className="text-sm text-gray-600 mt-1">{org.description}</p>
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-3 w-full sm:w-auto">
                                     <Button
                                       size="sm"
                                       onClick={() => approveOrganization(org.id)}
-                                      className="bg-green-600 hover:bg-green-700"
+                                      className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-initial"
                                     >
                                       <Check className="w-4 h-4 mr-1" />
                                       Approve
@@ -1119,7 +1131,7 @@ const AdminDashboard = () => {
                                       size="sm"
                                       variant="outline"
                                       onClick={() => rejectOrganization(org.id)}
-                                      className="hover:bg-red-50 hover:text-red-600 hover:border-red-600"
+                                      className="hover:bg-red-50 hover:text-red-600 hover:border-red-600 flex-1 sm:flex-initial"
                                     >
                                       <X className="w-4 h-4 mr-1" />
                                       Reject
@@ -1127,14 +1139,14 @@ const AdminDashboard = () => {
                                   </div>
                                 </div>
                                 <Separator />
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                                   <div className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-gray-400" />
-                                    <span>{org.contact_email}</span>
+                                    <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                    <span className="truncate">{org.contact_email}</span>
                                   </div>
                                   {org.phone && (
                                     <div className="flex items-center gap-2">
-                                      <Phone className="w-4 h-4 text-gray-400" />
+                                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
                                       <span>{org.phone}</span>
                                     </div>
                                   )}
@@ -1161,37 +1173,37 @@ const AdminDashboard = () => {
             {/* Organizations Tab */}
             <TabsContent value="orgs" className="space-y-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="pb-4 md:pb-6">
+                  <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
                     <Building2 className="w-5 h-5" />
                     Organization Management
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="mt-2">
                     View and manage registered organizations
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex gap-4 items-center">
-                      <div className="relative flex-1 max-w-sm">
+                <CardContent className="pt-2">
+                  <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                      <div className="relative flex-1 w-full sm:max-w-sm">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <Input
                           placeholder="Search organizations..."
                           value={orgSearchTerm}
                           onChange={(e) => setOrgSearchTerm(e.target.value)}
-                          className="pl-10"
+                          className="pl-10 w-full"
                         />
                       </div>
-                      <Badge variant="secondary" className="px-3 py-1">
+                      <Badge variant="secondary" className="px-3 py-1 whitespace-nowrap">
                         {filteredOrganizations.length} organizations
                       </Badge>
                     </div>
 
                     {filteredOrganizations.length === 0 ? (
-                      <div className="text-center py-12">
+                      <div className="text-center py-16 md:py-12">
                         <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-lg mb-2">No organizations found</p>
-                        <p className="text-gray-400 text-sm">
+                        <p className="text-gray-400 text-sm px-4">
                           {orgSearchTerm ? "Try adjusting your search" : "Approved organizations will appear here"}
                         </p>
                       </div>
@@ -1199,18 +1211,19 @@ const AdminDashboard = () => {
                       <div className="space-y-4">
                         {filteredOrganizations.map((org) => (
                           <Card key={org.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
+                            <CardContent className="p-4 sm:p-6">
                               <div className="space-y-4">
-                                <div className="flex items-start justify-between">
+                                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                                   <div className="flex-1">
                                     <h3 className="font-semibold text-lg">{org.name}</h3>
                                     <p className="text-sm text-gray-600 mt-1">{org.description}</p>
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-1">
                                     <Button
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => setEditingOrg(org)}
+                                      className="h-9 w-9"
                                     >
                                       <Edit2 className="w-4 h-4" />
                                     </Button>
@@ -1218,27 +1231,27 @@ const AdminDashboard = () => {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => deleteOrganization(org.id)}
-                                      className="hover:text-red-600"
+                                      className="hover:text-red-600 h-9 w-9"
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                                   <div className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-gray-400" />
-                                    <span>{org.contact_email}</span>
+                                    <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                    <span className="truncate">{org.contact_email}</span>
                                   </div>
                                   {org.phone && (
                                     <div className="flex items-center gap-2">
-                                      <Phone className="w-4 h-4 text-gray-400" />
+                                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
                                       <span>{org.phone}</span>
                                     </div>
                                   )}
                                   {org.website && (
                                     <div className="flex items-center gap-2">
-                                      <Globe className="w-4 h-4 text-gray-400" />
-                                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                                      <Globe className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-[#00AFCE] hover:underline truncate">
                                         Website
                                       </a>
                                     </div>
@@ -1263,37 +1276,37 @@ const AdminDashboard = () => {
             {/* Events Tab */}
             <TabsContent value="events" className="space-y-6">
               <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="pb-4 md:pb-6">
+                  <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
                     <Calendar className="w-5 h-5" />
                     Event Management
                   </CardTitle>
-                  <CardDescription>
+                  <CardDescription className="mt-2">
                     View and manage upcoming events
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex gap-4 items-center">
-                      <div className="relative flex-1 max-w-sm">
+                <CardContent className="pt-2">
+                  <div className="space-y-6">
+                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
+                      <div className="relative flex-1 w-full sm:max-w-sm">
                         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <Input
                           placeholder="Search events..."
                           value={eventSearchTerm}
                           onChange={(e) => setEventSearchTerm(e.target.value)}
-                          className="pl-10"
+                          className="pl-10 w-full"
                         />
                       </div>
-                      <Badge variant="secondary" className="px-3 py-1">
+                      <Badge variant="secondary" className="px-3 py-1 whitespace-nowrap">
                         {filteredEvents.length} events
                       </Badge>
                     </div>
 
                     {filteredEvents.length === 0 ? (
-                      <div className="text-center py-12">
+                      <div className="text-center py-16 md:py-12">
                         <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
                         <p className="text-gray-500 text-lg mb-2">No events found</p>
-                        <p className="text-gray-400 text-sm">
+                        <p className="text-gray-400 text-sm px-4">
                           {eventSearchTerm ? "Try adjusting your search" : "Events will appear here once created"}
                         </p>
                       </div>
@@ -1301,18 +1314,19 @@ const AdminDashboard = () => {
                       <div className="space-y-4">
                         {filteredEvents.map((event) => (
                           <Card key={event.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-6">
+                            <CardContent className="p-4 sm:p-6">
                               <div className="space-y-4">
-                                <div className="flex items-start justify-between">
+                                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                                   <div className="flex-1">
                                     <h3 className="font-semibold text-lg">{event.title}</h3>
                                     <p className="text-sm text-gray-600 mt-1">{event.description}</p>
                                   </div>
-                                  <div className="flex gap-2">
+                                  <div className="flex gap-1">
                                     <Button
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => setEditingEvent(event)}
+                                      className="h-9 w-9"
                                     >
                                       <Edit2 className="w-4 h-4" />
                                     </Button>
@@ -1320,33 +1334,33 @@ const AdminDashboard = () => {
                                       variant="ghost"
                                       size="icon"
                                       onClick={() => deleteEvent(event.id)}
-                                      className="hover:text-red-600"
+                                      className="hover:text-red-600 h-9 w-9"
                                     >
                                       <Trash2 className="w-4 h-4" />
                                     </Button>
                                   </div>
                                 </div>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
                                   <div className="flex items-center gap-2">
-                                    <CalendarDays className="w-4 h-4 text-gray-400" />
+                                    <CalendarDays className="w-4 h-4 text-gray-400 flex-shrink-0" />
                                     <span>{format(new Date(event.date), 'MMM d, yyyy')}</span>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-gray-400" />
-                                    <span>{formatEventTimeRange(event.arrival_time, event.estimated_end_time)}</span>
+                                    <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                    <span className="truncate">{formatEventTimeRange(event.arrival_time, event.estimated_end_time)}</span>
                                   </div>
                                   {event.location && (
                                     <div className="flex items-center gap-2">
-                                      <MapPin className="w-4 h-4 text-gray-400" />
-                                      <span>{event.location}</span>
+                                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                      <span className="truncate">{event.location}</span>
                                     </div>
                                   )}
                                   <div className="flex items-center gap-2">
-                                    <Building2 className="w-4 h-4 text-gray-400" />
-                                    <span>{event.organizations?.name || 'No organization'}</span>
+                                    <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                                    <span className="truncate">{event.organizations?.name || 'No organization'}</span>
                                   </div>
                                 </div>
-                                <div className="flex items-center gap-4 text-sm">
+                                <div className="flex flex-wrap items-center gap-3 text-sm mt-3">
                                   <Badge variant="secondary">
                                     {event.participants || 0} / {event.max_participants || '∞'} participants
                                   </Badge>
