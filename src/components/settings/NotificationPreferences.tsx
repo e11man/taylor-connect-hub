@@ -38,20 +38,18 @@ export const NotificationPreferences = () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('notification_preferences')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
+        .rpc('get_notification_preferences', { p_user_id: user.id });
 
       if (error && error.code !== 'PGRST116') { // PGRST116 means no rows found
         throw error;
       }
 
-      if (data) {
+      if (data && data.length > 0) {
+        const userPreferences = data[0];
         setPreferences({
-          email_frequency: data.email_frequency as any,
-          chat_notifications: data.chat_notifications,
-          event_updates: data.event_updates,
+          email_frequency: userPreferences.email_frequency as any,
+          chat_notifications: userPreferences.chat_notifications,
+          event_updates: userPreferences.event_updates,
         });
       }
     } catch (error) {
@@ -72,10 +70,11 @@ export const NotificationPreferences = () => {
     setSaving(true);
     try {
       const { error } = await supabase
-        .from('notification_preferences')
-        .upsert({
-          user_id: user.id,
-          ...preferences,
+        .rpc('upsert_notification_preferences', {
+          p_user_id: user.id,
+          p_email_frequency: preferences.email_frequency,
+          p_chat_notifications: preferences.chat_notifications,
+          p_event_updates: preferences.event_updates,
         });
 
       if (error) throw error;
