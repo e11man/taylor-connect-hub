@@ -343,18 +343,22 @@ export const useContentAdmin = () => {
   ) => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('content')
-        .insert({
+      const response = await fetch('http://localhost:3001/api/content', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           page,
           section,
           key,
           value,
           language_code: languageCode
-        });
+        }),
+      });
 
-      if (error) throw error;
-      return { success: true };
+      const result = await response.json();
+      return result;
     } catch (error) {
       console.error('Error creating content:', error);
       return { success: false, error };
@@ -369,13 +373,19 @@ export const useContentAdmin = () => {
   ) => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('content')
-        .update({ value })
-        .eq('id', id);
+      const response = await fetch('http://localhost:3001/api/content', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id,
+          value
+        }),
+      });
 
-      if (error) throw error;
-      return { success: true };
+      const result = await response.json();
+      return result;
     } catch (error) {
       console.error('Error updating content:', error);
       return { success: false, error };
@@ -387,13 +397,12 @@ export const useContentAdmin = () => {
   const deleteContent = useCallback(async (id: string) => {
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('content')
-        .delete()
-        .eq('id', id);
+      const response = await fetch(`http://localhost:3001/api/content?id=${id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) throw error;
-      return { success: true };
+      const result = await response.json();
+      return result;
     } catch (error) {
       console.error('Error deleting content:', error);
       return { success: false, error };
@@ -405,16 +414,19 @@ export const useContentAdmin = () => {
   const getAllContent = useCallback(async (languageCode: string = 'en') => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('content')
-        .select('*')
-        .eq('language_code', languageCode)
-        .order('page')
-        .order('section')
-        .order('key');
-
-      if (error) throw error;
-      return { success: true, data };
+      const response = await fetch('http://localhost:3001/api/content');
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        // Filter by language code if needed
+        const filteredData = languageCode === 'en' 
+          ? result.data 
+          : result.data.filter((item: any) => item.language_code === languageCode);
+        
+        return { success: true, data: filteredData };
+      }
+      
+      return result;
     } catch (error) {
       console.error('Error fetching content:', error);
       return { success: false, error };

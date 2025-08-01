@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Shield, Lock, Mail } from 'lucide-react';
-import { loginUser } from '@/utils/directAuth';
+import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -15,6 +15,7 @@ import { useContent } from '@/hooks/useContent';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
+  const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -35,8 +36,8 @@ const AdminLogin = () => {
     setError('');
 
     try {
-      // Use direct authentication
-      const result = await loginUser(email, password);
+      // Use AuthContext's signIn function
+      const result = await signIn(email, password);
       
       if (result.error) {
         throw new Error(result.error.message);
@@ -52,19 +53,14 @@ const AdminLogin = () => {
         throw new Error('Account not active. Please contact support.');
       }
 
-      // Store the session in localStorage (same as AuthContext)
-      if (result.data?.session?.access_token) {
-        localStorage.setItem('user_session', JSON.stringify(result.data.session));
-      }
-
       // If we got here, user is authenticated and authorized
       toast({
         title: successMessage,
         description: successDescription,
       });
       
-      // Force a page reload to ensure AuthContext picks up the new session
-      window.location.href = '/admin/dashboard';
+      // Navigate to admin dashboard
+      navigate('/admin/dashboard');
     } catch (error: any) {
       console.error('Admin login error:', error);
       

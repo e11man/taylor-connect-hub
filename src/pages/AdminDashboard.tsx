@@ -98,7 +98,7 @@ interface Event {
 }
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -132,8 +132,11 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
+    // Don't check admin access while still loading
+    if (loading) return;
+    
     checkAdminAccess();
-  }, [user]);
+  }, [user, loading]);
 
   useEffect(() => {
     if (isAdmin) {
@@ -718,7 +721,7 @@ const AdminDashboard = () => {
     event.organizations?.name.toLowerCase().includes(eventSearchTerm.toLowerCase())
   );
 
-  if (isLoading) {
+  if (loading || isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] to-white">
         <Header />
@@ -728,7 +731,9 @@ const AdminDashboard = () => {
               <div className="w-16 h-16 border-4 border-[#00AFCE] border-t-transparent rounded-full animate-spin mx-auto"></div>
               <Sparkles className="w-6 h-6 text-[#00AFCE] absolute top-0 right-0 animate-pulse" />
             </div>
-            <p className="text-muted-foreground animate-pulse">Loading admin dashboard...</p>
+            <p className="text-muted-foreground animate-pulse">
+              {loading ? 'Checking authentication...' : 'Loading admin dashboard...'}
+            </p>
           </div>
         </div>
         <Footer />

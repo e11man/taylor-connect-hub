@@ -3,11 +3,17 @@ import cors from 'cors';
 import { spawn } from 'child_process';
 import dotenv from 'dotenv';
 import path from 'path';
+import { createClient } from '@supabase/supabase-js';
 
 dotenv.config();
 
 const app = express();
 const port = 3001;
+
+// Supabase client for content management
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Middleware
 app.use(cors());
@@ -89,6 +95,90 @@ app.post('/api/send-verification-code', async (req, res) => {
   } catch (error) {
     console.error('Server error:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Content management API routes
+app.get('/api/content', async (req, res) => {
+  try {
+    const { data: content, error } = await supabase
+      .from('content')
+      .select('*')
+      .order('page')
+      .order('section')
+      .order('key');
+
+    if (error) throw error;
+    res.json({ success: true, data: content });
+  } catch (error) {
+    console.error('Error fetching content:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/content', async (req, res) => {
+  try {
+    const { page, section, key, value, language_code = 'en' } = req.body;
+    
+    if (!page || !section || !key || !value) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    const { data: newContent, error } = await supabase
+      .from('content')
+      .insert({ page, section, key, value, language_code })
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.status(201).json({ success: true, data: newContent });
+  } catch (error) {
+    console.error('Error creating content:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/content', async (req, res) => {
+  try {
+    const { id, value: updateValue } = req.body;
+    
+    if (!id || !updateValue) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    const { data: updatedContent, error } = await supabase
+      .from('content')
+      .update({ value: updateValue })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    res.json({ success: true, data: updatedContent });
+  } catch (error) {
+    console.error('Error updating content:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/content', async (req, res) => {
+  try {
+    const { id } = req.query;
+    
+    if (!id) {
+      return res.status(400).json({ success: false, error: 'Missing content ID' });
+    }
+
+    const { error } = await supabase
+      .from('content')
+      .delete()
+      .eq('id', id);
+
+    if (error) throw error;
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting content:', error);
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 

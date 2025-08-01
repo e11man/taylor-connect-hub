@@ -76,8 +76,8 @@ For the admin user:
 
 ## 🔧 Files Modified
 
-- `src/pages/AdminLogin.tsx` - Fixed the role check path, added status validation, removed hardcoded test credentials, and fixed session storage
-- `src/pages/AdminDashboard.tsx` - Updated admin access check to use profiles table instead of user_roles table
+- `src/pages/AdminLogin.tsx` - Fixed the role check path, added status validation, removed hardcoded test credentials, and integrated with AuthContext
+- `src/pages/AdminDashboard.tsx` - Updated admin access check to use profiles table instead of user_roles table, added loading state checks
 
 ## 🎯 Complete Fix Summary
 
@@ -88,13 +88,15 @@ For the admin user:
 - Removed the special case for `admin@taylor.edu` / `admin123`
 - Now uses actual user authentication from the database
 
-### 3. **Fixed Session Storage**
-- Added proper localStorage session storage to match AuthContext
-- Changed from `navigate()` to `window.location.href` to force page reload
+### 3. **Integrated with AuthContext**
+- Now uses AuthContext's `signIn` function instead of direct `loginUser` call
+- Properly sets session state in AuthContext for consistent state management
+- Uses `navigate()` instead of `window.location.href` for proper React Router navigation
 
 ### 4. **Fixed Admin Dashboard Access Check**
 - Updated to check admin role in `profiles` table instead of `user_roles` table
 - Added status validation to ensure user is active
+- Added loading state checks to prevent premature redirects during authentication
 
 ---
 
