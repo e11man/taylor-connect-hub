@@ -241,6 +241,7 @@ const GroupSignupModal = ({
         // Don't fail the entire operation if emails fail
       }
 
+      const totalSignups = selectedUsers.size + (includeMyself ? 1 : 0);
       toast({
         title: "Success!",
         description: `Successfully signed up ${totalSignups} ${totalSignups === 1 ? 'person' : 'people'} for "${eventTitle}". Confirmation emails have been sent.`,

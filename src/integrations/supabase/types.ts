@@ -289,10 +289,13 @@ export type Database = {
           dorm: string | null
           email: string
           id: string
+          password_hash: string | null
           role: Database["public"]["Enums"]["user_role"]
           status: string
           updated_at: string
-          user_id: string
+          user_id: string | null
+          user_type: string | null
+          verification_code: string | null
           wing: string | null
         }
         Insert: {
@@ -300,10 +303,13 @@ export type Database = {
           dorm?: string | null
           email: string
           id?: string
+          password_hash?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
+          user_type?: string | null
+          verification_code?: string | null
           wing?: string | null
         }
         Update: {
@@ -311,11 +317,44 @@ export type Database = {
           dorm?: string | null
           email?: string
           id?: string
+          password_hash?: string | null
           role?: Database["public"]["Enums"]["user_role"]
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
+          user_type?: string | null
+          verification_code?: string | null
           wing?: string | null
+        }
+        Relationships: []
+      }
+      statistics: {
+        Row: {
+          base_value: number
+          created_at: string
+          description: string | null
+          id: string
+          key: string
+          live_value: number
+          updated_at: string
+        }
+        Insert: {
+          base_value?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          key: string
+          live_value?: number
+          updated_at?: string
+        }
+        Update: {
+          base_value?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          key?: string
+          live_value?: number
+          updated_at?: string
         }
         Relationships: []
       }
@@ -375,33 +414,6 @@ export type Database = {
         }
         Relationships: []
       }
-      site_stats: {
-        Row: {
-          id: string
-          stat_type: string
-          confirmed_total: number
-          current_estimate: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          stat_type: string
-          confirmed_total?: number
-          current_estimate?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          stat_type?: string
-          confirmed_total?: number
-          current_estimate?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
@@ -415,12 +427,30 @@ export type Database = {
         Args: { user_id: string }
         Returns: undefined
       }
+      get_combined_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          key: string
+          base_value: number
+          live_value: number
+          total_value: number
+          description: string
+        }[]
+      }
       is_admin: {
         Args: { user_id: string }
         Returns: boolean
       }
       is_pa: {
         Args: { user_id: string }
+        Returns: boolean
+      }
+      update_statistic_base_value: {
+        Args: { stat_key: string; new_base_value: number }
+        Returns: boolean
+      }
+      update_statistic_live_value: {
+        Args: { stat_key: string; new_live_value: number }
         Returns: boolean
       }
     }

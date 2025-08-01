@@ -6,6 +6,7 @@ import SecondaryButton from "@/components/buttons/SecondaryButton";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from "@/hooks/useUserRole";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import GroupSignupModal from "@/components/modals/GroupSignupModal";
 import UserAuthModal from "@/components/modals/UserAuthModal";
@@ -44,10 +45,9 @@ const OpportunitiesSection = () => {
   const [safetyModalOpen, setSafetyModalOpen] = useState(false);
   const [pendingEventId, setPendingEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [userRole, setUserRole] = useState<UserRole>(null);
-  const [userRoleLoading, setUserRoleLoading] = useState(false);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
   const { user, refreshUserEvents, userEventsRefreshTrigger, eventsRefreshTrigger } = useAuth();
+  const { userRole, loading: userRoleLoading, isPA } = useUserRole();
   const { toast } = useToast();
 
   // Use filtered events from search context when available, otherwise show all events
@@ -58,68 +58,9 @@ const OpportunitiesSection = () => {
     fetchEventSignupCounts();
     if (user) {
       fetchUserEvents();
-      fetchUserRole();
-      // Debug: Test different queries
-      debugUserRoleQueries();
     }
   }, [user, userEventsRefreshTrigger, eventsRefreshTrigger]);
 
-  // Temporary debug function
-  const debugUserRoleQueries = async () => {
-    if (!user) return;
-    
-    console.log('=== DEBUG: Testing user_roles queries ===');
-    
-    // Test 1: Get all records from user_roles
-    try {
-      const { data: allRoles, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .limit(5);
-      
-      console.log('All user_roles records (first 5):', allRoles, error);
-    } catch (err) {
-      console.error('Error fetching all roles:', err);
-    }
-    
-    // Test 2: Try to find current user by user_id
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('user_id', user.id);
-      
-      console.log('Query by user_id:', data, error);
-    } catch (err) {
-      console.error('Error with user_id query:', err);
-    }
-    
-    // Test 3: Try to find current user by id
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .eq('id', user.id);
-      
-      console.log('Query by id:', data, error);
-    } catch (err) {
-      console.error('Error with id query:', err);
-    }
-    
-    // Test 4: Get column info
-    try {
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('*')
-        .limit(1);
-      
-      if (data && data.length > 0) {
-        console.log('user_roles table columns:', Object.keys(data[0]));
-      }
-    } catch (err) {
-      console.error('Error getting columns:', err);
-    }
-  };
 
   const fetchEvents = async () => {
     try {
@@ -159,36 +100,6 @@ const OpportunitiesSection = () => {
     }
   };
 
-  const fetchUserRole = async () => {
-    if (!user || userRoleLoading || userRole !== null) return;
-    
-    setUserRoleLoading(true);
-    try {
-      console.log('Fetching user role for user:', user.id);
-      
-      const { data, error } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error fetching user role:', error);
-        setUserRole('');
-      } else if (data) {
-        console.log('User role fetched:', data.role);
-        setUserRole((data.role?.toLowerCase().trim() as UserRole) || '');
-      } else {
-        console.log('No user role found for user');
-        setUserRole('');
-      }
-    } catch (error) {
-      console.error('Error fetching user role:', error);
-      setUserRole('');
-    } finally {
-      setUserRoleLoading(false);
-    }
-  };
 
   const fetchEventSignupCounts = async () => {
     try {
@@ -409,8 +320,19 @@ const OpportunitiesSection = () => {
 
                   {/* Show buttons based on user role and signup status */}
                   {(() => {
-                    const isPAUser = user && userRole === 'pa';
+                    const isPAUser = user && isPA;
                     const userSignedUp = isSignedUp(event.id);
+                    
+                    // Debug log for PA detection
+                    if (user) {
+                      console.log('🔍 PA Detection:', {
+                        userId: user.id,
+                        userRole,
+                        isPA,
+                        isPAUser,
+                        userRoleLoading
+                      });
+                    }
                     
                     // For PA users
                     if (isPAUser) {
