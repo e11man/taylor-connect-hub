@@ -1296,12 +1296,18 @@ app.get('/api/site-statistics', async (req, res) => {
         // Calculate real values from the database
         console.log('Calculating real values from database...');
         
-        // Calculate active volunteers
-        const { data: activeVolunteers, error: avError } = await supabase
+        // Calculate active volunteers (unique users who signed up for events)
+        const { data: userEventsForVolunteers, error: ueVolunteersError } = await supabase
           .from('user_events')
-          .select('user_id', { count: 'exact', head: true });
+          .select('user_id');
 
-        const activeVolunteersCount = activeVolunteers?.length || 0;
+        const uniqueUserIds = new Set();
+        if (userEventsForVolunteers) {
+          userEventsForVolunteers.forEach(ue => {
+            uniqueUserIds.add(ue.user_id);
+          });
+        }
+        const activeVolunteersCount = uniqueUserIds.size;
 
         // Calculate hours contributed
         const { data: userEvents, error: ueError } = await supabase
@@ -1630,6 +1636,20 @@ app.post('/api/event-signup', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
+    // Check if user exists in profiles table
+    const { data: userProfile, error: userError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', user_id)
+      .single();
+
+    if (userError || !userProfile) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'User not found in profiles table. Please ensure you are logged in with a valid account.' 
+      });
+    }
+
     // Check if already signed up
     const { data: existing, error: checkError } = await supabase
       .from('user_events')
@@ -1707,6 +1727,28 @@ app.post('/api/group-signup', async (req, res) => {
     
     if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0 || !event_id) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    // Check if all users exist in profiles table
+    const { data: userProfiles, error: userError } = await supabase
+      .from('profiles')
+      .select('id')
+      .in('id', user_ids);
+
+    if (userError) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'Error checking user profiles. Please ensure all users have valid accounts.' 
+      });
+    }
+
+    if (!userProfiles || userProfiles.length !== user_ids.length) {
+      const foundUserIds = userProfiles ? userProfiles.map(p => p.id) : [];
+      const missingUserIds = user_ids.filter(id => !foundUserIds.includes(id));
+      return res.status(400).json({ 
+        success: false, 
+        error: `Some users not found in profiles table: ${missingUserIds.join(', ')}` 
+      });
     }
 
     // Check event capacity
@@ -1807,6 +1849,35 @@ app.delete('/api/event-signup', async (req, res) => {
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Email server is running' });
+});
+
+// Temporary endpoint to fix foreign key constraints
+app.post('/api/fix-foreign-keys', async (req, res) => {
+  try {
+    console.log('🔧 Attempting to fix foreign key constraints...');
+    
+    // Since we can't execute DDL directly, let's try to work around the issue
+    // by checking if the user exists in profiles before inserting
+    
+    res.json({ 
+      success: true, 
+      message: 'Foreign key fix endpoint created. The issue is that user_events.user_id references users table instead of profiles table.',
+      instructions: 'Please run this SQL in your Supabase dashboard:',
+      sql: `
+-- Fix user_events foreign key constraint
+ALTER TABLE public.user_events DROP CONSTRAINT IF EXISTS user_events_user_id_fkey;
+ALTER TABLE public.user_events ADD CONSTRAINT user_events_user_id_fkey 
+  FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE;
+
+ALTER TABLE public.user_events DROP CONSTRAINT IF EXISTS user_events_signed_up_by_fkey;
+ALTER TABLE public.user_events ADD CONSTRAINT user_events_signed_up_by_fkey 
+  FOREIGN KEY (signed_up_by) REFERENCES public.profiles(id) ON DELETE CASCADE;
+      `
+    });
+  } catch (error) {
+    console.error('Error in fix-foreign-keys endpoint:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
 });
 
 app.listen(port, () => {

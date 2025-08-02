@@ -5,6 +5,7 @@ Handles automatic calculation and manual override of site statistics
 
 import os
 import json
+import datetime
 from http.server import BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from supabase import create_client, Client
@@ -31,21 +32,8 @@ class handler(BaseHTTPRequestHandler):
     def do_GET(self):
         """Get all site statistics with calculated and manual values"""
         try:
-            # Get all statistics using the database function
-            response = supabase.rpc('get_all_site_statistics').execute()
-            
-            if response.error:
-                raise Exception(f"Database error: {response.error}")
-            
-            # Format the data for frontend consumption
-            stats_data = {}
-            for stat in response.data:
-                stats_data[stat['stat_type']] = {
-                    'calculated_value': stat['calculated_value'],
-                    'manual_override': stat['manual_override'],
-                    'display_value': stat['display_value'],
-                    'last_calculated_at': stat['last_calculated_at']
-                }
+            # Calculate statistics directly from database tables
+            stats_data = self.calculate_statistics()
             
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')
@@ -61,30 +49,101 @@ class handler(BaseHTTPRequestHandler):
         except Exception as e:
             self.send_error_response(500, str(e))
     
+    def calculate_statistics(self):
+        """Calculate statistics directly from database tables"""
+        print("DEBUG: calculate_statistics function called!")
+        try:
+            # Calculate active volunteers (unique users who signed up for events)
+            user_events_response = supabase.table('user_events').select('user_id').execute()
+            print(f"Debug: user_events_response.data = {user_events_response.data}")
+            print(f"Debug: user_events_response.error = {user_events_response.error}")
+            unique_user_ids = set()
+            if user_events_response.data:
+                unique_user_ids = set(event['user_id'] for event in user_events_response.data)
+            active_volunteers = len(unique_user_ids)
+            print(f"Debug: unique_user_ids = {unique_user_ids}")
+            print(f"Debug: active_volunteers = {active_volunteers}")
+            
+            # Calculate hours contributed
+            hours_contributed = 0
+            if user_events_response.data:
+                # Get event details for hours calculation
+                event_ids = list(set(event['event_id'] for event in user_events_response.data))
+                if event_ids:
+                    events_response = supabase.table('events').select('arrival_time, estimated_end_time').in_('id', event_ids).execute()
+                    if events_response.data:
+                        for event in events_response.data:
+                            if event['arrival_time'] and event['estimated_end_time']:
+                                # Calculate hours between arrival and estimated end time
+                                arrival = datetime.datetime.fromisoformat(event['arrival_time'].replace('Z', '+00:00'))
+                                end = datetime.datetime.fromisoformat(event['estimated_end_time'].replace('Z', '+00:00'))
+                                hours = max(1, int((end - arrival).total_seconds() / 3600))
+                                hours_contributed += hours
+                            else:
+                                # Default 2 hours if no time specified
+                                hours_contributed += 2
+            
+            # Calculate partner organizations (unique organizations with events)
+            events_response = supabase.table('events').select('organization_id').execute()
+            unique_org_ids = set()
+            if events_response.data:
+                unique_org_ids = set(event['organization_id'] for event in events_response.data if event['organization_id'])
+            partner_organizations = len(unique_org_ids)
+            
+            # Return formatted statistics
+            result = {
+                'active_volunteers': {
+                    'calculated_value': active_volunteers,
+                    'manual_override': None,
+                    'display_value': active_volunteers,
+                    'last_calculated_at': datetime.datetime.now().isoformat()
+                },
+                'hours_contributed': {
+                    'calculated_value': hours_contributed,
+                    'manual_override': None,
+                    'display_value': hours_contributed,
+                    'last_calculated_at': datetime.datetime.now().isoformat()
+                },
+                'partner_organizations': {
+                    'calculated_value': partner_organizations,
+                    'manual_override': None,
+                    'display_value': partner_organizations,
+                    'last_calculated_at': datetime.datetime.now().isoformat()
+                }
+            }
+            
+            print(f"Debug: Final result = {result}")
+            return result
+            
+        except Exception as e:
+            print(f"Error calculating statistics: {str(e)}")
+            # Return zeros on error
+            return {
+                'active_volunteers': {
+                    'calculated_value': 0,
+                    'manual_override': None,
+                    'display_value': 0,
+                    'last_calculated_at': datetime.datetime.now().isoformat()
+                },
+                'hours_contributed': {
+                    'calculated_value': 0,
+                    'manual_override': None,
+                    'display_value': 0,
+                    'last_calculated_at': datetime.datetime.now().isoformat()
+                },
+                'partner_organizations': {
+                    'calculated_value': 0,
+                    'manual_override': None,
+                    'display_value': 0,
+                    'last_calculated_at': datetime.datetime.now().isoformat()
+                }
+            }
+    
     def do_POST(self):
         """Recalculate all statistics"""
         try:
-            # Trigger recalculation of all statistics
-            response = supabase.rpc('update_site_statistics').execute()
-            
-            if response.error:
-                raise Exception(f"Database error: {response.error}")
-            
-            # Get updated statistics
-            stats_response = supabase.rpc('get_all_site_statistics').execute()
-            
-            if stats_response.error:
-                raise Exception(f"Database error: {stats_response.error}")
-            
-            # Format the data
-            stats_data = {}
-            for stat in stats_response.data:
-                stats_data[stat['stat_type']] = {
-                    'calculated_value': stat['calculated_value'],
-                    'manual_override': stat['manual_override'],
-                    'display_value': stat['display_value'],
-                    'last_calculated_at': stat['last_calculated_at']
-                }
+            # Calculate statistics directly from database tables
+            stats_data = self.calculate_statistics()
             
             self.send_response(200)
             self.send_header('Content-Type', 'application/json')

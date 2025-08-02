@@ -11,19 +11,19 @@ const ImpactSection = () => {
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: siteStats?.active_volunteers?.display_value?.toLocaleString() || "2,500+",
+      value: siteStats?.active_volunteers?.display_value?.toLocaleString() || "0",
       description: aboutImpactContent.volunteers_description || "Passionate individuals serving Upland"
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: siteStats?.hours_contributed?.display_value?.toLocaleString() || "15,000+",
+      value: siteStats?.hours_contributed?.display_value?.toLocaleString() || "0",
       description: aboutImpactContent.hours_description || "Collective time dedicated to service"
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: siteStats?.partner_organizations?.display_value?.toLocaleString() || "50+",
+      value: siteStats?.partner_organizations?.display_value?.toLocaleString() || "0",
       description: aboutImpactContent.organizations_description || "Local organizations making a difference"
     }
   ];

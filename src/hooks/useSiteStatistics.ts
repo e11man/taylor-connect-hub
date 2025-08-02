@@ -51,19 +51,19 @@ export const useSiteStatistics = () => {
         active_volunteers: {
           calculated_value: 0,
           manual_override: null,
-          display_value: 2500,
+          display_value: 0,
           last_calculated_at: new Date().toISOString()
         },
         hours_contributed: {
           calculated_value: 0,
           manual_override: null,
-          display_value: 15000,
+          display_value: 0,
           last_calculated_at: new Date().toISOString()
         },
         partner_organizations: {
           calculated_value: 0,
           manual_override: null,
-          display_value: 50,
+          display_value: 0,
           last_calculated_at: new Date().toISOString()
         }
       });
