@@ -8,12 +8,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Calendar, Clock, TrendingUp } from 'lucide-react';
+import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Calendar, Clock, TrendingUp, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ContentManagement } from '@/components/admin/ContentManagement';
 import { Statistics } from '@/components/admin/Statistics';
 import { useTimePeriodStatistics } from '@/hooks/useTimePeriodStatistics';
+import { useContentSection } from '@/hooks/useContent';
+import { useSiteStatistics } from '@/hooks/useSiteStatistics';
 
 interface User {
   id: string;
@@ -48,6 +51,328 @@ interface Event {
   max_participants?: number;
   created_at: string;
 }
+
+// Site Statistics Editor Component
+const SiteStatisticsEditor = () => {
+  const { 
+    statistics, 
+    loading, 
+    error, 
+    recalculateStatistics, 
+    updateManualOverride, 
+    removeManualOverride 
+  } = useSiteStatistics();
+  
+  const [editingStats, setEditingStats] = useState({
+    active_volunteers: '',
+    hours_contributed: '',
+    partner_organizations: ''
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { toast } = useToast();
+
+  // Initialize editing stats when statistics load
+  useEffect(() => {
+    if (statistics) {
+      setEditingStats({
+        active_volunteers: statistics.active_volunteers.display_value.toString(),
+        hours_contributed: statistics.hours_contributed.display_value.toString(),
+        partner_organizations: statistics.partner_organizations.display_value.toString()
+      });
+    }
+  }, [statistics]);
+
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      
+      // Update each statistic with manual override
+      const updates = [
+        { 
+          key: 'active_volunteers' as const, 
+          value: parseInt(editingStats.active_volunteers) || 0 
+        },
+        { 
+          key: 'hours_contributed' as const, 
+          value: parseInt(editingStats.hours_contributed) || 0 
+        },
+        { 
+          key: 'partner_organizations' as const, 
+          value: parseInt(editingStats.partner_organizations) || 0 
+        }
+      ];
+
+      for (const update of updates) {
+        await updateManualOverride(update.key, update.value);
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Site statistics updated successfully',
+      });
+      setIsEditing(false);
+    } catch (error: any) {
+      console.error('Error updating site statistics:', error);
+      toast({
+        title: 'Error',
+        description: `Failed to update statistics: ${error.message}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    if (statistics) {
+      setEditingStats({
+        active_volunteers: statistics.active_volunteers.display_value.toString(),
+        hours_contributed: statistics.hours_contributed.display_value.toString(),
+        partner_organizations: statistics.partner_organizations.display_value.toString()
+      });
+    }
+    setIsEditing(false);
+  };
+
+  const handleRecalculate = async () => {
+    try {
+      await recalculateStatistics();
+      toast({
+        title: 'Success',
+        description: 'Statistics recalculated successfully',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to recalculate statistics: ${error.message}`,
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleResetToCalculated = async () => {
+    try {
+      setSaving(true);
+      
+      // Remove manual overrides for all statistics
+      await removeManualOverride('active_volunteers');
+      await removeManualOverride('hours_contributed');
+      await removeManualOverride('partner_organizations');
+
+      toast({
+        title: 'Success',
+        description: 'Statistics reset to calculated values',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: `Failed to reset statistics: ${error.message}`,
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-32" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Site Statistics</h3>
+          <Button onClick={handleRecalculate} size="sm" variant="outline">
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Retry
+          </Button>
+        </div>
+        <div className="text-center py-8 text-red-600">
+          <p>Error loading statistics: {error}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!statistics) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Site Statistics</h3>
+        </div>
+        <div className="text-center py-8 text-gray-500">
+          <p>No statistics available</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold">Site Statistics</h3>
+        <div className="flex gap-2">
+          {!isEditing ? (
+            <>
+              <Button onClick={handleRecalculate} size="sm" variant="outline">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Recalculate
+              </Button>
+              <Button onClick={() => setIsEditing(true)} size="sm">
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            </>
+          ) : (
+            <div className="flex gap-2">
+              <Button onClick={handleSave} size="sm" disabled={saving}>
+                <Check className="w-4 h-4 mr-2" />
+                {saving ? 'Saving...' : 'Save'}
+              </Button>
+              <Button onClick={handleCancel} variant="outline" size="sm" disabled={saving}>
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Active Volunteers */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              Active Volunteers
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isEditing ? (
+              <Input
+                value={editingStats.active_volunteers}
+                onChange={(e) => setEditingStats(prev => ({ ...prev, active_volunteers: e.target.value }))}
+                placeholder="e.g., 2,500+"
+                className="text-2xl font-bold"
+              />
+            ) : (
+              <div className="text-2xl font-bold text-primary">
+                {statistics.active_volunteers.display_value.toLocaleString()}
+              </div>
+            )}
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-xs text-muted-foreground">
+                Calculated: {statistics.active_volunteers.calculated_value.toLocaleString()}
+              </p>
+              {statistics.active_volunteers.manual_override !== null && (
+                <Badge variant="secondary" className="text-xs">
+                  Manual
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Hours Contributed */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Clock className="h-4 w-4" />
+              Hours Contributed
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isEditing ? (
+              <Input
+                value={editingStats.hours_contributed}
+                onChange={(e) => setEditingStats(prev => ({ ...prev, hours_contributed: e.target.value }))}
+                placeholder="e.g., 15,000+"
+                className="text-2xl font-bold"
+              />
+            ) : (
+              <div className="text-2xl font-bold text-primary">
+                {statistics.hours_contributed.display_value.toLocaleString()}
+              </div>
+            )}
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-xs text-muted-foreground">
+                Calculated: {statistics.hours_contributed.calculated_value.toLocaleString()}
+              </p>
+              {statistics.hours_contributed.manual_override !== null && (
+                <Badge variant="secondary" className="text-xs">
+                  Manual
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Partner Organizations */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm font-medium flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              Partner Organizations
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {isEditing ? (
+              <Input
+                value={editingStats.partner_organizations}
+                onChange={(e) => setEditingStats(prev => ({ ...prev, partner_organizations: e.target.value }))}
+                placeholder="e.g., 50+"
+                className="text-2xl font-bold"
+              />
+            ) : (
+              <div className="text-2xl font-bold text-primary">
+                {statistics.partner_organizations.display_value.toLocaleString()}
+              </div>
+            )}
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-xs text-muted-foreground">
+                Calculated: {statistics.partner_organizations.calculated_value.toLocaleString()}
+              </p>
+              {statistics.partner_organizations.manual_override !== null && (
+                <Badge variant="secondary" className="text-xs">
+                  Manual
+                </Badge>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Reset to Calculated Button */}
+      {isEditing && (
+        <div className="flex justify-center">
+          <Button onClick={handleResetToCalculated} variant="outline" size="sm" disabled={saving}>
+            <RefreshCw className="w-4 h-4 mr-2" />
+            Reset to Calculated Values
+          </Button>
+        </div>
+      )}
+
+      {/* Last Updated Info */}
+      <div className="text-center text-xs text-muted-foreground">
+        <p>Last calculated: {new Date(statistics.active_volunteers.last_calculated_at).toLocaleString()}</p>
+      </div>
+    </div>
+  );
+};
 
 export const AdminDashboard = () => {
   const [users, setUsers] = useState<User[]>([]);
@@ -1141,6 +1466,22 @@ export const AdminDashboard = () => {
 
         {/* Statistics Tab */}
         <TabsContent value="statistics" className="space-y-6">
+          {/* Site Statistics Section */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <BarChart3 className="w-5 h-5" />
+                Site Statistics
+              </CardTitle>
+              <CardDescription>
+                Edit the statistics displayed on the homepage and about page
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SiteStatisticsEditor />
+            </CardContent>
+          </Card>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

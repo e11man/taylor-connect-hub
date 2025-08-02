@@ -6,13 +6,12 @@ import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
 import { useContentSection } from "@/hooks/useContent";
-import { useStatistics } from "@/hooks/useStatistics";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const HeroSection = () => {
   const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
-  const { statistics, loading: statsLoading } = useStatistics();
+  const { content: siteStats } = useContentSection('site_stats', 'main');
   
   // Extract content with fallbacks
   const titleLine1 = heroContent.titleLine1 || "Connect.";
@@ -26,17 +25,17 @@ const HeroSection = () => {
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: statistics.active_volunteers
+      value: siteStats.active_volunteers || "2,500+"
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: statistics.hours_contributed
+      value: siteStats.hours_contributed || "15,000+"
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: statistics.partner_organizations
+      value: siteStats.partner_organizations || "50+"
     }
   ];
 

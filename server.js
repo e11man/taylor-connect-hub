@@ -1275,6 +1275,352 @@ app.delete('/api/content', async (req, res) => {
   }
 });
 
+// Site Statistics API routes
+app.get('/api/site-statistics', async (req, res) => {
+  try {
+    // First try to use the database function
+    const { data, error } = await supabase.rpc('get_all_site_statistics');
+    
+    if (error) {
+      console.log('Database function not available, using direct query:', error.message);
+      
+      // Fallback: query the site_stats table directly
+      const { data: statsData, error: queryError } = await supabase
+        .from('site_stats')
+        .select('*')
+        .order('stat_type');
+      
+      if (queryError) {
+        console.log('Direct query failed:', queryError.message);
+        
+        // Calculate real values from the database
+        console.log('Calculating real values from database...');
+        
+        // Calculate active volunteers
+        const { data: activeVolunteers, error: avError } = await supabase
+          .from('user_events')
+          .select('user_id', { count: 'exact', head: true });
+
+        const activeVolunteersCount = activeVolunteers?.length || 0;
+
+        // Calculate hours contributed
+        const { data: userEvents, error: ueError } = await supabase
+          .from('user_events')
+          .select(`
+            event_id,
+            events (
+              arrival_time,
+              estimated_end_time
+            )
+          `);
+
+        let totalHours = 0;
+        if (userEvents) {
+          userEvents.forEach(ue => {
+            const event = ue.events;
+            if (event && event.arrival_time && event.estimated_end_time) {
+              const start = new Date(event.arrival_time);
+              const end = new Date(event.estimated_end_time);
+              const hours = Math.ceil((end - start) / (1000 * 60 * 60));
+              totalHours += hours;
+            } else {
+              totalHours += 2; // Default 2 hours
+            }
+          });
+        }
+
+        // Calculate partner organizations
+        const { data: events, error: eventsError } = await supabase
+          .from('events')
+          .select('organization_id');
+
+        const uniqueOrganizations = new Set();
+        if (events) {
+          events.forEach(event => {
+            if (event.organization_id) {
+              uniqueOrganizations.add(event.organization_id);
+            }
+          });
+        }
+        const partnerOrganizationsCount = uniqueOrganizations.size;
+        
+        // Return calculated values with fallback display values
+        const defaultStats = {
+          active_volunteers: {
+            calculated_value: activeVolunteersCount,
+            manual_override: null,
+            display_value: activeVolunteersCount > 0 ? activeVolunteersCount : 2500,
+            last_calculated_at: new Date().toISOString()
+          },
+          hours_contributed: {
+            calculated_value: totalHours,
+            manual_override: null,
+            display_value: totalHours > 0 ? totalHours : 15000,
+            last_calculated_at: new Date().toISOString()
+          },
+          partner_organizations: {
+            calculated_value: partnerOrganizationsCount,
+            manual_override: null,
+            display_value: partnerOrganizationsCount > 0 ? partnerOrganizationsCount : 50,
+            last_calculated_at: new Date().toISOString()
+          }
+        };
+        
+        return res.json({ success: true, data: defaultStats });
+      }
+      
+      // Format the data from direct query
+      const formattedStats = {};
+      statsData.forEach(stat => {
+        formattedStats[stat.stat_type] = {
+          calculated_value: stat.calculated_value || 0,
+          manual_override: stat.manual_override,
+          display_value: stat.manual_override !== null ? stat.manual_override : (stat.calculated_value || 0),
+          last_calculated_at: stat.last_calculated_at || new Date().toISOString()
+        };
+      });
+      
+      return res.json({ success: true, data: formattedStats });
+    }
+    
+    // Format the data for frontend consumption
+    const statsData = {};
+    data.forEach(stat => {
+      statsData[stat.stat_type] = {
+        calculated_value: stat.calculated_value,
+        manual_override: stat.manual_override,
+        display_value: stat.display_value,
+        last_calculated_at: stat.last_calculated_at
+      };
+    });
+    
+    res.json({ success: true, data: statsData });
+  } catch (error) {
+    console.error('Error fetching site statistics:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.post('/api/site-statistics', async (req, res) => {
+  try {
+    // Try to trigger recalculation of all statistics
+    const { error: calcError } = await supabase.rpc('update_site_statistics');
+    
+    if (calcError) {
+      console.log('Update function not available, calculating manually:', calcError.message);
+      
+      // Manual calculation fallback
+      // Calculate active volunteers
+      const { data: activeVolunteers, error: avError } = await supabase
+        .from('user_events')
+        .select('user_id', { count: 'exact', head: true });
+
+      const activeVolunteersCount = activeVolunteers?.length || 0;
+
+      // Calculate hours contributed
+      const { data: userEvents, error: ueError } = await supabase
+        .from('user_events')
+        .select(`
+          event_id,
+          events (
+            arrival_time,
+            estimated_end_time
+          )
+        `);
+
+      let totalHours = 0;
+      if (userEvents) {
+        userEvents.forEach(ue => {
+          const event = ue.events;
+          if (event && event.arrival_time && event.estimated_end_time) {
+            const start = new Date(event.arrival_time);
+            const end = new Date(event.estimated_end_time);
+            const hours = Math.ceil((end - start) / (1000 * 60 * 60));
+            totalHours += hours;
+          } else {
+            totalHours += 2; // Default 2 hours
+          }
+        });
+      }
+
+      // Calculate partner organizations
+      const { data: events, error: eventsError } = await supabase
+        .from('events')
+        .select('organization_id');
+
+      const uniqueOrganizations = new Set();
+      if (events) {
+        events.forEach(event => {
+          if (event.organization_id) {
+            uniqueOrganizations.add(event.organization_id);
+          }
+        });
+      }
+      const partnerOrganizationsCount = uniqueOrganizations.size;
+
+      // Update the calculated values
+      const updates = [
+        { stat_type: 'active_volunteers', calculated_value: activeVolunteersCount },
+        { stat_type: 'hours_contributed', calculated_value: totalHours },
+        { stat_type: 'partner_organizations', calculated_value: partnerOrganizationsCount }
+      ];
+
+      for (const update of updates) {
+        await supabase
+          .from('site_stats')
+          .update({ 
+            calculated_value: update.calculated_value,
+            last_calculated_at: new Date().toISOString()
+          })
+          .eq('stat_type', update.stat_type);
+      }
+    }
+    
+    // Get updated statistics (try function first, then direct query)
+    let data, fetchError;
+    const { data: funcData, error: funcError } = await supabase.rpc('get_all_site_statistics');
+    
+    if (funcError) {
+      console.log('Getting stats via function failed, using direct query:', funcError.message);
+      const { data: directData, error: directError } = await supabase
+        .from('site_stats')
+        .select('*')
+        .order('stat_type');
+      
+      data = directData;
+      fetchError = directError;
+    } else {
+      data = funcData;
+    }
+    
+    if (fetchError) throw fetchError;
+    
+    // Format the data
+    const statsData = {};
+    data.forEach(stat => {
+      statsData[stat.stat_type] = {
+        calculated_value: stat.calculated_value || 0,
+        manual_override: stat.manual_override,
+        display_value: stat.manual_override !== null ? stat.manual_override : (stat.calculated_value || 0),
+        last_calculated_at: stat.last_calculated_at || new Date().toISOString()
+      };
+    });
+    
+    res.json({ 
+      success: true, 
+      message: 'Statistics recalculated successfully',
+      data: statsData 
+    });
+  } catch (error) {
+    console.error('Error recalculating statistics:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.put('/api/site-statistics', async (req, res) => {
+  try {
+    const { stat_type, manual_override } = req.body;
+    
+    if (!stat_type || manual_override === undefined) {
+      return res.status(400).json({ success: false, error: 'Missing required fields: stat_type and manual_override' });
+    }
+    
+    // Validate stat_type
+    const validTypes = ['active_volunteers', 'hours_contributed', 'partner_organizations'];
+    if (!validTypes.includes(stat_type)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `Invalid stat_type. Must be one of: ${validTypes.join(', ')}` 
+      });
+    }
+    
+    // Update the manual override
+    const { error } = await supabase
+      .from('site_stats')
+      .update({ manual_override: manual_override === null ? null : manual_override })
+      .eq('stat_type', stat_type);
+    
+    if (error) throw error;
+    
+    // Get updated statistics
+    const { data, error: fetchError } = await supabase.rpc('get_all_site_statistics');
+    
+    if (fetchError) throw fetchError;
+    
+    // Format the data
+    const statsData = {};
+    data.forEach(stat => {
+      statsData[stat.stat_type] = {
+        calculated_value: stat.calculated_value,
+        manual_override: stat.manual_override,
+        display_value: stat.display_value,
+        last_calculated_at: stat.last_calculated_at
+      };
+    });
+    
+    res.json({ 
+      success: true, 
+      message: `${stat_type} manual override updated successfully`,
+      data: statsData 
+    });
+  } catch (error) {
+    console.error('Error updating manual override:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+app.delete('/api/site-statistics', async (req, res) => {
+  try {
+    const { stat_type } = req.query;
+    
+    if (!stat_type) {
+      return res.status(400).json({ success: false, error: 'Missing stat_type parameter' });
+    }
+    
+    // Validate stat_type
+    const validTypes = ['active_volunteers', 'hours_contributed', 'partner_organizations'];
+    if (!validTypes.includes(stat_type)) {
+      return res.status(400).json({ 
+        success: false, 
+        error: `Invalid stat_type. Must be one of: ${validTypes.join(', ')}` 
+      });
+    }
+    
+    // Remove manual override (set to NULL)
+    const { error } = await supabase
+      .from('site_stats')
+      .update({ manual_override: null })
+      .eq('stat_type', stat_type);
+    
+    if (error) throw error;
+    
+    // Get updated statistics
+    const { data, error: fetchError } = await supabase.rpc('get_all_site_statistics');
+    
+    if (fetchError) throw fetchError;
+    
+    // Format the data
+    const statsData = {};
+    data.forEach(stat => {
+      statsData[stat.stat_type] = {
+        calculated_value: stat.calculated_value,
+        manual_override: stat.manual_override,
+        display_value: stat.display_value,
+        last_calculated_at: stat.last_calculated_at
+      };
+    });
+    
+    res.json({ 
+      success: true, 
+      message: `${stat_type} manual override removed successfully`,
+      data: statsData 
+    });
+  } catch (error) {
+    console.error('Error removing manual override:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Event signup API routes - bypass RLS using service role key
 app.post('/api/event-signup', async (req, res) => {
   try {
