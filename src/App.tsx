@@ -19,6 +19,8 @@ import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import ContentTest from "./pages/ContentTest";
 import TestEmailVerification from "./pages/TestEmailVerification";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import UserDashboard from "./components/sections/UserDashboard";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 
@@ -59,6 +61,8 @@ const App = () => (
                   <Route path="/reset-password" element={<ResetPassword />} />
                   <Route path="/content-test" element={<ContentTest />} />
                   <Route path="/test-email-verification" element={<TestEmailVerification />} />
+                  <Route path="/privacy" element={<PrivacyPolicy />} />
+                  <Route path="/terms" element={<TermsOfService />} />
                   <Route path="/dashboard" element={<ProtectedRoute><UserDashboard /></ProtectedRoute>} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
