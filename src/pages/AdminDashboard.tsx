@@ -180,7 +180,7 @@ export const AdminDashboard = () => {
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (user.organization_name || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = emailFilter === 'all' || user.user_type === emailFilter;
+    const matchesFilter = emailFilter === 'all' || user.role === emailFilter;
     return matchesSearch && matchesFilter;
   });
 
