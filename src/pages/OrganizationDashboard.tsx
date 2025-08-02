@@ -18,7 +18,6 @@ import { useToast } from "@/hooks/use-toast";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import { AddressAutocomplete, AddressDetails } from '@/components/ui/address-autocomplete';
 import SafetyGuidelinesModal from '@/components/modals/SafetyGuidelinesModal';
-import { OrganizationProfileModal } from '@/components/modals/OrganizationProfileModal';
 import { filterUpcomingEvents, filterActiveEvents } from '@/utils/eventFilters';
 
 interface Event {
@@ -58,7 +57,6 @@ const OrganizationDashboard = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [safetyGuidelinesModalOpen, setSafetyGuidelinesModalOpen] = useState(false);
-  const [profileModalOpen, setProfileModalOpen] = useState(false);
   
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -305,10 +303,6 @@ const OrganizationDashboard = () => {
     navigate('/');
   };
 
-  const handleProfileUpdate = (updatedOrg: Organization) => {
-    setOrganization(updatedOrg);
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen bg-white">
@@ -366,47 +360,21 @@ const OrganizationDashboard = () => {
 
           {/* Organization Info */}
           <Card className="mb-8">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader>
               <CardTitle>Organization Information</CardTitle>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setProfileModalOpen(true)}
-                className="flex items-center gap-2"
-              >
-                <Edit2 className="w-4 h-4" />
-                Edit Profile
-              </Button>
             </CardHeader>
             <CardContent className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label className="text-sm font-semibold">Description</Label>
-                <p className="text-sm text-muted-foreground">{organization.description || 'No description provided'}</p>
+                <p className="text-sm text-muted-foreground">{organization.description}</p>
               </div>
               <div>
                 <Label className="text-sm font-semibold">Website</Label>
-                <p className="text-sm text-muted-foreground">
-                  {organization.website ? (
-                    <a 
-                      href={organization.website.startsWith('http') ? organization.website : `https://${organization.website}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[#00AFCE] hover:underline"
-                    >
-                      {organization.website}
-                    </a>
-                  ) : (
-                    'Not provided'
-                  )}
-                </p>
+                <p className="text-sm text-muted-foreground">{organization.website || 'Not provided'}</p>
               </div>
               <div>
                 <Label className="text-sm font-semibold">Phone</Label>
                 <p className="text-sm text-muted-foreground">{organization.phone || 'Not provided'}</p>
-              </div>
-              <div>
-                <Label className="text-sm font-semibold">Contact Email</Label>
-                <p className="text-sm text-muted-foreground">{organization.contact_email || 'Not provided'}</p>
               </div>
             </CardContent>
           </Card>
@@ -745,14 +713,6 @@ const OrganizationDashboard = () => {
         }}
         onAccept={handleSafetyGuidelinesAccept}
         userType="organization"
-      />
-
-      {/* Organization Profile Modal */}
-      <OrganizationProfileModal
-        isOpen={profileModalOpen}
-        onClose={() => setProfileModalOpen(false)}
-        organization={organization}
-        onUpdate={handleProfileUpdate}
       />
       
       <Footer />
