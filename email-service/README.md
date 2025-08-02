@@ -1,6 +1,6 @@
 # Email Service
 
-This folder contains the email verification, password reset, and chat notification services for Taylor Connect Hub.
+This folder contains the email verification, password reset, organization password reset, and chat notification services for Taylor Connect Hub.
 
 ## Setup
 
@@ -30,6 +30,12 @@ source venv/bin/activate
 python3 send_password_reset_email.py "user@example.com"
 ```
 
+### Organization Password Reset
+```bash
+source venv/bin/activate
+python3 send_organization_password_reset_email.py "org@example.com"
+```
+
 ### Chat Notifications
 ```bash
 source venv/bin/activate
@@ -40,6 +46,8 @@ python3 send_chat_notification_email.py
 ```typescript
 import { sendVerificationCode } from '@/utils/emailService';
 import { sendPasswordResetCode } from '@/utils/passwordResetService';
+import { sendOrganizationPasswordResetCode } from '@/utils/organizationPasswordResetService';
+import { processChatNotifications } from '@/utils/chatNotificationService';
 
 // Send verification code
 const result = await sendVerificationCode('user@example.com');
@@ -51,6 +59,12 @@ if (result.success) {
 const resetResult = await sendPasswordResetCode('user@example.com');
 if (resetResult.success) {
   console.log('Password reset code sent');
+}
+
+// Send organization password reset code
+const orgResetResult = await sendOrganizationPasswordResetCode('org@example.com');
+if (orgResetResult.success) {
+  console.log('Organization password reset code sent');
 }
 
 // Process chat notifications
@@ -74,6 +88,14 @@ if (notificationResult.success) {
 - Sends professionally formatted HTML emails
 - Includes database functions for verification and password updates
 - Secure password reset flow with code verification
+
+### Organization Password Reset
+- Generates 6-digit reset codes for organization accounts
+- Stores codes in database with 10-minute expiration
+- Sends professionally formatted HTML emails with organization branding
+- Includes database functions for verification and password updates
+- Secure password reset flow with code verification
+- Validates organization account existence before sending
 
 ### Chat Notifications
 - Automatically sends emails when new chat messages are posted
@@ -99,6 +121,14 @@ The password reset email includes:
 - Clear 6-digit reset code display
 - Security warnings about code expiration
 - Professional styling
+- Mobile-responsive design
+
+### Organization Password Reset Email
+The organization password reset email includes:
+- Taylor Connect Hub branding with organization-specific messaging
+- Clear 6-digit reset code display
+- Security warnings about code expiration
+- Professional styling with organization context
 - Mobile-responsive design
 
 ### Chat Notification Email
@@ -137,9 +167,11 @@ The service is integrated with:
 - User registration flow
 - Email verification components
 - Password reset flow
+- Organization password reset flow
 - Chat messaging system
 - Notification preferences management
 - Database verification code storage
 - Resend functionality
 - Frontend password reset modals
+- Organization profile management
 - Event chat modals 

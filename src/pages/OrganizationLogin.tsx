@@ -8,11 +8,13 @@ import { useContent } from "@/hooks/useContent";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from '@/contexts/AuthContext';
+import { OrganizationForgotPasswordModal } from '@/components/modals/OrganizationForgotPasswordModal';
 
 const OrganizationLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn } = useAuth();
@@ -138,7 +140,13 @@ const OrganizationLogin = () => {
 
                 {/* Forgot Password Link */}
                 <div className="text-right">
-                  {/* Removed Forgot Password link as per new_code */}
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPasswordModal(true)}
+                    className="text-sm text-[#00AFCE] hover:text-[#00AFCE]/80 font-semibold transition-colors"
+                  >
+                    Forgot Password?
+                  </button>
                 </div>
 
                 {/* Submit Button */}
@@ -174,7 +182,10 @@ const OrganizationLogin = () => {
 
       <Footer />
       
-      {/* Removed ForgotPasswordModal as per new_code */}
+      <OrganizationForgotPasswordModal
+        isOpen={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+      />
     </div>
   );
 };

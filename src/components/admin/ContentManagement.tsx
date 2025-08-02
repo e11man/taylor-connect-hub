@@ -4,14 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Search, Eye, EyeOff, RefreshCw } from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Plus, Pencil, Eye, Save, X, RefreshCw, Search, Filter, FileText, Globe, Edit3, Trash2, Download, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 interface ContentItem {
   id: string;
@@ -26,46 +25,17 @@ interface ContentItem {
 
 export const ContentManagement = () => {
   const [content, setContent] = useState<ContentItem[]>([]);
-  const [filteredContent, setFilteredContent] = useState<ContentItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [selectedPage, setSelectedPage] = useState<string>('all');
+  const [selectedSection, setSelectedSection] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
-  
-  // Debug: Log when editingItem changes
-  useEffect(() => {
-    console.log('editingItem changed:', editingItem);
-  }, [editingItem]);
-  const [newContent, setNewContent] = useState({
-    page: '',
-    section: '',
-    key: '',
-    value: '',
-    language_code: 'en'
-  });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-
-  // Helper function to check if a field is a boolean field
-  const isBooleanField = (key: string) => {
-    if (!key || typeof key !== 'string') return false;
-    return key.endsWith('_hidden') || key === 'true' || key === 'false';
-  };
-
-  // Helper function to get a user-friendly label for boolean fields
-  const getBooleanFieldLabel = (key: string) => {
-    if (!key || typeof key !== 'string') return '';
-    if (key.endsWith('_hidden')) {
-      const platform = key.replace('_hidden', '');
-      return `Hide ${platform.charAt(0).toUpperCase() + platform.slice(1)}`;
-    }
-    return key;
-  };
 
   // Load content from Supabase
   const loadContent = async () => {
     setLoading(true);
-    setError(null);
     try {
       const { data, error } = await supabase
         .from('content')
@@ -73,412 +43,346 @@ export const ContentManagement = () => {
         .order('page')
         .order('section')
         .order('key');
-      if (error) {
-        setError(error.message);
-        setContent([]);
-        return;
-      }
+      
+      if (error) throw error;
       setContent(data || []);
-      setFilteredContent(data || []);
-      // Debug log
-      console.log('ContentManagement: Loaded content:', data);
     } catch (err: any) {
-      setError(err.message || 'Unknown error');
-      setContent([]);
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to load content',
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // Load content on mount
   useEffect(() => {
     loadContent();
   }, []);
 
-  // Filter content based on search query
-  useEffect(() => {
-    if (!searchQuery) {
-      setFilteredContent(content);
-    } else {
-      const filtered = content.filter(item =>
-        item.page.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.section.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.value.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-      setFilteredContent(filtered);
-    }
-  }, [content, searchQuery]);
+  // Get unique pages and sections
+  const pages = ['all', ...Array.from(new Set(content.map(item => item.page)))];
+  const sections = ['all', ...Array.from(new Set(
+    content
+      .filter(item => selectedPage === 'all' || item.page === selectedPage)
+      .map(item => item.section)
+  ))];
 
-  const handleCreate = async () => {
-    if (!newContent.page || !newContent.section || !newContent.key || !newContent.value) {
-      toast({
-        title: 'Error',
-        description: 'Please fill in all required fields',
-        variant: 'destructive',
-      });
-      return;
-    }
+  // Filter content based on selections
+  const filteredContent = content.filter(item => {
+    const matchesPage = selectedPage === 'all' || item.page === selectedPage;
+    const matchesSection = selectedSection === 'all' || item.section === selectedSection;
+    const matchesSearch = item.key.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.value.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.page.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         item.section.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    return matchesPage && matchesSection && matchesSearch;
+  });
 
-    try {
-      console.log('Creating new content:', newContent);
-      
-      // Use the Python API endpoint
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? '/api/content' 
-        : 'http://localhost:3001/api/content';
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          page: newContent.page,
-          section: newContent.section,
-          key: newContent.key,
-          value: newContent.value,
-          language_code: newContent.language_code,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to create content');
-      }
-
-      console.log('Create successful, data:', result.data);
-      
-      toast({
-        title: 'Success! ✅',
-        description: `"${newContent.key}" has been created successfully`,
-      });
-      setIsCreateModalOpen(false);
-      setNewContent({ page: '', section: '', key: '', value: '', language_code: 'en' });
-      await loadContent();
-    } catch (error: any) {
-      console.error('ContentManagement: Error creating content:', error);
-      toast({
-        title: 'Error',
-        description: `Failed to create content: ${error.message}`,
-        variant: 'destructive',
-      });
-    }
+  const handleEdit = (item: ContentItem) => {
+    setEditingItem(item);
+    setIsEditModalOpen(true);
   };
 
-  const handleUpdate = async () => {
+  const handleSave = async () => {
     if (!editingItem) return;
 
-    console.log('🔧 UPDATE DEBUG:');
-    console.log('- ID:', editingItem.id);
-    console.log('- New value:', editingItem.value);
-
+    setLoading(true);
     try {
-      // Use the Python API endpoint
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? '/api/content' 
-        : 'http://localhost:3001/api/content';
-      
-      const response = await fetch(apiUrl, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: editingItem.id,
-          value: editingItem.value
-        }),
-      });
+      const { error } = await supabase
+        .from('content')
+        .update({
+          value: editingItem.value,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingItem.id);
 
-      const result = await response.json();
-      console.log('🔧 UPDATE RESULT:', result);
+      if (error) throw error;
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to update content');
-      }
+      // Update local state
+      setContent(prev => prev.map(item => 
+        item.id === editingItem.id ? editingItem : item
+      ));
 
-      console.log('✅ UPDATE SUCCESS:', result.data);
       toast({
-        title: 'Success',
-        description: 'Content updated successfully',
+        title: "Success",
+        description: "Content updated successfully",
       });
+
+      setIsEditModalOpen(false);
       setEditingItem(null);
-      await loadContent();
-    } catch (error: any) {
-      console.error('❌ UPDATE FAILED:', error);
+    } catch (err: any) {
       toast({
-        title: 'Error',
-        description: `Failed to update: ${error.message}`,
-        variant: 'destructive',
+        title: "Error",
+        description: err.message || 'Failed to update content',
+        variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
+  const handleDelete = async (item: ContentItem) => {
+    if (!confirm(`Are you sure you want to delete "${item.key}"?`)) return;
+
+    setLoading(true);
     try {
-      console.log('Deleting content with ID:', id);
-      
-      // Use the Python API endpoint
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? '/api/content' 
-        : 'http://localhost:3001/api/content';
-      
-      const response = await fetch(`${apiUrl}?id=${id}`, {
-        method: 'DELETE',
-      });
+      const { error } = await supabase
+        .from('content')
+        .delete()
+        .eq('id', item.id);
 
-      const result = await response.json();
+      if (error) throw error;
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to delete content');
-      }
+      // Update local state
+      setContent(prev => prev.filter(contentItem => contentItem.id !== item.id));
 
-      console.log('Delete successful');
-      
       toast({
-        title: 'Success! ✅',
-        description: 'Content has been deleted successfully',
+        title: "Success",
+        description: "Content deleted successfully",
       });
-      await loadContent();
-    } catch (error: any) {
-      console.error('ContentManagement: Error deleting content:', error);
+    } catch (err: any) {
       toast({
-        title: 'Error',
-        description: `Failed to delete content: ${error.message}`,
-        variant: 'destructive',
+        title: "Error",
+        description: err.message || 'Failed to delete content',
+        variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const groupedContent = filteredContent.reduce((acc, item) => {
-    const pageKey = item.page;
-    if (!acc[pageKey]) {
-      acc[pageKey] = {};
-    }
-    if (!acc[pageKey][item.section]) {
-      acc[pageKey][item.section] = [];
-    }
-    acc[pageKey][item.section].push(item);
-    return acc;
-  }, {} as Record<string, Record<string, ContentItem[]>>);
+  const exportContent = () => {
+    const dataStr = JSON.stringify(filteredContent, null, 2);
+    const dataBlob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `content-export-${new Date().toISOString().split('T')[0]}.json`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Content Management</CardTitle>
-        <CardDescription>
-          Manage all text content across the application. Changes will be reflected immediately.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="flex gap-2 mb-4">
-          <Input
-            placeholder="Search content..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="max-w-xs"
-          />
-          <Button onClick={loadContent} variant="outline" disabled={loading}>
-            <RefreshCw className={loading ? 'animate-spin mr-2' : 'mr-2'} />
-            Reload
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">Content Management</h2>
+          <p className="text-gray-600">Manage all text content across the application</p>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={exportContent} variant="outline" className="flex items-center gap-2">
+            <Download className="w-4 h-4" />
+            Export
           </Button>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Add Content
+          <Button onClick={loadContent} variant="outline" className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Refresh
           </Button>
         </div>
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
-            <p className="text-red-800 font-medium">Error loading content: {error}</p>
-            <p className="text-xs text-gray-500 mt-2">VITE_SUPABASE_URL: {import.meta.env.VITE_SUPABASE_URL || 'Not set'}</p>
-            <p className="text-xs text-gray-500">VITE_SUPABASE_ANON_KEY: {import.meta.env.VITE_SUPABASE_ANON_KEY ? 'SET' : 'Not set'}</p>
+      </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Filter className="w-5 h-5" />
+            Filters & Search
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input
+                  placeholder="Search by key, value, page, or section..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            <Select value={selectedPage} onValueChange={setSelectedPage}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select page" />
+              </SelectTrigger>
+              <SelectContent>
+                {pages.map(page => (
+                  <SelectItem key={page} value={page}>
+                    {page === 'all' ? 'All Pages' : page.charAt(0).toUpperCase() + page.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={selectedSection} onValueChange={setSelectedSection}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select section" />
+              </SelectTrigger>
+              <SelectContent>
+                {sections.map(section => (
+                  <SelectItem key={section} value={section}>
+                    {section === 'all' ? 'All Sections' : section.charAt(0).toUpperCase() + section.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
-        )}
-        {loading ? (
-          <div className="space-y-4">
-            {[...Array(3)].map((_, i) => (
-              <Skeleton key={i} className="h-12 w-full" />
-            ))}
+        </CardContent>
+      </Card>
+
+      {/* Content Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Content Items
+          </CardTitle>
+          <CardDescription>
+            {filteredContent.length} items found
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Page
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Section
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Key
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Value
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Updated
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {filteredContent.map(item => (
+                  <tr key={item.id} className="hover:bg-gray-50">
+                    <td className="px-4 py-3">
+                      <Badge variant="outline" className="text-xs">
+                        {item.page}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge variant="secondary" className="text-xs">
+                        {item.section}
+                      </Badge>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm font-medium text-gray-900">{item.key}</div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="text-sm text-gray-900 max-w-xs truncate" title={item.value}>
+                        {item.value}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-gray-500">
+                      {new Date(item.updated_at).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleEdit(item)}
+                          className="flex items-center gap-1"
+                        >
+                          <Edit3 className="w-3 h-3" />
+                          Edit
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleDelete(item)}
+                          className="flex items-center gap-1 text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                          Delete
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        ) : (
-          <div>
-            {Object.entries(groupedContent).map(([page, sections]) => (
-              <Card key={page}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{page.charAt(0).toUpperCase() + page.slice(1)} Page</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {Object.entries(sections).map(([section, items]) => (
-                    <div key={section} className="mb-6">
-                      <h4 className="text-md font-semibold mb-3 text-muted-foreground">
-                        {section.charAt(0).toUpperCase() + section.slice(1)} Section
-                      </h4>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Key</TableHead>
-                            <TableHead>Value / Status</TableHead>
-                            <TableHead className="w-32">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {items.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell className="font-mono text-sm">{item.key}</TableCell>
-                                                             <TableCell className="max-w-xs truncate">
-                                 {item.key && isBooleanField(item.key) ? (
-                                  <div className="flex items-center gap-2">
-                                    <Switch
-                                      checked={item.value === 'true'}
-                                      onCheckedChange={async (checked) => {
-                                        const updatedItem = { ...item, value: checked ? 'true' : 'false' };
-                                        const result = await supabase
-                                          .from('content')
-                                          .update({ value: updatedItem.value })
-                                          .eq('id', updatedItem.id)
-                                          .select()
-                                          .single();
-                                        if (result.error) {
-                                          toast({
-                                            title: 'Error',
-                                            description: `Failed to update content: ${result.error.message}`,
-                                            variant: 'destructive',
-                                          });
-                                        } else {
-                                          toast({
-                                            title: 'Success',
-                                            description: 'Content updated successfully',
-                                          });
-                                          loadContent(); // Refresh the content
-                                        }
-                                      }}
-                                      className="data-[state=checked]:bg-[#00AFCE]"
-                                    />
-                                    <span className="text-sm text-muted-foreground">
-                                      {item.value === 'true' ? (
-                                        <span className="flex items-center gap-1 text-red-600">
-                                          <EyeOff className="h-3 w-3" />
-                                          Hidden
-                                        </span>
-                                      ) : (
-                                        <span className="flex items-center gap-1 text-green-600">
-                                          <Eye className="h-3 w-3" />
-                                          Visible
-                                        </span>
-                                      )}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  item.value
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                                                 <div className="flex gap-2">
-                                   <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
-                                     <DialogTrigger asChild>
-                                       <Button
-                                         variant="outline"
-                                         size="sm"
-                                         onClick={() => {
-                                           console.log('Edit button clicked for item:', item);
-                                           setEditingItem({ ...item });
-                                         }}
-                                       >
-                                         <Pencil className="h-3 w-3" />
-                                       </Button>
-                                     </DialogTrigger>
-                                    <DialogContent>
-                                      <DialogHeader>
-                                        <DialogTitle>Edit Content</DialogTitle>
-                                        <DialogDescription>
-                                          Update the content for {item.page}.{item.section}.{item.key}
-                                        </DialogDescription>
-                                      </DialogHeader>
-                                                                             {editingItem && (
-                                         <div className="py-4">
-                                           {editingItem.key && isBooleanField(editingItem.key) ? (
-                                            <div className="space-y-4">
-                                              <Label className="text-base font-medium">
-                                                {getBooleanFieldLabel(editingItem.key)}
-                                              </Label>
-                                              <div className="flex items-center gap-3">
-                                                <Switch
-                                                  checked={editingItem.value === 'true'}
-                                                  onCheckedChange={(checked) => setEditingItem({ ...editingItem, value: checked ? 'true' : 'false' })}
-                                                  className="data-[state=checked]:bg-[#00AFCE]"
-                                                />
-                                                <span className="text-sm text-muted-foreground">
-                                                  {editingItem.value === 'true' ? 'Hidden' : 'Visible'}
-                                                </span>
-                                              </div>
-                                              <p className="text-xs text-muted-foreground">
-                                                {editingItem.value === 'true' 
-                                                  ? 'This item will be hidden from the website.'
-                                                  : 'This item will be visible on the website.'
-                                                }
-                                              </p>
-                                            </div>
-                                          ) : (
-                                            <>
-                                              <Label htmlFor="edit-value">Value</Label>
-                                              <Textarea
-                                                id="edit-value"
-                                                value={editingItem.value}
-                                                onChange={(e) => setEditingItem({ ...editingItem, value: e.target.value })}
-                                                className="mt-2"
-                                              />
-                                            </>
-                                          )}
-                                        </div>
-                                      )}
-                                      <DialogFooter>
-                                        <Button variant="outline" onClick={() => setEditingItem(null)}>
-                                          Cancel
-                                        </Button>
-                                        <Button onClick={handleUpdate} disabled={loading}>
-                                          Update
-                                        </Button>
-                                      </DialogFooter>
-                                    </DialogContent>
-                                  </Dialog>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="outline" size="sm">
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete Content</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Are you sure you want to delete this content item? This action cannot be undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(item.id)}>
-                                          Delete
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
-            {filteredContent.length === 0 && !error && (
-              <div className="text-center text-gray-500 py-8">No content found.</div>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {filteredContent.length === 0 && (
+            <div className="text-center py-8 text-gray-500">
+              {searchTerm || selectedPage !== 'all' || selectedSection !== 'all' 
+                ? 'No content found matching your criteria' 
+                : 'No content available'}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Modal */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Content</DialogTitle>
+            <DialogDescription>
+              Update the content for {editingItem?.key}
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editingItem && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Page</Label>
+                  <Input value={editingItem.page} disabled />
+                </div>
+                <div>
+                  <Label>Section</Label>
+                  <Input value={editingItem.section} disabled />
+                </div>
+              </div>
+              <div>
+                <Label>Key</Label>
+                <Input value={editingItem.key} disabled />
+              </div>
+              <div>
+                <Label>Value</Label>
+                <Textarea
+                  value={editingItem.value}
+                  onChange={(e) => setEditingItem({ ...editingItem, value: e.target.value })}
+                  rows={6}
+                  placeholder="Enter content..."
+                />
+              </div>
+              <div className="text-xs text-gray-500">
+                Last updated: {new Date(editingItem.updated_at).toLocaleString()}
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} disabled={loading}>
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
