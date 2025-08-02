@@ -21,6 +21,7 @@ const ContactSection = () => {
   const { content: contactContent } = useContentSection('contact', 'main');
   const { content: contactInfo } = useContentSection('contact', 'info');
   const { content: contactForm } = useContentSection('contact', 'form');
+  const { content: aboutContactContent } = useContentSection('about', 'contact');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -123,7 +124,7 @@ const ContactSection = () => {
           {/* Contact Information */}
           <AnimatedSection variant="slideLeft" delay={0.4}>
             <AnimatedText variant="slideUp" delay={0.5}>
-              <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-8 text-primary">Contact Information</h3>
+              <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-8 text-primary">{aboutContactContent.contact_info_title || 'Contact Information'}</h3>
             </AnimatedText>
             
             <motion.div 
@@ -203,7 +204,7 @@ const ContactSection = () => {
                   }}
                   viewport={{ once: false }}
                 >
-                  Quick Response
+                  {aboutContactContent.quick_response_title || 'Quick Response'}
                 </motion.h4>
                 <motion.p 
                   className="text-muted-foreground text-sm leading-relaxed"
@@ -215,8 +216,7 @@ const ContactSection = () => {
                   }}
                   viewport={{ once: false }}
                 >
-                  We typically respond to messages within 24 hours during business days. 
-                  For urgent matters, please call us directly.
+                  {aboutContactContent.quick_response_description || 'We typically respond to messages within 24 hours during business days. For urgent matters, please call us directly.'}
                 </motion.p>
               </motion.div>
             </AnimatedCard>
@@ -232,7 +232,7 @@ const ContactSection = () => {
               }}
             >
               <AnimatedText variant="slideUp" delay={0.6}>
-                <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-6 text-primary">Send us a Message</h3>
+                <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-6 text-primary">{aboutContactContent.send_message_title || 'Send us a Message'}</h3>
               </AnimatedText>
               
               <motion.form 

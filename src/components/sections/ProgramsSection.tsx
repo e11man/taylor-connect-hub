@@ -1,36 +1,39 @@
 import { Package, Users, Hammer, BookOpen, TrendingUp, Heart } from "lucide-react";
+import { useContentSection } from "@/hooks/useContent";
 
 const ProgramsSection = () => {
+  const { content: programsContent } = useContentSection('about', 'programs');
+  
   const programs = [
     {
       icon: Package,
-      title: "Basics",
-      description: "Essential needs support for families and individuals"
+      title: programsContent.basics_title || "Basics",
+      description: programsContent.basics_description || "Essential needs support for families and individuals"
     },
     {
       icon: Users,
-      title: "Basics Jr.",
-      description: "Youth-focused programs for children and teens"
+      title: programsContent.basics_jr_title || "Basics Jr.",
+      description: programsContent.basics_jr_description || "Youth-focused programs for children and teens"
     },
     {
       icon: Hammer,
-      title: "Carpenter's Hands",
-      description: "Home repair and construction projects"
+      title: programsContent.carpenters_hands_title || "Carpenter's Hands",
+      description: programsContent.carpenters_hands_description || "Home repair and construction projects"
     },
     {
       icon: BookOpen,
-      title: "ESL",
-      description: "English as Second Language tutoring and support"
+      title: programsContent.esl_title || "ESL",
+      description: programsContent.esl_description || "English as Second Language tutoring and support"
     },
     {
       icon: TrendingUp,
-      title: "Lift",
-      description: "Mentorship and encouragement programs"
+      title: programsContent.lift_title || "Lift",
+      description: programsContent.lift_description || "Mentorship and encouragement programs"
     },
     {
       icon: Heart,
-      title: "ReaLife",
-      description: "Real-life skills and life coaching"
+      title: programsContent.realife_title || "ReaLife",
+      description: programsContent.realife_description || "Real-life skills and life coaching"
     }
   ];
 
@@ -41,11 +44,11 @@ const ProgramsSection = () => {
           {/* Section Header */}
           <div className="animate-slide-up">
             <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-              Community Outreach Programs
+              {programsContent.title || 'Community Outreach Programs'}
             </h2>
             
             <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-4xl mx-auto">
-              Share the love of Christ through diverse service opportunities that address real needs in Upland and foster meaningful relationships.
+              {programsContent.description || 'Share the love of Christ through diverse service opportunities that address real needs in Upland and foster meaningful relationships.'}
             </p>
           </div>
         </div>

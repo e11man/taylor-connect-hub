@@ -4,6 +4,7 @@ import { useStatistics } from "@/hooks/useStatistics";
 
 const ImpactSection = () => {
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
+  const { content: aboutImpactContent } = useContentSection('about', 'impact');
   const { statistics, loading: statsLoading } = useStatistics();
   
   const stats = [
@@ -11,19 +12,19 @@ const ImpactSection = () => {
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
       value: statistics.active_volunteers,
-      description: "Passionate individuals serving Upland"
+      description: aboutImpactContent.volunteers_description || "Passionate individuals serving Upland"
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
       value: statistics.hours_contributed,
-      description: "Collective time dedicated to service"
+      description: aboutImpactContent.hours_description || "Collective time dedicated to service"
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
       value: statistics.partner_organizations,
-      description: "Local organizations making a difference"
+      description: aboutImpactContent.organizations_description || "Local organizations making a difference"
     }
   ];
 
@@ -34,7 +35,7 @@ const ImpactSection = () => {
           {/* Section Header */}
           <div className="animate-slide-up">
             <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-              Our Impact
+              {aboutImpactContent.title || 'Our Impact'}
             </h2>
           </div>
         </div>

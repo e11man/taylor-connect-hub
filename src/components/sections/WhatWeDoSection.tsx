@@ -1,26 +1,29 @@
 import { Heart, Globe, Users, HandHeart } from "lucide-react";
+import { useContentSection } from "@/hooks/useContent";
 
 const WhatWeDoSection = () => {
+  const { content: whatWeDoContent } = useContentSection('about', 'what_we_do');
+  
   const services = [
     {
       icon: Heart,
-      title: "Local Ministries",
-      description: "Taylor World Outreach (TWO) ministries provide hands-on opportunities to serve in our local Upland and beyond. These programs focus on meeting immediate needs while building lasting relationships."
+      title: whatWeDoContent.local_ministries_title || "Local Ministries",
+      description: whatWeDoContent.local_ministries_description || "Taylor World Outreach (TWO) ministries provide hands-on opportunities to serve in our local Upland and beyond. These programs focus on meeting immediate needs while building lasting relationships."
     },
     {
       icon: Users,
-      title: "Community Plunge",
-      description: "Our signature immersive experience where volunteers dive deep into service in Upland, building connections and creating lasting impact through intensive, focused engagement."
+      title: whatWeDoContent.community_plunge_title || "Community Plunge",
+      description: whatWeDoContent.community_plunge_description || "Our signature immersive experience where volunteers dive deep into service in Upland, building connections and creating lasting impact through intensive, focused engagement."
     },
     {
       icon: Globe,
-      title: "World Opportunities",
-      description: "Learn about opportunities to serve globally, from short-term mission trips to long-term international partnerships that expand your impact beyond local borders."
+      title: whatWeDoContent.world_opportunities_title || "World Opportunities",
+      description: whatWeDoContent.world_opportunities_description || "Learn about opportunities to serve globally, from short-term mission trips to long-term international partnerships that expand your impact beyond local borders."
     },
     {
       icon: HandHeart,
-      title: "Community Outreach Programs",
-      description: "Share the love of Christ through diverse service opportunities that address real needs in Upland and foster meaningful relationships."
+      title: whatWeDoContent.community_outreach_title || "Community Outreach Programs",
+      description: whatWeDoContent.community_outreach_description || "Share the love of Christ through diverse service opportunities that address real needs in Upland and foster meaningful relationships."
     }
   ];
 
@@ -31,11 +34,11 @@ const WhatWeDoSection = () => {
           {/* Section Header */}
           <div className="animate-slide-up">
             <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-              What We Do
+              {whatWeDoContent.title || 'What We Do'}
             </h2>
             
             <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-4xl mx-auto">
-              Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in Upland.
+              {whatWeDoContent.description || 'Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in Upland.'}
             </p>
           </div>
         </div>
