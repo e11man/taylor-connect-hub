@@ -1354,6 +1354,88 @@ app.get('/api/user-events/:userId', async (req, res) => {
   }
 });
 
+// Group signup API route - handle multiple signups at once
+app.post('/api/group-signup', async (req, res) => {
+  try {
+    const { user_ids, event_id, signed_up_by } = req.body;
+    
+    if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0 || !event_id) {
+      return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    // Check event capacity
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select('max_participants')
+      .eq('id', event_id)
+      .single();
+
+    if (eventError) throw eventError;
+
+    if (event.max_participants) {
+      const { count, error: countError } = await supabase
+        .from('user_events')
+        .select('*', { count: 'exact', head: true })
+        .eq('event_id', event_id);
+
+      if (countError) throw countError;
+      
+      const availableSpots = event.max_participants - count;
+      if (user_ids.length > availableSpots) {
+        return res.status(400).json({ 
+          success: false, 
+          error: `Not enough spots. Only ${availableSpots} spots remaining for ${user_ids.length} users.` 
+        });
+      }
+    }
+
+    // Check for existing signups
+    const { data: existing, error: existingError } = await supabase
+      .from('user_events')
+      .select('user_id')
+      .eq('event_id', event_id)
+      .in('user_id', user_ids);
+
+    if (existingError) throw existingError;
+
+    if (existing && existing.length > 0) {
+      const existingUserIds = existing.map(e => e.user_id);
+      const newUserIds = user_ids.filter(id => !existingUserIds.includes(id));
+      
+      if (newUserIds.length === 0) {
+        return res.status(400).json({ success: false, error: 'All selected users are already signed up for this event' });
+      }
+      
+      // Only sign up users who aren't already signed up
+      user_ids.splice(0, user_ids.length, ...newUserIds);
+    }
+
+    // Prepare signup data
+    const signupData = user_ids.map(user_id => ({
+      user_id,
+      event_id,
+      signed_up_by: signed_up_by || user_id
+    }));
+
+    // Insert all signups
+    const { data, error } = await supabase
+      .from('user_events')
+      .insert(signupData)
+      .select();
+
+    if (error) throw error;
+    
+    res.json({ 
+      success: true, 
+      data,
+      message: `Successfully signed up ${user_ids.length} ${user_ids.length === 1 ? 'user' : 'users'} for the event`
+    });
+  } catch (error) {
+    console.error('Error in group signup:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 app.delete('/api/event-signup', async (req, res) => {
   try {
     const { user_id, event_id } = req.query;

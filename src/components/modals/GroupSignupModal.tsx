@@ -179,55 +179,43 @@ const GroupSignupModal = ({
     setSubmitting(true);
     
     try {
-      const signupPromises = [];
-      const signupData = [];
+      // Prepare user IDs for signup
+      const userIds = Array.from(selectedUsers);
+      if (includeMyself) {
+        userIds.push(user.id);
+      }
+
+      // Use the group signup API
+      const apiUrl = process.env.NODE_ENV === 'production' 
+        ? '/api/group-signup' 
+        : 'http://localhost:3001/api/group-signup';
       
-      // Sign up selected users
-      for (const userId of selectedUsers) {
-        signupPromises.push(
-          supabase
-            .from('user_events')
-            .insert({
-              user_id: userId,
-              event_id: eventId,
-              signed_up_by: user.id
-            })
-        );
-        signupData.push({
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_ids: userIds,
+          event_id: eventId,
+          signed_up_by: user.id
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Failed to sign up users');
+      }
+
+      // Send confirmation emails (optional - won't break if it fails)
+      try {
+        const signupData = userIds.map(userId => ({
           userId,
           eventId,
           signedUpBy: user.id
-        });
-      }
+        }));
 
-      // Include myself if checked
-      if (includeMyself) {
-        signupPromises.push(
-          supabase
-            .from('user_events')
-            .insert({
-              user_id: user.id,
-              event_id: eventId,
-              signed_up_by: user.id
-            })
-        );
-        signupData.push({
-          userId: user.id,
-          eventId,
-          signedUpBy: user.id
-        });
-      }
-
-      const results = await Promise.all(signupPromises);
-      
-      // Check for errors
-      const errors = results.filter(result => result.error);
-      if (errors.length > 0) {
-        throw new Error(`Failed to sign up ${errors.length} users`);
-      }
-
-      // Send confirmation emails
-      try {
         const emailResponse = await supabase.functions.invoke('send-signup-confirmation', {
           body: { signups: signupData }
         });
@@ -241,7 +229,7 @@ const GroupSignupModal = ({
         // Don't fail the entire operation if emails fail
       }
 
-      const totalSignups = selectedUsers.size + (includeMyself ? 1 : 0);
+      const totalSignups = userIds.length;
       toast({
         title: "Success!",
         description: `Successfully signed up ${totalSignups} ${totalSignups === 1 ? 'person' : 'people'} for "${eventTitle}". Confirmation emails have been sent.`,
@@ -255,7 +243,7 @@ const GroupSignupModal = ({
       console.error('Error signing up users:', error);
       toast({
         title: "Error",
-        description: "Failed to sign up users. Please try again.",
+        description: error.message || "Failed to sign up users. Please try again.",
         variant: "destructive",
       });
     } finally {
