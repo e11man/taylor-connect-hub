@@ -9,6 +9,9 @@ export default defineConfig(({ mode }) => ({
     host: "::",
     port: 8080,
     historyApiFallback: true, // Enable history API fallback for client-side routing
+    hmr: {
+      overlay: false, // Disable the error overlay that's causing constant reloading
+    },
     proxy: {
       '/api': {
         target: 'http://localhost:3001',
