@@ -9,10 +9,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X } from 'lucide-react';
+import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Calendar, Clock, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ContentManagement } from '@/components/admin/ContentManagement';
 import { Statistics } from '@/components/admin/Statistics';
+import { useTimePeriodStatistics } from '@/hooks/useTimePeriodStatistics';
 
 interface User {
   id: string;
@@ -59,7 +60,17 @@ export const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
   const { toast } = useToast();
+  
+  // Time period statistics
+  const { 
+    timePeriodStats, 
+    currentYearStats, 
+    currentMonthStats, 
+    loading: timeStatsLoading, 
+    refreshStatistics: refreshTimeStats 
+  } = useTimePeriodStatistics(timePeriod);
 
   // Modal states
   const [viewUserModal, setViewUserModal] = useState(false);
@@ -1012,7 +1023,140 @@ export const AdminDashboard = () => {
 
         {/* Statistics Tab */}
         <TabsContent value="statistics" className="space-y-6">
-          <Statistics />
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Time Period Statistics
+              </CardTitle>
+              <CardDescription>
+                View statistics for different time periods
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Time Period Selector */}
+              <div className="flex items-center gap-4 mb-6">
+                <Label htmlFor="time-period">Time Period:</Label>
+                <Select value={timePeriod} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'yearly') => setTimePeriod(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={refreshTimeStats} variant="outline" size="sm" disabled={timeStatsLoading}>
+                  <RefreshCw className={`w-4 h-4 ${timeStatsLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+
+              {/* Current Period Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Current Year</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{currentYearStats.active_volunteers}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {currentYearStats.hours_contributed} hours • {currentYearStats.events_count} events
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Current Month</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{currentMonthStats.active_volunteers}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {currentMonthStats.hours_contributed} hours • {currentMonthStats.events_count} events
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Total Signups</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{currentYearStats.signups_count}</div>
+                    <p className="text-xs text-muted-foreground">
+                      This year
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Monthly Signups</CardTitle>
+                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{currentMonthStats.signups_count}</div>
+                    <p className="text-xs text-muted-foreground">
+                      This month
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Time Period Data Table */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Historical Data - {timePeriod.charAt(0).toUpperCase() + timePeriod.slice(1)}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {timeStatsLoading ? (
+                    <div className="text-center py-8">
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                      <p>Loading statistics...</p>
+                    </div>
+                  ) : timePeriodStats.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-2">Period</th>
+                            <th className="text-left p-2">Active Volunteers</th>
+                            <th className="text-left p-2">Hours Contributed</th>
+                            <th className="text-left p-2">Events</th>
+                            <th className="text-left p-2">Signups</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {timePeriodStats.map((stat, index) => (
+                            <tr key={index} className="border-b hover:bg-gray-50">
+                              <td className="p-2">
+                                {new Date(stat.period_start).toLocaleDateString()} - {new Date(stat.period_end).toLocaleDateString()}
+                              </td>
+                              <td className="p-2 font-medium">{stat.active_volunteers}</td>
+                              <td className="p-2">{stat.hours_contributed}</td>
+                              <td className="p-2">{stat.events_count}</td>
+                              <td className="p-2">{stat.signups_count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar className="w-8 h-8 mx-auto mb-2" />
+                      <p>No data available for this time period</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
 
