@@ -5,8 +5,11 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle } from 'lucide-react';
+import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ContentManagement } from '@/components/admin/ContentManagement';
 import { Statistics } from '@/components/admin/Statistics';
@@ -57,6 +60,40 @@ export const AdminDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
   const { toast } = useToast();
+
+  // Modal states
+  const [viewUserModal, setViewUserModal] = useState(false);
+  const [editUserModal, setEditUserModal] = useState(false);
+  const [viewOrgModal, setViewOrgModal] = useState(false);
+  const [editOrgModal, setEditOrgModal] = useState(false);
+  const [viewEventModal, setViewEventModal] = useState(false);
+  const [editEventModal, setEditEventModal] = useState(false);
+  
+  // Selected items for modals
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  
+  // Edit form states
+  const [editUserForm, setEditUserForm] = useState({
+    email: '',
+    role: '',
+    status: ''
+  });
+  const [editOrgForm, setEditOrgForm] = useState({
+    name: '',
+    contact_email: '',
+    description: '',
+    website: '',
+    phone: ''
+  });
+  const [editEventForm, setEditEventForm] = useState({
+    title: '',
+    description: '',
+    date: '',
+    location: '',
+    max_participants: 0
+  });
 
   // Load all data
   const loadData = async () => {
@@ -314,6 +351,155 @@ export const AdminDashboard = () => {
     }
   };
 
+  // View functions
+  const viewUser = (user: User) => {
+    setSelectedUser(user);
+    setViewUserModal(true);
+  };
+
+  const viewOrganization = (org: Organization) => {
+    setSelectedOrg(org);
+    setViewOrgModal(true);
+  };
+
+  const viewEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setViewEventModal(true);
+  };
+
+  // Edit functions
+  const editUser = (user: User) => {
+    setSelectedUser(user);
+    setEditUserForm({
+      email: user.email,
+      role: user.role,
+      status: user.status
+    });
+    setEditUserModal(true);
+  };
+
+  const editOrganization = (org: Organization) => {
+    setSelectedOrg(org);
+    setEditOrgForm({
+      name: org.name,
+      contact_email: org.contact_email,
+      description: org.description || '',
+      website: org.website || '',
+      phone: org.phone || ''
+    });
+    setEditOrgModal(true);
+  };
+
+  const editEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setEditEventForm({
+      title: event.title,
+      description: event.description || '',
+      date: event.date,
+      location: event.location || '',
+      max_participants: event.max_participants || 0
+    });
+    setEditEventModal(true);
+  };
+
+  // Save functions
+  const saveUser = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          email: editUserForm.email,
+          role: editUserForm.role,
+          status: editUserForm.status
+        })
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "User updated successfully",
+      });
+
+      setEditUserModal(false);
+      loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to update user',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveOrganization = async () => {
+    if (!selectedOrg) return;
+    
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          name: editOrgForm.name,
+          contact_email: editOrgForm.contact_email,
+          description: editOrgForm.description,
+          website: editOrgForm.website,
+          phone: editOrgForm.phone
+        })
+        .eq('id', selectedOrg.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Organization updated successfully",
+      });
+
+      setEditOrgModal(false);
+      loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to update organization',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveEvent = async () => {
+    if (!selectedEvent) return;
+    
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({
+          title: editEventForm.title,
+          description: editEventForm.description,
+          date: editEventForm.date,
+          location: editEventForm.location,
+          max_participants: editEventForm.max_participants
+        })
+        .eq('id', selectedEvent.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Event updated successfully",
+      });
+
+      setEditEventModal(false);
+      loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to update event',
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -558,10 +744,10 @@ export const AdminDashboard = () => {
                                 Promote to PA
                               </Button>
                             )}
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => viewUser(user)}>
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => editUser(user)}>
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
@@ -687,10 +873,10 @@ export const AdminDashboard = () => {
                                 </Button>
                               </>
                             )}
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => viewOrganization(org)}>
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => editOrganization(org)}>
                               <Edit className="w-4 h-4" />
                             </Button>
                           </div>
@@ -764,10 +950,10 @@ export const AdminDashboard = () => {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => viewEvent(event)}>
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="outline">
+                            <Button size="sm" variant="outline" onClick={() => editEvent(event)}>
                               <Edit className="w-4 h-4" />
                             </Button>
                             <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)}>
@@ -800,6 +986,294 @@ export const AdminDashboard = () => {
           <Statistics />
         </TabsContent>
       </Tabs>
+
+      {/* View User Modal */}
+      <Dialog open={viewUserModal} onOpenChange={setViewUserModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+            <DialogDescription>View user information</DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-4">
+              <div>
+                <Label>Email</Label>
+                <p className="text-sm text-gray-600">{selectedUser.email}</p>
+              </div>
+              <div>
+                <Label>Role</Label>
+                <p className="text-sm text-gray-600">{selectedUser.role}</p>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <p className="text-sm text-gray-600">{selectedUser.status}</p>
+              </div>
+              <div>
+                <Label>Created</Label>
+                <p className="text-sm text-gray-600">{new Date(selectedUser.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Modal */}
+      <Dialog open={editUserModal} onOpenChange={setEditUserModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>Update user information</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="user-email">Email</Label>
+              <Input
+                id="user-email"
+                value={editUserForm.email}
+                onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="user-role">Role</Label>
+              <Select value={editUserForm.role} onValueChange={(value) => setEditUserForm({ ...editUserForm, role: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="pa">PA</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="user-status">Status</Label>
+              <Select value={editUserForm.status} onValueChange={(value) => setEditUserForm({ ...editUserForm, status: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="blocked">Blocked</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={saveUser} className="flex-1">Save</Button>
+              <Button variant="outline" onClick={() => setEditUserModal(false)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Organization Modal */}
+      <Dialog open={viewOrgModal} onOpenChange={setViewOrgModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Organization Details</DialogTitle>
+            <DialogDescription>View organization information</DialogDescription>
+          </DialogHeader>
+          {selectedOrg && (
+            <div className="space-y-4">
+              <div>
+                <Label>Name</Label>
+                <p className="text-sm text-gray-600">{selectedOrg.name}</p>
+              </div>
+              <div>
+                <Label>Contact Email</Label>
+                <p className="text-sm text-gray-600">{selectedOrg.contact_email}</p>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <p className="text-sm text-gray-600">{selectedOrg.status}</p>
+              </div>
+              {selectedOrg.description && (
+                <div>
+                  <Label>Description</Label>
+                  <p className="text-sm text-gray-600">{selectedOrg.description}</p>
+                </div>
+              )}
+              {selectedOrg.website && (
+                <div>
+                  <Label>Website</Label>
+                  <p className="text-sm text-gray-600">{selectedOrg.website}</p>
+                </div>
+              )}
+              {selectedOrg.phone && (
+                <div>
+                  <Label>Phone</Label>
+                  <p className="text-sm text-gray-600">{selectedOrg.phone}</p>
+                </div>
+              )}
+              <div>
+                <Label>Created</Label>
+                <p className="text-sm text-gray-600">{new Date(selectedOrg.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Organization Modal */}
+      <Dialog open={editOrgModal} onOpenChange={setEditOrgModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Organization</DialogTitle>
+            <DialogDescription>Update organization information</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="org-name">Name</Label>
+              <Input
+                id="org-name"
+                value={editOrgForm.name}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="org-email">Contact Email</Label>
+              <Input
+                id="org-email"
+                value={editOrgForm.contact_email}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, contact_email: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="org-description">Description</Label>
+              <Textarea
+                id="org-description"
+                value={editOrgForm.description}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, description: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="org-website">Website</Label>
+              <Input
+                id="org-website"
+                value={editOrgForm.website}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, website: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="org-phone">Phone</Label>
+              <Input
+                id="org-phone"
+                value={editOrgForm.phone}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, phone: e.target.value })}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={saveOrganization} className="flex-1">Save</Button>
+              <Button variant="outline" onClick={() => setEditOrgModal(false)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Event Modal */}
+      <Dialog open={viewEventModal} onOpenChange={setViewEventModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Event Details</DialogTitle>
+            <DialogDescription>View event information</DialogDescription>
+          </DialogHeader>
+          {selectedEvent && (
+            <div className="space-y-4">
+              <div>
+                <Label>Title</Label>
+                <p className="text-sm text-gray-600">{selectedEvent.title}</p>
+              </div>
+              {selectedEvent.description && (
+                <div>
+                  <Label>Description</Label>
+                  <p className="text-sm text-gray-600">{selectedEvent.description}</p>
+                </div>
+              )}
+              <div>
+                <Label>Organization</Label>
+                <p className="text-sm text-gray-600">{selectedEvent.organization_name}</p>
+              </div>
+              <div>
+                <Label>Date</Label>
+                <p className="text-sm text-gray-600">{new Date(selectedEvent.date).toLocaleDateString()}</p>
+              </div>
+              <div>
+                <Label>Location</Label>
+                <p className="text-sm text-gray-600">{selectedEvent.location || 'TBD'}</p>
+              </div>
+              {selectedEvent.max_participants && (
+                <div>
+                  <Label>Max Participants</Label>
+                  <p className="text-sm text-gray-600">{selectedEvent.max_participants}</p>
+                </div>
+              )}
+              <div>
+                <Label>Created</Label>
+                <p className="text-sm text-gray-600">{new Date(selectedEvent.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Event Modal */}
+      <Dialog open={editEventModal} onOpenChange={setEditEventModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Event</DialogTitle>
+            <DialogDescription>Update event information</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="event-title">Title</Label>
+              <Input
+                id="event-title"
+                value={editEventForm.title}
+                onChange={(e) => setEditEventForm({ ...editEventForm, title: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="event-description">Description</Label>
+              <Textarea
+                id="event-description"
+                value={editEventForm.description}
+                onChange={(e) => setEditEventForm({ ...editEventForm, description: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="event-date">Date</Label>
+              <Input
+                id="event-date"
+                type="date"
+                value={editEventForm.date}
+                onChange={(e) => setEditEventForm({ ...editEventForm, date: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="event-location">Location</Label>
+              <Input
+                id="event-location"
+                value={editEventForm.location}
+                onChange={(e) => setEditEventForm({ ...editEventForm, location: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="event-max-participants">Max Participants</Label>
+              <Input
+                id="event-max-participants"
+                type="number"
+                value={editEventForm.max_participants}
+                onChange={(e) => setEditEventForm({ ...editEventForm, max_participants: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={saveEvent} className="flex-1">Save</Button>
+              <Button variant="outline" onClick={() => setEditEventModal(false)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
