@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Send, MessageCircle } from 'lucide-react';
+import { sendChatMessage } from '@/utils/chatNotificationService';
 
 interface ChatMessage {
   id: string;
@@ -116,22 +117,23 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
     setLoading(true);
     
     try {
-      const { error } = await supabase
-        .rpc('insert_chat_message', {
-          p_event_id: eventId,
-          p_message: newMessage.trim(),
-          p_is_anonymous: !isHost, // Only hosts are not anonymous
-          p_user_id: user?.id || null,
-          p_organization_id: isHost && userOrganization ? userOrganization.id : null
-        });
+      const result = await sendChatMessage(
+        eventId,
+        newMessage.trim(),
+        !isHost, // Only hosts are not anonymous
+        user?.id,
+        isHost && userOrganization ? userOrganization.id : undefined
+      );
 
-      if (error) throw error;
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to send message');
+      }
 
       setNewMessage('');
 
       toast({
         title: "Message sent",
-        description: "Your message has been posted to the chat",
+        description: "Your message has been posted to the chat and notifications sent",
       });
 
     } catch (error) {

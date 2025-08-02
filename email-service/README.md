@@ -1,6 +1,6 @@
 # Email Service
 
-This folder contains the email verification and password reset services for Taylor Connect Hub.
+This folder contains the email verification, password reset, and chat notification services for Taylor Connect Hub.
 
 ## Setup
 
@@ -30,6 +30,12 @@ source venv/bin/activate
 python3 send_password_reset_email.py "user@example.com"
 ```
 
+### Chat Notifications
+```bash
+source venv/bin/activate
+python3 send_chat_notification_email.py
+```
+
 ### From Node.js/TypeScript
 ```typescript
 import { sendVerificationCode } from '@/utils/emailService';
@@ -46,7 +52,12 @@ const resetResult = await sendPasswordResetCode('user@example.com');
 if (resetResult.success) {
   console.log('Password reset code sent');
 }
-```
+
+// Process chat notifications
+const notificationResult = await processChatNotifications();
+if (notificationResult.success) {
+  console.log('Chat notifications processed');
+}
 
 ## Features
 
@@ -63,6 +74,14 @@ if (resetResult.success) {
 - Sends professionally formatted HTML emails
 - Includes database functions for verification and password updates
 - Secure password reset flow with code verification
+
+### Chat Notifications
+- Automatically sends emails when new chat messages are posted
+- Respects user notification preferences (immediate, daily, weekly, never)
+- Sends to volunteers signed up for events and event organizers
+- Professional HTML email templates with event details
+- Rate limiting based on user preferences
+- Tracks notification status to prevent duplicates
 
 ## Email Templates
 
@@ -82,6 +101,15 @@ The password reset email includes:
 - Professional styling
 - Mobile-responsive design
 
+### Chat Notification Email
+The chat notification email includes:
+- Taylor Connect Hub branding
+- Event title and description
+- Sender information (Organization/Volunteer/Anonymous)
+- Message preview
+- Direct link to view the event chat
+- Professional styling with event details
+
 ## Database Integration
 
 ### Password Reset Functions
@@ -96,12 +124,22 @@ The service integrates with database functions:
 - Secure database functions with proper error handling
 - Client-side bcrypt password hashing
 
+### Chat Notification Features
+- Automatic notification creation when chat messages are posted
+- User preference-based rate limiting (immediate/daily/weekly/never)
+- Duplicate prevention and notification tracking
+- Organization and volunteer targeting
+- Database triggers for automatic processing
+
 ## Integration
 
 The service is integrated with:
 - User registration flow
 - Email verification components
 - Password reset flow
+- Chat messaging system
+- Notification preferences management
 - Database verification code storage
 - Resend functionality
-- Frontend password reset modals 
+- Frontend password reset modals
+- Event chat modals 

@@ -179,6 +179,74 @@ app.post('/api/send-password-reset', async (req, res) => {
   }
 });
 
+// Chat notification processing endpoint
+app.post('/api/process-chat-notifications', async (req, res) => {
+  try {
+    console.log('Processing chat notifications...');
+
+    // Call the Python script
+    const pythonScriptPath = path.join(process.cwd(), 'email-service', 'send_chat_notification_email.py');
+    
+    return new Promise((resolve, reject) => {
+      const args = [pythonScriptPath];
+      
+      // Set up environment to use the virtual environment
+      const env = { ...process.env };
+      const venvPath = path.join(process.cwd(), 'email-service', 'venv');
+      env.PYTHONPATH = path.join(venvPath, 'lib', 'python3.13', 'site-packages');
+      env.VIRTUAL_ENV = venvPath;
+      env.PATH = path.join(venvPath, 'bin') + ':' + env.PATH;
+      
+      // Use the virtual environment's Python directly
+      const venvPythonPath = path.join(venvPath, 'bin', 'python');
+      const pythonProcess = spawn(venvPythonPath, args, { env });
+      
+      let output = '';
+      let errorOutput = '';
+      
+      pythonProcess.stdout.on('data', (data) => {
+        output += data.toString();
+      });
+      
+      pythonProcess.stderr.on('data', (data) => {
+        errorOutput += data.toString();
+      });
+      
+      pythonProcess.on('close', (code) => {
+        if (code === 0) {
+          console.log('Chat notifications processed successfully via Python script');
+          res.json({ 
+            success: true, 
+            message: 'Chat notifications processed successfully',
+            output: output
+          });
+          resolve();
+        } else {
+          console.error('Python script error:', errorOutput);
+          res.status(500).json({ 
+            error: 'Failed to process chat notifications',
+            details: errorOutput
+          });
+          reject();
+        }
+      });
+      
+      pythonProcess.on('error', (error) => {
+        console.error('Failed to start Python process:', error);
+        res.status(500).json({ 
+          error: 'Failed to start email service',
+          details: error.message
+        });
+        reject();
+      });
+    });
+
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Admin approval endpoints
 app.post('/api/admin/approve-organization', async (req, res) => {
   try {
