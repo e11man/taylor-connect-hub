@@ -215,6 +215,33 @@ export const AdminDashboard = () => {
     setSelectedUsers(new Set(paUsers.map(u => u.id)));
   };
 
+  // Email functionality
+  const handleEmailSelectedUsers = () => {
+    const selectedUserEmails = filteredUsers
+      .filter(user => selectedUsers.has(user.id))
+      .map(user => user.email);
+    
+    if (selectedUserEmails.length === 0) {
+      toast({
+        title: "No users selected",
+        description: "Please select at least one user to email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create mailto link with all selected emails
+    const mailtoLink = `mailto:${selectedUserEmails.join(',')}`;
+    
+    // Open native email app
+    window.open(mailtoLink, '_blank');
+    
+    toast({
+      title: "Email app opened",
+      description: `Email app opened with ${selectedUserEmails.length} recipient(s)`,
+    });
+  };
+
   // Organization selection functions
   const toggleOrganizationSelection = (orgId: string) => {
     const newSelection = new Set(selectedOrganizations);
@@ -232,6 +259,33 @@ export const AdminDashboard = () => {
 
   const clearOrganizationSelection = () => {
     setSelectedOrganizations(new Set());
+  };
+
+  // Email functionality for organizations
+  const handleEmailSelectedOrganizations = () => {
+    const selectedOrgEmails = filteredOrganizations
+      .filter(org => selectedOrganizations.has(org.id))
+      .map(org => org.contact_email);
+    
+    if (selectedOrgEmails.length === 0) {
+      toast({
+        title: "No organizations selected",
+        description: "Please select at least one organization to email",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Create mailto link with all selected organization emails
+    const mailtoLink = `mailto:${selectedOrgEmails.join(',')}`;
+    
+    // Open native email app
+    window.open(mailtoLink, '_blank');
+    
+    toast({
+      title: "Email app opened",
+      description: `Email app opened with ${selectedOrgEmails.length} organization(s)`,
+    });
   };
 
   // Approval functions
@@ -731,6 +785,16 @@ export const AdminDashboard = () => {
                 <Button variant="outline" onClick={clearUserSelection}>
                   Clear Selection
                 </Button>
+                {selectedUsers.size > 0 && (
+                  <Button 
+                    variant="default" 
+                    onClick={handleEmailSelectedUsers}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Email Selected ({selectedUsers.size})
+                  </Button>
+                )}
               </div>
 
               {/* Users Table */}
@@ -738,6 +802,20 @@ export const AdminDashboard = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <input
+                          type="checkbox"
+                          checked={selectedUsers.size === filteredUsers.length && filteredUsers.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              selectAllUsers();
+                            } else {
+                              clearUserSelection();
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                      </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         User
                       </th>
@@ -758,6 +836,14 @@ export const AdminDashboard = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredUsers.map(user => (
                       <tr key={user.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedUsers.has(user.id)}
+                            onChange={() => toggleUserSelection(user.id)}
+                            className="rounded border-gray-300"
+                          />
+                        </td>
                         <td className="px-4 py-3">
                           <div className="text-sm font-medium text-gray-900">{user.email}</div>
                         </td>
@@ -851,6 +937,16 @@ export const AdminDashboard = () => {
                 <Button variant="outline" onClick={clearOrganizationSelection}>
                   Clear Selection
                 </Button>
+                {selectedOrganizations.size > 0 && (
+                  <Button 
+                    variant="default" 
+                    onClick={handleEmailSelectedOrganizations}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    Email Selected ({selectedOrganizations.size})
+                  </Button>
+                )}
               </div>
 
               {/* Organizations Table */}
@@ -858,6 +954,20 @@ export const AdminDashboard = () => {
                 <table className="w-full">
                   <thead className="bg-gray-50">
                     <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        <input
+                          type="checkbox"
+                          checked={selectedOrganizations.size === filteredOrganizations.length && filteredOrganizations.length > 0}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              selectAllOrganizations();
+                            } else {
+                              clearOrganizationSelection();
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                      </th>
                       <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Organization
                       </th>
@@ -878,6 +988,14 @@ export const AdminDashboard = () => {
                   <tbody className="bg-white divide-y divide-gray-200">
                     {filteredOrganizations.map(org => (
                       <tr key={org.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <input
+                            type="checkbox"
+                            checked={selectedOrganizations.has(org.id)}
+                            onChange={() => toggleOrganizationSelection(org.id)}
+                            className="rounded border-gray-300"
+                          />
+                        </td>
                         <td className="px-4 py-3">
                           <div className="text-sm font-medium text-gray-900">{org.name}</div>
                           {org.description && (
