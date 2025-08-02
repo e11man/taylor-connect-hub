@@ -1,723 +1,345 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { 
-  Users, 
-  Building2, 
-  Calendar, 
-  Shield, 
-  UserCheck, 
-  Check, 
-  X, 
-  Edit2, 
-  Trash2, 
-  Mail,
-  Phone,
-  Globe,
-  MapPin,
-  Clock,
-  UserPlus,
-  Building,
-  CalendarDays,
-  Search,
-  Filter,
-  ChevronRight,
-  AlertCircle,
-  CheckCircle2,
-  Sparkles,
-  Heart,
-  BarChart3
-} from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Separator } from "@/components/ui/separator";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import { ContentManagement } from "@/components/admin/ContentManagement";
-import { Statistics } from "@/components/admin/Statistics";
-import { format } from "date-fns";
-import { Database } from "@/integrations/supabase/types";
-import { formatEventTimeRange } from "@/utils/formatEvent";
-
-type UserRole = Database["public"]["Enums"]["user_role"];
+import { useState, useEffect } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
+import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Calendar, Clock, TrendingUp } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { ContentManagement } from '@/components/admin/ContentManagement';
+import { Statistics } from '@/components/admin/Statistics';
+import { useTimePeriodStatistics } from '@/hooks/useTimePeriodStatistics';
 
 interface User {
   id: string;
-  user_id?: string; // Added for user_id from profiles
   email: string;
+  user_type: string;
   created_at: string;
-  profiles?: {
-    dorm: string | null;
-    wing: string | null;
-    status: string;
-    profile_id?: string; // Added for profile_id
-    role?: UserRole; // Added for role from profiles table
-  };
-  user_roles?: {
-    role: UserRole;
-  }[];
+  status: string;
+  role: string;
+  organization_name?: string;
 }
 
 interface Organization {
   id: string;
   name: string;
-  description: string | null;
-  website: string | null;
-  phone: string | null;
   contact_email: string;
   status: string;
   created_at: string;
-  approved_at: string | null;
-  approved_by: string | null;
+  approved_at?: string;
+  approved_by?: string;
+  description?: string;
+  website?: string;
+  phone?: string;
 }
 
 interface Event {
   id: string;
   title: string;
-  description: string | null;
+  organization_name: string;
   date: string;
-  arrival_time: string | null;
-  estimated_end_time: string | null;
-  location: string | null;
-  max_participants: number | null;
-  organization_id: string | null;
+  description?: string;
+  location?: string;
+  max_participants?: number;
   created_at: string;
-  updated_at: string;
-  organizations?: {
-    name: string;
-  };
-  participants?: number;
 }
 
-const AdminDashboard = () => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+export const AdminDashboard = () => {
+  const [users, setUsers] = useState<User[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
+  const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
+  const [emailFilter, setEmailFilter] = useState<string>('all');
+  const [orgFilter, setOrgFilter] = useState<string>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [timePeriod, setTimePeriod] = useState<'daily' | 'weekly' | 'monthly' | 'yearly'>('monthly');
   const { toast } = useToast();
   
-  // State management
-  const [users, setUsers] = useState<User[]>([]);
-  const [pendingUsers, setPendingUsers] = useState<User[]>([]);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [pendingOrganizations, setPendingOrganizations] = useState<Organization[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [activeTab, setActiveTab] = useState("users");
-  const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+  // Time period statistics
+  const { 
+    timePeriodStats, 
+    currentYearStats, 
+    currentMonthStats, 
+    loading: timeStatsLoading, 
+    refreshStatistics: refreshTimeStats 
+  } = useTimePeriodStatistics(timePeriod);
+
+  // Modal states
+  const [viewUserModal, setViewUserModal] = useState(false);
+  const [editUserModal, setEditUserModal] = useState(false);
+  const [viewOrgModal, setViewOrgModal] = useState(false);
+  const [editOrgModal, setEditOrgModal] = useState(false);
+  const [viewEventModal, setViewEventModal] = useState(false);
+  const [editEventModal, setEditEventModal] = useState(false);
   
-  // Search and filter states
-  const [userSearchTerm, setUserSearchTerm] = useState("");
-  const [orgSearchTerm, setOrgSearchTerm] = useState("");
-  const [eventSearchTerm, setEventSearchTerm] = useState("");
+  // Selected items for modals
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedOrg, setSelectedOrg] = useState<Organization | null>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   
-  // Edit modals
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [editingOrg, setEditingOrg] = useState<Organization | null>(null);
-  const [editingEvent, setEditingEvent] = useState<Event | null>(null);
-  const [isCleaningUp, setIsCleaningUp] = useState(false);
-  
-  // Stats for dashboard
-  const [stats, setStats] = useState({
-    totalUsers: 0,
-    pendingApprovals: 0,
-    activeOrgs: 0,
-    upcomingEvents: 0
+  // Edit form states
+  const [editUserForm, setEditUserForm] = useState({
+    email: '',
+    role: '',
+    status: ''
+  });
+  const [editOrgForm, setEditOrgForm] = useState({
+    name: '',
+    contact_email: '',
+    description: '',
+    website: '',
+    phone: ''
+  });
+  const [editEventForm, setEditEventForm] = useState({
+    title: '',
+    description: '',
+    date: '',
+    location: '',
+    max_participants: 0
   });
 
-  useEffect(() => {
-    // Don't check admin access while still loading
-    if (loading) return;
-    
-    checkAdminAccess();
-  }, [user, loading]);
-
-  useEffect(() => {
-    if (isAdmin) {
-      const updateStats = () => {
-        setStats({
-          totalUsers: users.length,
-          pendingApprovals: pendingUsers.length + pendingOrganizations.length,
-          activeOrgs: organizations.length,
-          upcomingEvents: events.filter(e => new Date(e.date) >= new Date()).length
-        });
-      };
-      updateStats();
-    }
-  }, [users, pendingUsers, organizations, pendingOrganizations, events, isAdmin]);
-
-  const checkAdminAccess = async () => {
-    if (!user) {
-      navigate('/admin');
-      return;
-    }
-
+  // Load all data
+  const loadData = async () => {
+    setLoading(true);
     try {
-      // Check admin role in profiles table (where our admin users are stored)
-      const { data: profileData, error } = await supabase
-        .from('profiles')
-        .select('role, status')
-        .eq('email', user.email)
-        .maybeSingle();
-
-      // Check for specific database errors
-      if (error) {
-        console.error('Database error checking admin role:', error);
-        
-        // Check for common schema/permission errors
-        if (error.message?.includes('schema') || error.code === '42501') {
-          toast({
-            title: "Database Configuration Error",
-            description: "Unable to verify admin access. Please contact support.",
-            variant: "destructive",
-          });
-        } else {
-          toast({
-            title: "Access Check Failed",
-            description: error.message || "Could not verify your admin privileges.",
-            variant: "destructive",
-          });
-        }
-        navigate('/');
-        return;
-      }
-
-      // Verify admin role and active status
-      if (!profileData || profileData.role !== 'admin') {
-        toast({
-          title: "Access Denied",
-          description: "You don't have admin privileges.",
-          variant: "destructive",
-        });
-        navigate('/');
-        return;
-      }
-
-      if (profileData.status !== 'active') {
-        toast({
-          title: "Account Not Active",
-          description: "Your account is not active. Please contact support.",
-          variant: "destructive",
-        });
-        navigate('/');
-        return;
-      }
-
-      // User is admin, proceed with loading data
-      setIsAdmin(true);
-      await fetchAllData();
-    } catch (error) {
-      console.error('Unexpected error checking admin access:', error);
-      
-      // Fallback error handling
-      toast({
-        title: "System Error",
-        description: "An unexpected error occurred. Please try again later.",
-        variant: "destructive",
-      });
-      navigate('/admin');
-    }
-  };
-
-  const fetchAllData = async () => {
-    setIsLoading(true);
-    try {
-      await Promise.all([
-        fetchUsers(),
-        fetchOrganizations(),
-        fetchEvents()
-      ]);
-    } catch (error) {
-      console.error('Error fetching data:', error);
-      toast({
-        title: "Error loading data",
-        description: "Some data could not be loaded. Please refresh the page.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchUsers = async () => {
-    try {
-      console.log('Starting fetchUsers...');
-      
-      // FIX: Removed supabase.auth.admin.listUsers() which requires service role key
-      // Instead, we query the profiles table directly which the anon key can access
-      // This prevents the "Database error querying schema" error
-      
-      // Fetch all profiles (users) - exclude organizations
-      const { data: profiles, error: profilesError } = await supabase
+      // Load users/profiles
+      const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('*')
-        .neq('user_type', 'organization') // Exclude organizations from users list
         .order('created_at', { ascending: false });
       
-      console.log('Profiles query result:', { profiles, profilesError });
-      
-      if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw new Error(`Failed to fetch profiles: ${profilesError.message}`);
-      }
+      if (usersError) throw usersError;
+      setUsers(usersData || []);
 
-      // Fetch user roles separately
-      const { data: roles, error: rolesError } = await supabase
-        .from('user_roles')
-        .select('*');
-      
-      console.log('Roles query result:', { roles, rolesError });
-      
-      if (rolesError) {
-        console.error('Error fetching roles:', rolesError);
-        // Don't throw here, roles might not exist for all users
-      }
-
-      // Combine the data
-      const combinedUsers = (profiles || []).map(profile => {
-        const role = roles?.find(r => r.user_id === profile.user_id);
-        
-        return {
-          id: profile.id, // Use profile.id instead of profile.user_id
-          user_id: profile.user_id, // Keep user_id for role management
-          email: profile.email || '',
-          created_at: profile.created_at,
-          profiles: {
-            dorm: profile.dorm,
-            wing: profile.wing,
-            status: profile.status || 'active',
-            profile_id: profile.id, // Keep track of profile id for updates
-            role: profile.role // Include role from profiles table
-          },
-          user_roles: role ? [{
-            role: role.role as UserRole
-          }] : []
-        };
-      });
-
-      console.log('Combined users:', combinedUsers);
-
-      // Separate active and pending users
-      const activeUsers = combinedUsers.filter(u => 
-        !u.profiles || u.profiles.status === 'active'
-      );
-      const pendingUsersList = combinedUsers.filter(u => 
-        u.profiles?.status === 'pending'
-      );
-
-      console.log(`Found ${activeUsers.length} active users and ${pendingUsersList.length} pending users`);
-      console.log('Pending users details:', pendingUsersList.map(u => ({ email: u.email, user_type: u.profiles?.user_type })));
-
-      setUsers(activeUsers);
-      setPendingUsers(pendingUsersList);
-    } catch (error) {
-      console.error('Error in fetchUsers:', error);
-      
-      // Provide user-friendly error message
-      toast({
-        title: "Error loading users",
-        description: error instanceof Error ? error.message : "Failed to load user data. Please check your permissions.",
-        variant: "destructive",
-      });
-      
-      setUsers([]);
-      setPendingUsers([]);
-    }
-  };
-
-  const fetchOrganizations = async () => {
-    try {
-      const { data, error } = await supabase
+      // Load organizations
+      const { data: orgsData, error: orgsError } = await supabase
         .from('organizations')
         .select('*')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (orgsError) throw orgsError;
+      setOrganizations(orgsData || []);
 
-      const approved = data?.filter(org => org.status === 'approved') || [];
-      const pending = data?.filter(org => org.status === 'pending') || [];
-
-      setOrganizations(approved);
-      setPendingOrganizations(pending);
-    } catch (error) {
-      console.error('Error fetching organizations:', error);
-      setOrganizations([]);
-      setPendingOrganizations([]);
-    }
-  };
-
-  const fetchEvents = async () => {
-    try {
-      const { data, error } = await supabase
+      // Load events
+      const { data: eventsData, error: eventsError } = await supabase
         .from('events')
         .select(`
           *,
-          organizations (name),
-          user_events (count)
+          organizations(name)
         `)
-        .order('date', { ascending: true });
+        .order('created_at', { ascending: false });
+
+      if (eventsError) throw eventsError;
+      setEvents(eventsData || []);
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to load data',
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  // Calculate statistics
+  const userStats = {
+    total: users.length,
+    approved: users.filter(u => u.status === 'active').length,
+    pending: users.filter(u => u.status === 'pending').length,
+    pas: users.filter(u => u.role === 'pa').length,
+    organizations: organizations.length,
+  };
+
+  const orgStats = {
+    total: organizations.length,
+    approved: organizations.filter(o => o.status === 'approved').length,
+    pending: organizations.filter(o => o.status === 'pending').length,
+    rejected: organizations.filter(o => o.status === 'rejected').length,
+  };
+
+  const eventStats = {
+    total: events.length,
+    upcoming: events.filter(e => new Date(e.date) > new Date()).length,
+    past: events.filter(e => new Date(e.date) <= new Date()).length,
+  };
+
+  // Filter functions
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (user.organization_name || '').toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = emailFilter === 'all' || user.user_type === emailFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  const filteredOrganizations = organizations.filter(org => {
+    const matchesSearch = org.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         org.contact_email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = orgFilter === 'all' || org.status === orgFilter;
+    return matchesSearch && matchesFilter;
+  });
+
+  // User selection functions
+  const toggleUserSelection = (userId: string) => {
+    const newSelection = new Set(selectedUsers);
+    if (newSelection.has(userId)) {
+      newSelection.delete(userId);
+    } else {
+      newSelection.add(userId);
+    }
+    setSelectedUsers(newSelection);
+  };
+
+  const selectAllUsers = () => {
+    setSelectedUsers(new Set(filteredUsers.map(u => u.id)));
+  };
+
+  const clearUserSelection = () => {
+    setSelectedUsers(new Set());
+  };
+
+  const selectAllPAs = () => {
+    const paUsers = filteredUsers.filter(u => u.role === 'pa');
+    setSelectedUsers(new Set(paUsers.map(u => u.id)));
+  };
+
+  // Organization selection functions
+  const toggleOrganizationSelection = (orgId: string) => {
+    const newSelection = new Set(selectedOrganizations);
+    if (newSelection.has(orgId)) {
+      newSelection.delete(orgId);
+    } else {
+      newSelection.add(orgId);
+    }
+    setSelectedOrganizations(newSelection);
+  };
+
+  const selectAllOrganizations = () => {
+    setSelectedOrganizations(new Set(filteredOrganizations.map(o => o.id)));
+  };
+
+  const clearOrganizationSelection = () => {
+    setSelectedOrganizations(new Set());
+  };
+
+  // Approval functions
+  const approveUser = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: 'active' })
+        .eq('id', userId);
 
       if (error) throw error;
 
-      // Add participant count
-      const eventsWithParticipants = data?.map(event => ({
-        ...event,
-        participants: event.user_events?.[0]?.count || 0
-      })) || [];
-
-      setEvents(eventsWithParticipants);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-      setEvents([]);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
       toast({
-        title: "Logged out successfully",
-        description: "Come back soon! 👋",
-      });
-      navigate('/');
-    } catch (error) {
-      console.error('Error logging out:', error);
-      navigate('/');
-    }
-  };
-
-  // User management functions
-  const approveUser = async (userId: string) => {
-    try {
-      const response = await fetch('/api/admin/approve-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: userId,
-          adminId: user?.id
-        }),
+        title: "Success",
+        description: "User approved successfully",
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "User approved! 🎉",
-          description: "The user can now access the platform.",
-        });
-        await fetchUsers();
-      } else {
-        throw new Error(result.error || 'Failed to approve user');
-      }
-    } catch (error) {
-      console.error('Error approving user:', error);
+      loadData(); // Refresh data
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Failed to approve user.",
+        description: err.message || 'Failed to approve user',
         variant: "destructive",
       });
     }
   };
 
-  const rejectUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to reject this user?")) return;
-
-    try {
-      const response = await fetch('/api/admin/reject-user', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: userId,
-          adminId: user?.id
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "User rejected",
-          description: "The user has been denied access.",
-        });
-        await fetchUsers();
-      } else {
-        throw new Error(result.error || 'Failed to reject user');
-      }
-    } catch (error) {
-      console.error('Error rejecting user:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to reject user.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateUserRole = async (userId: string, newRole: UserRole) => {
-    try {
-      // First, get the user to check if they have a user_id
-      const user = users.find(u => u.id === userId) || pendingUsers.find(u => u.id === userId);
-      
-      if (!user) {
-        throw new Error('User not found');
-      }
-
-      // Update profiles table first
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ role: newRole })
-        .eq('id', userId);
-
-      if (profileError) throw profileError;
-
-      // Update or insert into user_roles table using the actual user_id
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .upsert({ 
-          user_id: user.user_id || user.id, // Use user_id if available, fallback to id
-          role: newRole 
-        });
-
-      if (roleError) throw roleError;
-
-      toast({
-        title: "Role updated! ✨",
-        description: `User role changed to ${newRole}. Changes will be visible after refresh.`,
-      });
-
-      await fetchUsers();
-    } catch (error) {
-      console.error('Error updating role:', error);
-      toast({
-        title: "Error",
-        description: "Failed to update user role.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const deleteUser = async (userId: string) => {
-    if (!confirm("Are you sure you want to delete this user? This will permanently delete the user account, all their event signups, and if they're an organization, all their events and organization data. This action cannot be undone.")) return;
-
-    try {
-      const response = await fetch('/api/admin/delete-user', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: userId,
-          adminId: user?.id
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "User deleted",
-          description: "The user and all related data have been permanently removed.",
-        });
-        await fetchUsers();
-      } else {
-        throw new Error(result.error || 'Failed to delete user');
-      }
-    } catch (error) {
-      console.error('Error deleting user:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete user.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Organization management functions
   const approveOrganization = async (orgId: string) => {
-    try {
-      const response = await fetch('/api/admin/approve-organization', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          organizationId: orgId,
-          adminId: user?.id
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Organization approved! 🎊",
-          description: "They can now create events and have been notified via email.",
-        });
-        await fetchOrganizations();
-      } else {
-        throw new Error(result.error || 'Failed to approve organization');
-      }
-    } catch (error) {
-      console.error('Error approving organization:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to approve organization.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const rejectOrganization = async (orgId: string) => {
-    const reason = prompt("Please provide a reason for rejection (optional):");
-    if (reason === null) return; // User cancelled
-
-    try {
-      const response = await fetch('/api/admin/reject-organization', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          organizationId: orgId,
-          adminId: user?.id,
-          reason: reason || undefined
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Organization rejected",
-          description: "The organization has been denied and notified via email.",
-        });
-        await fetchOrganizations();
-      } else {
-        throw new Error(result.error || 'Failed to reject organization');
-      }
-    } catch (error) {
-      console.error('Error rejecting organization:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to reject organization.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const updateOrganization = async (orgId: string, updates: Partial<Organization>) => {
     try {
       const { error } = await supabase
         .from('organizations')
-        .update(updates)
+        .update({ 
+          status: 'approved',
+          approved_at: new Date().toISOString(),
+          approved_by: (await supabase.auth.getUser()).data.user?.id
+        })
         .eq('id', orgId);
 
       if (error) throw error;
 
       toast({
-        title: "Organization updated! 💫",
-        description: "Changes saved successfully.",
+        title: "Success",
+        description: "Organization approved successfully",
       });
 
-      await fetchOrganizations();
-      setEditingOrg(null);
-    } catch (error) {
-      console.error('Error updating organization:', error);
+      loadData(); // Refresh data
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to update organization.",
+        description: err.message || 'Failed to approve organization',
         variant: "destructive",
       });
     }
   };
 
-  const deleteOrganization = async (orgId: string) => {
-    if (!confirm("Are you sure? This will permanently delete the organization, all its events, user signups, and the user account. This action cannot be undone.")) return;
-
-    try {
-      const response = await fetch('/api/admin/delete-organization', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          organizationId: orgId,
-          adminId: user?.id
-        }),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Organization deleted",
-          description: "The organization and all related data have been permanently removed.",
-        });
-        await fetchOrganizations();
-      } else {
-        throw new Error(result.error || 'Failed to delete organization');
-      }
-    } catch (error) {
-      console.error('Error deleting organization:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete organization.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  // Event management functions
-  const updateEvent = async (eventId: string, updates: Partial<Event>) => {
+  const rejectOrganization = async (orgId: string, reason: string) => {
     try {
       const { error } = await supabase
-        .from('events')
-        .update(updates)
-        .eq('id', eventId);
+        .from('organizations')
+        .update({ 
+          status: 'rejected',
+          rejection_reason: reason
+        })
+        .eq('id', orgId);
 
       if (error) throw error;
 
       toast({
-        title: "Event updated! 🎯",
-        description: "Changes saved successfully.",
+        title: "Success",
+        description: "Organization rejected successfully",
       });
 
-      await fetchEvents();
-      setEditingEvent(null);
-    } catch (error) {
-      console.error('Error updating event:', error);
+      loadData(); // Refresh data
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to update event.",
+        description: err.message || 'Failed to reject organization',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const promoteToPA = async (userId: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: 'pa' })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "User promoted to PA successfully",
+      });
+
+      loadData(); // Refresh data
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to promote user',
         variant: "destructive",
       });
     }
   };
 
   const deleteEvent = async (eventId: string) => {
-    if (!confirm("Are you sure you want to delete this event?")) return;
-
     try {
-      // Delete related data first
-      await supabase.from('user_events').delete().eq('event_id', eventId);
-      await supabase.from('chat_messages').delete().eq('event_id', eventId);
-      
-      // Delete event
       const { error } = await supabase
         .from('events')
         .delete()
@@ -726,973 +348,1105 @@ const AdminDashboard = () => {
       if (error) throw error;
 
       toast({
-        title: "Event deleted",
-        description: "The event has been removed.",
+        title: "Success",
+        description: "Event deleted successfully",
       });
 
-      await fetchEvents();
-    } catch (error) {
-      console.error('Error deleting event:', error);
+      loadData(); // Refresh data
+    } catch (err: any) {
       toast({
         title: "Error",
-        description: "Failed to delete event.",
+        description: err.message || 'Failed to delete event',
         variant: "destructive",
       });
     }
   };
 
-  const performEventCleanup = async () => {
-    if (!confirm("This will remove all expired events (more than 1 hour after end time) that have no chat messages. Continue?")) return;
+  // View functions
+  const viewUser = (user: User) => {
+    setSelectedUser(user);
+    setViewUserModal(true);
+  };
 
-    setIsCleaningUp(true);
+  const viewOrganization = (org: Organization) => {
+    setSelectedOrg(org);
+    setViewOrgModal(true);
+  };
+
+  const viewEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setViewEventModal(true);
+  };
+
+  // Edit functions
+  const editUser = (user: User) => {
+    setSelectedUser(user);
+    setEditUserForm({
+      email: user.email,
+      role: user.role,
+      status: user.status
+    });
+    setEditUserModal(true);
+  };
+
+  const editOrganization = (org: Organization) => {
+    setSelectedOrg(org);
+    setEditOrgForm({
+      name: org.name,
+      contact_email: org.contact_email,
+      description: org.description || '',
+      website: org.website || '',
+      phone: org.phone || ''
+    });
+    setEditOrgModal(true);
+  };
+
+  const editEvent = (event: Event) => {
+    setSelectedEvent(event);
+    setEditEventForm({
+      title: event.title,
+      description: event.description || '',
+      date: event.date,
+      location: event.location || '',
+      max_participants: event.max_participants || 0
+    });
+    setEditEventModal(true);
+  };
+
+  // Save functions
+  const saveUser = async () => {
+    if (!selectedUser) return;
+    
     try {
-      const response = await fetch('/api/cleanup-events', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          email: editUserForm.email,
+          role: editUserForm.role,
+          status: editUserForm.status
+        })
+        .eq('id', selectedUser.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "User updated successfully",
       });
 
-      const result = await response.json();
-
-      if (response.ok) {
-        toast({
-          title: "Event Cleanup Complete",
-          description: result.message,
-        });
-        await fetchEvents(); // Refresh events list
-      } else {
-        throw new Error(result.error || 'Failed to perform cleanup');
-      }
-    } catch (error) {
-      console.error('Error performing event cleanup:', error);
+      setEditUserModal(false);
+      loadData();
+    } catch (err: any) {
       toast({
-        title: "Cleanup Failed",
-        description: error instanceof Error ? error.message : "Failed to perform event cleanup.",
+        title: "Error",
+        description: err.message || 'Failed to update user',
         variant: "destructive",
       });
-    } finally {
-      setIsCleaningUp(false);
     }
   };
 
-  // Filter functions
-  const filteredUsers = users.filter(user => 
-    user.email.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-    user.profiles?.dorm?.toLowerCase().includes(userSearchTerm.toLowerCase()) ||
-    user.profiles?.wing?.toLowerCase().includes(userSearchTerm.toLowerCase())
-  );
+  const saveOrganization = async () => {
+    if (!selectedOrg) return;
+    
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({
+          name: editOrgForm.name,
+          contact_email: editOrgForm.contact_email,
+          description: editOrgForm.description,
+          website: editOrgForm.website,
+          phone: editOrgForm.phone
+        })
+        .eq('id', selectedOrg.id);
 
-  const filteredOrganizations = organizations.filter(org =>
-    org.name.toLowerCase().includes(orgSearchTerm.toLowerCase()) ||
-    org.contact_email.toLowerCase().includes(orgSearchTerm.toLowerCase())
-  );
+      if (error) throw error;
 
-  const filteredEvents = events.filter(event =>
-    event.title.toLowerCase().includes(eventSearchTerm.toLowerCase()) ||
-    event.location?.toLowerCase().includes(eventSearchTerm.toLowerCase()) ||
-    event.organizations?.name.toLowerCase().includes(eventSearchTerm.toLowerCase())
-  );
+      toast({
+        title: "Success",
+        description: "Organization updated successfully",
+      });
 
-  if (loading || isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] to-white">
-        <Header />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center space-y-4">
-            <div className="relative">
-              <div className="w-16 h-16 border-4 border-[#00AFCE] border-t-transparent rounded-full animate-spin mx-auto"></div>
-              <Sparkles className="w-6 h-6 text-[#00AFCE] absolute top-0 right-0 animate-pulse" />
-            </div>
-            <p className="text-muted-foreground animate-pulse">
-              {loading ? 'Checking authentication...' : 'Loading admin dashboard...'}
-            </p>
-          </div>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
+      setEditOrgModal(false);
+      loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to update organization',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const saveEvent = async () => {
+    if (!selectedEvent) return;
+    
+    try {
+      const { error } = await supabase
+        .from('events')
+        .update({
+          title: editEventForm.title,
+          description: editEventForm.description,
+          date: editEventForm.date,
+          location: editEventForm.location,
+          max_participants: editEventForm.max_participants
+        })
+        .eq('id', selectedEvent.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Event updated successfully",
+      });
+
+      setEditEventModal(false);
+      loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to update event',
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Refresh statistics function
+  const refreshStatistics = async () => {
+    try {
+      const { error } = await supabase.rpc('refresh_all_statistics');
+      
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Statistics refreshed successfully",
+      });
+
+      // Reload data to show updated statistics
+      loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to refresh statistics',
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] to-white">
-      <Header />
-      
-      <main className="section-padding">
-        <div className="container-custom">
-          {/* Header Section */}
-          <div className="mb-6 md:mb-8">
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 md:gap-4 mb-8 md:mb-6">
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3 md:mb-2 flex items-center gap-2">
-                  Admin Console
-                  <Shield className="w-8 h-8 text-[#00AFCE]" />
-                </h1>
-                <p className="text-lg text-muted-foreground">
-                  Manage your community with love 💙
+    <div className="container mx-auto p-6 space-y-6">
+              <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-gray-600">Manage users, organizations, events, and content</p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={refreshStatistics} variant="outline" className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Refresh Statistics
+            </Button>
+            <Button onClick={loadData} variant="outline" className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Refresh Data
+            </Button>
+          </div>
+        </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid w-full grid-cols-6">
+          <TabsTrigger value="overview" className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Overview
+          </TabsTrigger>
+          <TabsTrigger value="users" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Users
+          </TabsTrigger>
+          <TabsTrigger value="organizations" className="flex items-center gap-2">
+            <Building2 className="w-4 h-4" />
+            Organizations
+          </TabsTrigger>
+          <TabsTrigger value="events" className="flex items-center gap-2">
+            <FileText className="w-4 h-4" />
+            Events
+          </TabsTrigger>
+          <TabsTrigger value="content" className="flex items-center gap-2">
+            <Edit className="w-4 h-4" />
+            Content
+          </TabsTrigger>
+          <TabsTrigger value="statistics" className="flex items-center gap-2">
+            <BarChart3 className="w-4 h-4" />
+            Analytics
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Overview Tab */}
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <Users className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{userStats.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {userStats.pas} PAs • {userStats.pending} pending
                 </p>
-              </div>
-              <Button 
-                onClick={handleLogout}
-                variant="outline"
-                className="group hover:border-red-500 transition-all w-full sm:w-auto"
-              >
-                <Shield className="w-4 h-4 mr-2 group-hover:text-red-500 transition-colors" />
-                Exit Admin
-              </Button>
-            </div>
+              </CardContent>
+            </Card>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-10 md:mb-8">
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("users")}>
-                <CardContent className="p-6 md:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Total Users</p>
-                      <p className="text-2xl font-bold text-gray-900">{stats.totalUsers}</p>
-                    </div>
-                    <Users className="w-8 h-8 text-[#00AFCE]" />
-                  </div>
-                </CardContent>
-              </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Organizations</CardTitle>
+                <Building2 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{orgStats.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {orgStats.approved} approved • {orgStats.pending} pending
+                </p>
+              </CardContent>
+            </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("pending")}>
-                <CardContent className="p-6 md:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Pending</p>
-                      <p className="text-2xl font-bold text-orange-600">{stats.pendingApprovals}</p>
-                    </div>
-                    <Clock className="w-8 h-8 text-orange-500" />
-                  </div>
-                </CardContent>
-              </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Events</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{eventStats.total}</div>
+                <p className="text-xs text-muted-foreground">
+                  {eventStats.upcoming} upcoming • {eventStats.past} past
+                </p>
+              </CardContent>
+            </Card>
 
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("orgs")}>
-                <CardContent className="p-6 md:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Active Orgs</p>
-                      <p className="text-2xl font-bold text-gray-900">{stats.activeOrgs}</p>
-                    </div>
-                    <Building2 className="w-8 h-8 text-[#00AFCE]" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab("events")}>
-                <CardContent className="p-6 md:p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Events</p>
-                      <p className="text-2xl font-bold text-gray-900">{stats.upcomingEvents}</p>
-                    </div>
-                    <Calendar className="w-8 h-8 text-[#00AFCE]" />
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Event Cleanup Button */}
-            <div className="flex justify-center mb-6">
-              <Button
-                onClick={performEventCleanup}
-                disabled={isCleaningUp}
-                variant="outline"
-                className="border-orange-200 text-orange-700 hover:bg-orange-50 hover:border-orange-300 transition-all"
-              >
-                {isCleaningUp ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-orange-600 border-t-transparent rounded-full animate-spin mr-2" />
-                    Cleaning Up...
-                  </>
-                ) : (
-                  <>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Clean Up Expired Events
-                  </>
-                )}
-              </Button>
-            </div>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Quick Actions</CardTitle>
+                <Plus className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button size="sm" className="w-full" onClick={() => setActiveTab('users')}>
+                  Manage Users
+                </Button>
+                <Button size="sm" variant="outline" className="w-full" onClick={() => setActiveTab('organizations')}>
+                  Manage Organizations
+                </Button>
+              </CardContent>
+            </Card>
           </div>
 
-          {/* Main Content Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8 md:space-y-6">
-            <div className="overflow-x-auto -mx-4 px-4 sm:mx-0 sm:px-0">
-              <TabsList className="inline-flex min-w-full sm:grid sm:w-full sm:grid-cols-6 h-auto p-1 bg-white shadow-sm">
-                <TabsTrigger value="users" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
-                  <Users className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>Users</span>
-                </TabsTrigger>
-                <TabsTrigger value="pending" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
-                  <UserCheck className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>Pending</span>
-                </TabsTrigger>
-                <TabsTrigger value="orgs" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
-                  <Building2 className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>Orgs</span>
-                </TabsTrigger>
-                <TabsTrigger value="events" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
-                  <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>Events</span>
-                </TabsTrigger>
-                <TabsTrigger value="statistics" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
-                  <BarChart3 className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>Statistics</span>
-                </TabsTrigger>
-                <TabsTrigger value="content" className="data-[state=active]:bg-[#00AFCE] data-[state=active]:text-white py-3 px-4 md:px-2 whitespace-nowrap">
-                  <Sparkles className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span>Content</span>
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            {/* Users Tab */}
-            <TabsContent value="users" className="space-y-6">
-              <Card>
-                <CardHeader className="pb-4 md:pb-6">
-                  <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
-                    <Users className="w-5 h-5" />
-                    User Management
-                  </CardTitle>
-                  <CardDescription className="mt-2">
-                    Manage active users, roles, and permissions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-2">
-                  <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                      <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center flex-1 w-full sm:w-auto">
-                        <div className="relative flex-1 w-full sm:max-w-sm">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                          <Input
-                            placeholder="Search by email, dorm, or wing..."
-                            value={userSearchTerm}
-                            onChange={(e) => setUserSearchTerm(e.target.value)}
-                            className="pl-10 w-full"
-                          />
-                        </div>
-                        <Badge variant="secondary" className="px-3 py-1 whitespace-nowrap">
-                          {filteredUsers.length} users
-                        </Badge>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Users</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {users.slice(0, 5).map(user => (
+                    <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium">{user.email}</p>
+                        <p className="text-sm text-gray-600">{user.role}</p>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fetchUsers()}
-                        className="gap-2 w-full sm:w-auto"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Refresh
-                      </Button>
+                      <Badge variant={user.status === 'active' ? "default" : "secondary"}>
+                        {user.status}
+                      </Badge>
                     </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-                    {filteredUsers.length === 0 ? (
-                      <div className="text-center py-16 md:py-12">
-                        <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg mb-2">No users found</p>
-                        <p className="text-gray-400 text-sm px-4">
-                          {userSearchTerm ? "Try adjusting your search" : "Users will appear here once they sign up"}
-                        </p>
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Organizations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  {organizations.slice(0, 5).map(org => (
+                    <div key={org.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      <div>
+                        <p className="font-medium">{org.name}</p>
+                        <p className="text-sm text-gray-600">{org.contact_email}</p>
                       </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {filteredUsers.map((user) => (
-                          <Card key={user.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-4 sm:p-6">
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                <div className="flex items-start sm:items-center gap-3 sm:gap-4 flex-1 w-full">
-                                  <Avatar className="flex-shrink-0">
-                                    <AvatarFallback className="bg-[#00AFCE] text-white">
-                                      {user.email.charAt(0).toUpperCase()}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-semibold truncate">{user.email}</p>
-                                    <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground mt-1">
-                                      {user.profiles?.dorm && (
-                                        <span className="flex items-center gap-1">
-                                          <Building className="w-3 h-3 flex-shrink-0" />
-                                          <span className="truncate">{user.profiles.dorm} {user.profiles.wing && `- Wing ${user.profiles.wing}`}</span>
-                                        </span>
-                                      )}
-                                      <span className="flex items-center gap-1">
-                                        <Clock className="w-3 h-3 flex-shrink-0" />
-                                        <span className="whitespace-nowrap">Joined {format(new Date(user.created_at), 'MMM d, yyyy')}</span>
-                                      </span>
-                                    </div>
-                                    <Badge 
-                                      variant={user.profiles?.status === 'active' ? 'default' : 
-                                              user.profiles?.status === 'pending' ? 'secondary' : 'destructive'} 
-                                      className="mt-2 sm:hidden"
-                                    >
-                                      {user.profiles?.status || 'active'}
-                                    </Badge>
-                                  </div>
-                                  <Badge 
-                                    variant={user.profiles?.status === 'active' ? 'default' : 
-                                            user.profiles?.status === 'pending' ? 'secondary' : 'destructive'} 
-                                    className="hidden sm:inline-flex"
-                                  >
-                                    {user.profiles?.status || 'active'}
-                                  </Badge>
-                                </div>
-                                <div className="flex items-center gap-2 w-full sm:w-auto">
-                                  <Select
-                                    value={user.user_roles?.[0]?.role || user.profiles?.role || 'user'}
-                                    onValueChange={(value: UserRole) => updateUserRole(user.id, value)}
-                                  >
-                                    <SelectTrigger className="w-full sm:w-32">
-                                      <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="user">User</SelectItem>
-                                      <SelectItem value="pa">PA</SelectItem>
-                                      <SelectItem value="admin">Admin</SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => setEditingUser(user)}
-                                      className="h-9 w-9"
-                                    >
-                                      <Edit2 className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => deleteUser(user.id)}
-                                      className="hover:text-red-600 h-9 w-9"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
+                      <Badge variant={org.status === 'approved' ? "default" : org.status === 'pending' ? "secondary" : "destructive"}>
+                        {org.status}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
 
-            {/* Pending Tab */}
-            <TabsContent value="pending" className="space-y-6">
-              <div className="space-y-8">
-                {/* Pending Users */}
+        {/* Users Tab */}
+        <TabsContent value="users" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5" />
+                User Management
+              </CardTitle>
+              <CardDescription>
+                Manage all users, PAs, and organizations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Filters and Search */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Search by email or organization name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <Select value={emailFilter} onValueChange={setEmailFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Users</SelectItem>
+                    <SelectItem value="user">Regular Users</SelectItem>
+                    <SelectItem value="pa">PAs</SelectItem>
+                    <SelectItem value="admin">Admins</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* User Controls */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Button variant="outline" onClick={selectAllUsers}>
+                  Select All ({filteredUsers.length})
+                </Button>
+                <Button variant="outline" onClick={selectAllPAs}>
+                  Select All PAs ({filteredUsers.filter(u => u.role === 'pa').length})
+                </Button>
+                <Button variant="outline" onClick={clearUserSelection}>
+                  Clear Selection
+                </Button>
+              </div>
+
+              {/* Users Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        User
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Role
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredUsers.map(user => (
+                      <tr key={user.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium text-gray-900">{user.email}</div>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant="outline">{user.role}</Badge>
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={user.status === 'active' ? 'default' : 'secondary'}>
+                            {user.status}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            {user.status === 'pending' && (
+                              <Button size="sm" onClick={() => approveUser(user.id)}>
+                                <CheckCircle className="w-4 h-4" />
+                              </Button>
+                            )}
+                            {user.role === 'user' && (
+                              <Button size="sm" variant="outline" onClick={() => promoteToPA(user.id)}>
+                                Promote to PA
+                              </Button>
+                            )}
+                            <Button size="sm" variant="outline" onClick={() => viewUser(user)}>
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => editUser(user)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredUsers.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No users found matching your criteria
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Organizations Tab */}
+        <TabsContent value="organizations" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Organization Management
+              </CardTitle>
+              <CardDescription>
+                Manage organization approvals and settings
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Filters and Search */}
+              <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                <div className="flex-1">
+                  <Input
+                    placeholder="Search by name or email..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full"
+                  />
+                </div>
+                <Select value={orgFilter} onValueChange={setOrgFilter}>
+                  <SelectTrigger className="w-[180px]">
+                    <SelectValue placeholder="Filter by status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Organizations</SelectItem>
+                    <SelectItem value="pending">Pending</SelectItem>
+                    <SelectItem value="approved">Approved</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Organization Controls */}
+              <div className="flex flex-wrap gap-2 mb-6">
+                <Button variant="outline" onClick={selectAllOrganizations}>
+                  Select All ({filteredOrganizations.length})
+                </Button>
+                <Button variant="outline" onClick={clearOrganizationSelection}>
+                  Clear Selection
+                </Button>
+              </div>
+
+              {/* Organizations Table */}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Organization
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Contact
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Status
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Created
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredOrganizations.map(org => (
+                      <tr key={org.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium text-gray-900">{org.name}</div>
+                          {org.description && (
+                            <div className="text-sm text-gray-500">{org.description}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm text-gray-900">{org.contact_email}</div>
+                          {org.phone && (
+                            <div className="text-sm text-gray-500">{org.phone}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge variant={
+                            org.status === 'approved' ? 'default' : 
+                            org.status === 'pending' ? 'secondary' : 'destructive'
+                          }>
+                            {org.status}
+                          </Badge>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {new Date(org.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            {org.status === 'pending' && (
+                              <>
+                                <Button size="sm" onClick={() => approveOrganization(org.id)}>
+                                  <CheckCircle className="w-4 h-4" />
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => rejectOrganization(org.id, 'Rejected by admin')}>
+                                  <XCircle className="w-4 h-4" />
+                                </Button>
+                              </>
+                            )}
+                            <Button size="sm" variant="outline" onClick={() => viewOrganization(org)}>
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => editOrganization(org)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {filteredOrganizations.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No organizations found matching your criteria
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Events Tab */}
+        <TabsContent value="events" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                Event Management
+              </CardTitle>
+              <CardDescription>
+                View and manage all events
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Event
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Organization
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Date
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Location
+                      </th>
+                      <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {events.map(event => (
+                      <tr key={event.id} className="hover:bg-gray-50">
+                        <td className="px-4 py-3">
+                          <div className="text-sm font-medium text-gray-900">{event.title}</div>
+                          {event.description && (
+                            <div className="text-sm text-gray-500">{event.description}</div>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="text-sm text-gray-500">{event.organization_name}</div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {new Date(event.date).toLocaleDateString()}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-500">
+                          {event.location || 'TBD'}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex gap-2">
+                            <Button size="sm" variant="outline" onClick={() => viewEvent(event)}>
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => editEvent(event)}>
+                              <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)}>
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {events.length === 0 && (
+                <div className="text-center py-8 text-gray-500">
+                  No events found
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Content Tab */}
+        <TabsContent value="content" className="space-y-6">
+          <ContentManagement />
+        </TabsContent>
+
+        {/* Statistics Tab */}
+        <TabsContent value="statistics" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Time Period Statistics
+              </CardTitle>
+              <CardDescription>
+                View statistics for different time periods
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Time Period Selector */}
+              <div className="flex items-center gap-4 mb-6">
+                <Label htmlFor="time-period">Time Period:</Label>
+                <Select value={timePeriod} onValueChange={(value: 'daily' | 'weekly' | 'monthly' | 'yearly') => setTimePeriod(value)}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
+                    <SelectItem value="yearly">Yearly</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button onClick={refreshTimeStats} variant="outline" size="sm" disabled={timeStatsLoading}>
+                  <RefreshCw className={`w-4 h-4 ${timeStatsLoading ? 'animate-spin' : ''}`} />
+                  Refresh
+                </Button>
+              </div>
+
+              {/* Current Period Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
                 <Card>
-                  <CardHeader className="pb-4 md:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
-                      <UserPlus className="w-5 h-5" />
-                      Pending User Approvals
-                    </CardTitle>
-                    <CardDescription className="mt-2">
-                      Review and approve new user registrations
-                    </CardDescription>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Current Year</CardTitle>
+                    <Clock className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent className="pt-2">
-                    {pendingUsers.length === 0 ? (
-                      <div className="text-center py-16 md:py-12">
-                        <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg mb-2">All caught up!</p>
-                        <p className="text-gray-400 text-sm">No pending user approvals</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {pendingUsers.map((user) => (
-                          <Card key={user.id} className="border-orange-200 bg-orange-50">
-                            <CardContent className="p-4 sm:p-6">
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-                                <div className="w-full sm:w-auto">
-                                  <p className="font-semibold text-lg">{user.email}</p>
-                                  <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm text-muted-foreground mt-2">
-                                    {user.profiles?.dorm && (
-                                      <span className="flex items-center gap-1">
-                                        <Building className="w-3 h-3 flex-shrink-0" />
-                                        <span>{user.profiles.dorm} {user.profiles.wing && `- ${user.profiles.wing}`}</span>
-                                      </span>
-                                    )}
-                                    <span className="flex items-center gap-1">
-                                      <Clock className="w-3 h-3 flex-shrink-0" />
-                                      <span className="whitespace-nowrap">Applied {format(new Date(user.created_at), 'MMM d, yyyy')}</span>
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex gap-3 w-full sm:w-auto">
-                                  <Button
-                                    size="sm"
-                                    onClick={() => approveUser(user.id)}
-                                    className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-initial"
-                                  >
-                                    <Check className="w-4 h-4 mr-1" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="outline"
-                                    onClick={() => rejectUser(user.id)}
-                                    className="hover:bg-red-50 hover:text-red-600 hover:border-red-600 flex-1 sm:flex-initial"
-                                  >
-                                    <X className="w-4 h-4 mr-1" />
-                                    Reject
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
+                  <CardContent>
+                    <div className="text-2xl font-bold">{currentYearStats.active_volunteers}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {currentYearStats.hours_contributed} hours • {currentYearStats.events_count} events
+                    </p>
                   </CardContent>
                 </Card>
 
-                {/* Pending Organizations */}
                 <Card>
-                  <CardHeader className="pb-4 md:pb-6">
-                    <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
-                      <Building className="w-5 h-5" />
-                      Pending Organization Approvals
-                    </CardTitle>
-                    <CardDescription className="mt-2">
-                      Review and approve new organization registrations
-                    </CardDescription>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Current Month</CardTitle>
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
                   </CardHeader>
-                  <CardContent className="pt-2">
-                    {pendingOrganizations.length === 0 ? (
-                      <div className="text-center py-16 md:py-12">
-                        <CheckCircle2 className="w-12 h-12 text-green-400 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg mb-2">All caught up!</p>
-                        <p className="text-gray-400 text-sm">No pending organization approvals</p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {pendingOrganizations.map((org) => (
-                          <Card key={org.id} className="border-orange-200 bg-orange-50">
-                            <CardContent className="p-4 sm:p-6">
-                              <div className="space-y-4">
-                                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                                  <div className="flex-1">
-                                    <h3 className="font-semibold text-lg">{org.name}</h3>
-                                    <p className="text-sm text-gray-600 mt-1">{org.description}</p>
-                                  </div>
-                                  <div className="flex gap-3 w-full sm:w-auto">
-                                    <Button
-                                      size="sm"
-                                      onClick={() => approveOrganization(org.id)}
-                                      className="bg-green-600 hover:bg-green-700 flex-1 sm:flex-initial"
-                                    >
-                                      <Check className="w-4 h-4 mr-1" />
-                                      Approve
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => rejectOrganization(org.id)}
-                                      className="hover:bg-red-50 hover:text-red-600 hover:border-red-600 flex-1 sm:flex-initial"
-                                    >
-                                      <X className="w-4 h-4 mr-1" />
-                                      Reject
-                                    </Button>
-                                  </div>
-                                </div>
-                                <Separator />
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                    <span className="truncate">{org.contact_email}</span>
-                                  </div>
-                                  {org.phone && (
-                                    <div className="flex items-center gap-2">
-                                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                      <span>{org.phone}</span>
-                                    </div>
-                                  )}
-                                  {org.website && (
-                                    <div className="flex items-center gap-2">
-                                      <Globe className="w-4 h-4 text-gray-400" />
-                                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
-                                        Website
-                                      </a>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
+                  <CardContent>
+                    <div className="text-2xl font-bold">{currentMonthStats.active_volunteers}</div>
+                    <p className="text-xs text-muted-foreground">
+                      {currentMonthStats.hours_contributed} hours • {currentMonthStats.events_count} events
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Total Signups</CardTitle>
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{currentYearStats.signups_count}</div>
+                    <p className="text-xs text-muted-foreground">
+                      This year
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm font-medium">Monthly Signups</CardTitle>
+                    <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{currentMonthStats.signups_count}</div>
+                    <p className="text-xs text-muted-foreground">
+                      This month
+                    </p>
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
 
-            {/* Organizations Tab */}
-            <TabsContent value="orgs" className="space-y-6">
+              {/* Time Period Data Table */}
               <Card>
-                <CardHeader className="pb-4 md:pb-6">
-                  <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
-                    <Building2 className="w-5 h-5" />
-                    Organization Management
-                  </CardTitle>
-                  <CardDescription className="mt-2">
-                    View and manage registered organizations
-                  </CardDescription>
+                <CardHeader>
+                  <CardTitle>Historical Data - {timePeriod.charAt(0).toUpperCase() + timePeriod.slice(1)}</CardTitle>
                 </CardHeader>
-                <CardContent className="pt-2">
-                  <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                      <div className="relative flex-1 w-full sm:max-w-sm">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Search organizations..."
-                          value={orgSearchTerm}
-                          onChange={(e) => setOrgSearchTerm(e.target.value)}
-                          className="pl-10 w-full"
-                        />
-                      </div>
-                      <Badge variant="secondary" className="px-3 py-1 whitespace-nowrap">
-                        {filteredOrganizations.length} organizations
-                      </Badge>
+                <CardContent>
+                  {timeStatsLoading ? (
+                    <div className="text-center py-8">
+                      <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2" />
+                      <p>Loading statistics...</p>
                     </div>
-
-                    {filteredOrganizations.length === 0 ? (
-                      <div className="text-center py-16 md:py-12">
-                        <Building2 className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg mb-2">No organizations found</p>
-                        <p className="text-gray-400 text-sm px-4">
-                          {orgSearchTerm ? "Try adjusting your search" : "Approved organizations will appear here"}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {filteredOrganizations.map((org) => (
-                          <Card key={org.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-4 sm:p-6">
-                              <div className="space-y-4">
-                                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                                  <div className="flex-1">
-                                    <h3 className="font-semibold text-lg">{org.name}</h3>
-                                    <p className="text-sm text-gray-600 mt-1">{org.description}</p>
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => setEditingOrg(org)}
-                                      className="h-9 w-9"
-                                    >
-                                      <Edit2 className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => deleteOrganization(org.id)}
-                                      className="hover:text-red-600 h-9 w-9"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <Mail className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                    <span className="truncate">{org.contact_email}</span>
-                                  </div>
-                                  {org.phone && (
-                                    <div className="flex items-center gap-2">
-                                      <Phone className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                      <span>{org.phone}</span>
-                                    </div>
-                                  )}
-                                  {org.website && (
-                                    <div className="flex items-center gap-2">
-                                      <Globe className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                      <a href={org.website} target="_blank" rel="noopener noreferrer" className="text-[#00AFCE] hover:underline truncate">
-                                        Website
-                                      </a>
-                                    </div>
-                                  )}
-                                </div>
-                                {org.approved_at && (
-                                  <div className="text-xs text-gray-500">
-                                    Approved on {format(new Date(org.approved_at), 'MMM d, yyyy')}
-                                  </div>
-                                )}
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+                  ) : timePeriodStats.length > 0 ? (
+                    <div className="overflow-x-auto">
+                      <table className="w-full">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left p-2">Period</th>
+                            <th className="text-left p-2">Active Volunteers</th>
+                            <th className="text-left p-2">Hours Contributed</th>
+                            <th className="text-left p-2">Events</th>
+                            <th className="text-left p-2">Signups</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {timePeriodStats.map((stat, index) => (
+                            <tr key={index} className="border-b hover:bg-gray-50">
+                              <td className="p-2">
+                                {new Date(stat.period_start).toLocaleDateString()} - {new Date(stat.period_end).toLocaleDateString()}
+                              </td>
+                              <td className="p-2 font-medium">{stat.active_volunteers}</td>
+                              <td className="p-2">{stat.hours_contributed}</td>
+                              <td className="p-2">{stat.events_count}</td>
+                              <td className="p-2">{stat.signups_count}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar className="w-8 h-8 mx-auto mb-2" />
+                      <p>No data available for this time period</p>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
-            </TabsContent>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
-            {/* Events Tab */}
-            <TabsContent value="events" className="space-y-6">
-              <Card>
-                <CardHeader className="pb-4 md:pb-6">
-                  <CardTitle className="flex items-center gap-2 text-xl md:text-2xl">
-                    <Calendar className="w-5 h-5" />
-                    Event Management
-                  </CardTitle>
-                  <CardDescription className="mt-2">
-                    View and manage upcoming events
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-2">
-                  <div className="space-y-6">
-                    <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
-                      <div className="relative flex-1 w-full sm:max-w-sm">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                        <Input
-                          placeholder="Search events..."
-                          value={eventSearchTerm}
-                          onChange={(e) => setEventSearchTerm(e.target.value)}
-                          className="pl-10 w-full"
-                        />
-                      </div>
-                      <Badge variant="secondary" className="px-3 py-1 whitespace-nowrap">
-                        {filteredEvents.length} events
-                      </Badge>
-                    </div>
+      {/* View User Modal */}
+      <Dialog open={viewUserModal} onOpenChange={setViewUserModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+            <DialogDescription>View user information</DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-4">
+              <div>
+                <Label>Email</Label>
+                <p className="text-sm text-gray-600">{selectedUser.email}</p>
+              </div>
+              <div>
+                <Label>Role</Label>
+                <p className="text-sm text-gray-600">{selectedUser.role}</p>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <p className="text-sm text-gray-600">{selectedUser.status}</p>
+              </div>
+              <div>
+                <Label>Created</Label>
+                <p className="text-sm text-gray-600">{new Date(selectedUser.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-                    {filteredEvents.length === 0 ? (
-                      <div className="text-center py-16 md:py-12">
-                        <Calendar className="w-12 h-12 text-gray-300 mx-auto mb-4" />
-                        <p className="text-gray-500 text-lg mb-2">No events found</p>
-                        <p className="text-gray-400 text-sm px-4">
-                          {eventSearchTerm ? "Try adjusting your search" : "Events will appear here once created"}
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="space-y-4">
-                        {filteredEvents.map((event) => (
-                          <Card key={event.id} className="hover:shadow-md transition-shadow">
-                            <CardContent className="p-4 sm:p-6">
-                              <div className="space-y-4">
-                                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                                  <div className="flex-1">
-                                    <h3 className="font-semibold text-lg">{event.title}</h3>
-                                    <p className="text-sm text-gray-600 mt-1">{event.description}</p>
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => setEditingEvent(event)}
-                                      className="h-9 w-9"
-                                    >
-                                      <Edit2 className="w-4 h-4" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() => deleteEvent(event.id)}
-                                      className="hover:text-red-600 h-9 w-9"
-                                    >
-                                      <Trash2 className="w-4 h-4" />
-                                    </Button>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <CalendarDays className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                    <span>{format(new Date(event.date), 'MMM d, yyyy')}</span>
-                                  </div>
-                                  <div className="flex items-center gap-2">
-                                    <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                    <span className="truncate">{formatEventTimeRange(event.arrival_time, event.estimated_end_time)}</span>
-                                  </div>
-                                  {event.location && (
-                                    <div className="flex items-center gap-2">
-                                      <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                      <span className="truncate">{event.location}</span>
-                                    </div>
-                                  )}
-                                  <div className="flex items-center gap-2">
-                                    <Building2 className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                                    <span className="truncate">{event.organizations?.name || 'No organization'}</span>
-                                  </div>
-                                </div>
-                                <div className="flex flex-wrap items-center gap-3 text-sm mt-3">
-                                  <Badge variant="secondary">
-                                    {event.participants || 0} / {event.max_participants || '∞'} participants
-                                  </Badge>
-                                  {new Date(event.date) < new Date() && (
-                                    <Badge variant="destructive">Past Event</Badge>
-                                  )}
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            {/* Content Management Tab */}
-            <TabsContent value="content" className="space-y-6">
-              <ContentManagement />
-            </TabsContent>
-
-            {/* Statistics Tab */}
-            <TabsContent value="statistics" className="space-y-6">
-              <Statistics />
-            </TabsContent>
-          </Tabs>
-        </div>
-      </main>
-
-      {/* Edit User Dialog */}
-      <Dialog open={!!editingUser} onOpenChange={() => setEditingUser(null)}>
+      {/* Edit User Modal */}
+      <Dialog open={editUserModal} onOpenChange={setEditUserModal}>
         <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>
-              Update user information and profile details
-            </DialogDescription>
+            <DialogDescription>Update user information</DialogDescription>
           </DialogHeader>
-          {editingUser && (
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              const dorm = formData.get('dorm') as string;
-              const wing = formData.get('wing') as string;
-              const status = formData.get('status') as string;
-              
-              try {
-                // Update profile information
-                const { error: profileError } = await supabase
-                  .from('profiles')
-                  .update({
-                    dorm: dorm || null,
-                    wing: wing || null,
-                    status: status,
-                    updated_at: new Date().toISOString()
-                  })
-                  .eq('user_id', editingUser.id);
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="user-email">Email</Label>
+              <Input
+                id="user-email"
+                value={editUserForm.email}
+                onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="user-role">Role</Label>
+              <Select value={editUserForm.role} onValueChange={(value) => setEditUserForm({ ...editUserForm, role: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="pa">PA</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="user-status">Status</Label>
+              <Select value={editUserForm.status} onValueChange={(value) => setEditUserForm({ ...editUserForm, status: value })}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="blocked">Blocked</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={saveUser} className="flex-1">Save</Button>
+              <Button variant="outline" onClick={() => setEditUserModal(false)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-                if (profileError) throw profileError;
-
-                toast({
-                  title: "User updated! ✨",
-                  description: "Profile information has been updated successfully.",
-                });
-
-                await fetchUsers();
-                setEditingUser(null);
-              } catch (error) {
-                console.error('Error updating user:', error);
-                toast({
-                  title: "Error",
-                  description: "Failed to update user profile.",
-                  variant: "destructive",
-                });
-              }
-            }}>
-              <div className="space-y-4">
-                <div>
-                  <Label>Email</Label>
-                  <Input value={editingUser.email} disabled />
-                </div>
-                
-                <div>
-                  <Label>Role</Label>
-                  <Select
-                    value={editingUser.user_roles?.[0]?.role || editingUser.profiles?.role || 'user'}
-                    onValueChange={(value: UserRole) => {
-                      updateUserRole(editingUser.id, value);
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="pa">PA</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Status</Label>
-                  <Select name="status" defaultValue={editingUser.profiles?.status || 'active'}>
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="blocked">Blocked</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <Label>Dorm</Label>
-                  <Input 
-                    name="dorm" 
-                    placeholder="Enter dorm name" 
-                    defaultValue={editingUser.profiles?.dorm || ''} 
-                  />
-                </div>
-
-                <div>
-                  <Label>Wing</Label>
-                  <Input 
-                    name="wing" 
-                    placeholder="Enter wing name" 
-                    defaultValue={editingUser.profiles?.wing || ''} 
-                  />
-                </div>
-
-                <div className="text-xs text-muted-foreground">
-                  Created: {format(new Date(editingUser.created_at), 'MMM d, yyyy h:mm a')}
-                </div>
+      {/* View Organization Modal */}
+      <Dialog open={viewOrgModal} onOpenChange={setViewOrgModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Organization Details</DialogTitle>
+            <DialogDescription>View organization information</DialogDescription>
+          </DialogHeader>
+          {selectedOrg && (
+            <div className="space-y-4">
+              <div>
+                <Label>Name</Label>
+                <p className="text-sm text-gray-600">{selectedOrg.name}</p>
               </div>
-
-              <DialogFooter className="mt-6">
-                <Button type="button" variant="outline" onClick={() => setEditingUser(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  Save Changes
-                </Button>
-              </DialogFooter>
-            </form>
+              <div>
+                <Label>Contact Email</Label>
+                <p className="text-sm text-gray-600">{selectedOrg.contact_email}</p>
+              </div>
+              <div>
+                <Label>Status</Label>
+                <p className="text-sm text-gray-600">{selectedOrg.status}</p>
+              </div>
+              {selectedOrg.description && (
+                <div>
+                  <Label>Description</Label>
+                  <p className="text-sm text-gray-600">{selectedOrg.description}</p>
+                </div>
+              )}
+              {selectedOrg.website && (
+                <div>
+                  <Label>Website</Label>
+                  <p className="text-sm text-gray-600">{selectedOrg.website}</p>
+                </div>
+              )}
+              {selectedOrg.phone && (
+                <div>
+                  <Label>Phone</Label>
+                  <p className="text-sm text-gray-600">{selectedOrg.phone}</p>
+                </div>
+              )}
+              <div>
+                <Label>Created</Label>
+                <p className="text-sm text-gray-600">{new Date(selectedOrg.created_at).toLocaleDateString()}</p>
+              </div>
+            </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Edit Organization Dialog */}
-      <Dialog open={!!editingOrg} onOpenChange={() => setEditingOrg(null)}>
-        <DialogContent>
+      {/* Edit Organization Modal */}
+      <Dialog open={editOrgModal} onOpenChange={setEditOrgModal}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Organization</DialogTitle>
-            <DialogDescription>
-              Update organization information
-            </DialogDescription>
+            <DialogDescription>Update organization information</DialogDescription>
           </DialogHeader>
-          {editingOrg && (
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              updateOrganization(editingOrg.id, {
-                name: formData.get('name') as string,
-                description: formData.get('description') as string,
-                contact_email: formData.get('contact_email') as string,
-                phone: formData.get('phone') as string,
-                website: formData.get('website') as string,
-              });
-            }} className="space-y-4">
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="org-name">Name</Label>
+              <Input
+                id="org-name"
+                value={editOrgForm.name}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, name: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="org-email">Contact Email</Label>
+              <Input
+                id="org-email"
+                value={editOrgForm.contact_email}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, contact_email: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="org-description">Description</Label>
+              <Textarea
+                id="org-description"
+                value={editOrgForm.description}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, description: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="org-website">Website</Label>
+              <Input
+                id="org-website"
+                value={editOrgForm.website}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, website: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="org-phone">Phone</Label>
+              <Input
+                id="org-phone"
+                value={editOrgForm.phone}
+                onChange={(e) => setEditOrgForm({ ...editOrgForm, phone: e.target.value })}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={saveOrganization} className="flex-1">Save</Button>
+              <Button variant="outline" onClick={() => setEditOrgModal(false)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Event Modal */}
+      <Dialog open={viewEventModal} onOpenChange={setViewEventModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Event Details</DialogTitle>
+            <DialogDescription>View event information</DialogDescription>
+          </DialogHeader>
+          {selectedEvent && (
+            <div className="space-y-4">
               <div>
-                <Label htmlFor="name">Organization Name</Label>
-                <Input id="name" name="name" defaultValue={editingOrg.name} required />
+                <Label>Title</Label>
+                <p className="text-sm text-gray-600">{selectedEvent.title}</p>
+              </div>
+              {selectedEvent.description && (
+                <div>
+                  <Label>Description</Label>
+                  <p className="text-sm text-gray-600">{selectedEvent.description}</p>
+                </div>
+              )}
+              <div>
+                <Label>Organization</Label>
+                <p className="text-sm text-gray-600">{selectedEvent.organization_name}</p>
               </div>
               <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" defaultValue={editingOrg.description || ''} />
+                <Label>Date</Label>
+                <p className="text-sm text-gray-600">{new Date(selectedEvent.date).toLocaleDateString()}</p>
               </div>
               <div>
-                <Label htmlFor="contact_email">Contact Email</Label>
-                <Input id="contact_email" name="contact_email" type="email" defaultValue={editingOrg.contact_email} required />
+                <Label>Location</Label>
+                <p className="text-sm text-gray-600">{selectedEvent.location || 'TBD'}</p>
               </div>
+              {selectedEvent.max_participants && (
+                <div>
+                  <Label>Max Participants</Label>
+                  <p className="text-sm text-gray-600">{selectedEvent.max_participants}</p>
+                </div>
+              )}
               <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input id="phone" name="phone" defaultValue={editingOrg.phone || ''} />
+                <Label>Created</Label>
+                <p className="text-sm text-gray-600">{new Date(selectedEvent.created_at).toLocaleDateString()}</p>
               </div>
-              <div>
-                <Label htmlFor="website">Website</Label>
-                <Input id="website" name="website" defaultValue={editingOrg.website || ''} />
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setEditingOrg(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit">Save Changes</Button>
-              </DialogFooter>
-            </form>
+            </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Edit Event Dialog */}
-      <Dialog open={!!editingEvent} onOpenChange={() => setEditingEvent(null)}>
-        <DialogContent>
+      {/* Edit Event Modal */}
+      <Dialog open={editEventModal} onOpenChange={setEditEventModal}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Edit Event</DialogTitle>
-            <DialogDescription>
-              Update event information
-            </DialogDescription>
+            <DialogDescription>Update event information</DialogDescription>
           </DialogHeader>
-          {editingEvent && (
-            <form onSubmit={(e) => {
-              e.preventDefault();
-              const formData = new FormData(e.currentTarget);
-              updateEvent(editingEvent.id, {
-                title: formData.get('title') as string,
-                description: formData.get('description') as string,
-                date: formData.get('date') as string,
-                arrival_time: formData.get('arrival_time') as string || null,
-                estimated_end_time: formData.get('estimated_end_time') as string || null,
-                location: formData.get('location') as string,
-                max_participants: parseInt(formData.get('max_participants') as string) || null,
-              });
-            }} className="space-y-4">
-              <div>
-                <Label htmlFor="title">Event Title</Label>
-                <Input id="title" name="title" defaultValue={editingEvent.title} required />
-              </div>
-              <div>
-                <Label htmlFor="description">Description</Label>
-                <Textarea id="description" name="description" defaultValue={editingEvent.description || ''} />
-              </div>
-              <div>
-                <Label htmlFor="date">Date</Label>
-                <Input id="date" name="date" type="datetime-local" defaultValue={editingEvent.date} required />
-              </div>
-              <div>
-                <Label htmlFor="arrival_time">Arrival Time</Label>
-                <Input id="arrival_time" name="arrival_time" type="datetime-local" defaultValue={editingEvent.arrival_time || ''} />
-              </div>
-              <div>
-                <Label htmlFor="estimated_end_time">Estimated End Time</Label>
-                <Input id="estimated_end_time" name="estimated_end_time" type="datetime-local" defaultValue={editingEvent.estimated_end_time || ''} />
-              </div>
-              <div>
-                <Label htmlFor="location">Location</Label>
-                <Input id="location" name="location" defaultValue={editingEvent.location || ''} />
-              </div>
-              <div>
-                <Label htmlFor="max_participants">Max Participants</Label>
-                <Input id="max_participants" name="max_participants" type="number" defaultValue={editingEvent.max_participants || ''} />
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setEditingEvent(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit">Save Changes</Button>
-              </DialogFooter>
-            </form>
-          )}
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="event-title">Title</Label>
+              <Input
+                id="event-title"
+                value={editEventForm.title}
+                onChange={(e) => setEditEventForm({ ...editEventForm, title: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="event-description">Description</Label>
+              <Textarea
+                id="event-description"
+                value={editEventForm.description}
+                onChange={(e) => setEditEventForm({ ...editEventForm, description: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="event-date">Date</Label>
+              <Input
+                id="event-date"
+                type="date"
+                value={editEventForm.date}
+                onChange={(e) => setEditEventForm({ ...editEventForm, date: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="event-location">Location</Label>
+              <Input
+                id="event-location"
+                value={editEventForm.location}
+                onChange={(e) => setEditEventForm({ ...editEventForm, location: e.target.value })}
+              />
+            </div>
+            <div>
+              <Label htmlFor="event-max-participants">Max Participants</Label>
+              <Input
+                id="event-max-participants"
+                type="number"
+                value={editEventForm.max_participants}
+                onChange={(e) => setEditEventForm({ ...editEventForm, max_participants: parseInt(e.target.value) || 0 })}
+              />
+            </div>
+            <div className="flex gap-2">
+              <Button onClick={saveEvent} className="flex-1">Save</Button>
+              <Button variant="outline" onClick={() => setEditEventModal(false)} className="flex-1">Cancel</Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
-      
-      <Footer />
     </div>
   );
 };

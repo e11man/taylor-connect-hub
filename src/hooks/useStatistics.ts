@@ -18,14 +18,15 @@ export const useStatistics = () => {
   useEffect(() => {
     fetchStatistics();
 
-    // Subscribe to real-time updates
+    // Subscribe to real-time updates from the content table
     const channel = supabase
       .channel('statistics_changes')
       .on('postgres_changes', 
         { 
           event: '*', 
           schema: 'public', 
-          table: 'statistics' 
+          table: 'content',
+          filter: 'page=eq.homepage AND section=eq.impact'
         }, 
         () => {
           fetchStatistics();
@@ -40,25 +41,25 @@ export const useStatistics = () => {
 
   const fetchStatistics = async () => {
     try {
+      // Fetch statistics from the content table where the database triggers update them
       const { data, error } = await supabase
-        .from('statistics')
-        .select('key, base_value, live_value');
+        .from('content')
+        .select('key, value')
+        .eq('page', 'homepage')
+        .eq('section', 'impact')
+        .in('key', ['active_volunteers', 'hours_contributed', 'partner_organizations']);
 
       if (error) throw error;
 
       if (data) {
         const stats: Statistics = {
-          active_volunteers: '2,500',
-          hours_contributed: '5,000',
-          partner_organizations: '50'
+          active_volunteers: '0',
+          hours_contributed: '0',
+          partner_organizations: '0'
         };
 
         data.forEach(stat => {
-          // Use live_value if available and greater than base_value, otherwise use base_value
-          const value = stat.live_value > stat.base_value 
-            ? stat.live_value 
-            : stat.base_value;
-          
+          const value = parseInt(stat.value) || 0;
           const formattedValue = new Intl.NumberFormat('en-US').format(value);
           
           switch (stat.key) {
