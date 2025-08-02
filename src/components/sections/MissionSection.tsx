@@ -13,7 +13,7 @@ const MissionSection = () => {
               {missionContent.title || 'Our Mission'}
             </h2>
             
-            <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-5xl mx-auto">
+            <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-5xl mx-auto animate-fade-in" style={{ animationDelay: '0.3s' }}>
               {missionContent.description || 'Community Connect is dedicated to fostering meaningful relationships between passionate volunteers and impactful opportunities. We believe that when individuals come together with shared purpose, they can create transformative change that extends far beyond individual efforts. Our platform serves as a bridge, connecting hearts and hands to build stronger, more resilient Upland through collective action.'}
             </p>
           </div>

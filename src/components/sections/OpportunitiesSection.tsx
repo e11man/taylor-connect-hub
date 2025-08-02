@@ -261,6 +261,16 @@ const OpportunitiesSection = () => {
   return (
     <section className="bg-white section-padding">
       <div className="container-custom">
+        {/* Section Header */}
+        <div className="animate-slide-up mb-12">
+          <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary text-center">
+            Volunteer Opportunities
+          </h2>
+          <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-5xl mx-auto text-center animate-fade-in" style={{ animationDelay: '0.3s' }}>
+            Discover meaningful ways to serve your community and make a difference
+          </p>
+        </div>
+        
         {/* Opportunities Horizontal Scroll */}
         <div className="mb-8 md:mb-12">
           <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scroll-smooth snap-x snap-mandatory" style={{
