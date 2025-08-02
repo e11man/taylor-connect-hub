@@ -500,18 +500,47 @@ export const AdminDashboard = () => {
     }
   };
 
+  // Refresh statistics function
+  const refreshStatistics = async () => {
+    try {
+      const { error } = await supabase.rpc('refresh_all_statistics');
+      
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Statistics refreshed successfully",
+      });
+
+      // Reload data to show updated statistics
+      loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to refresh statistics',
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-gray-600">Manage users, organizations, events, and content</p>
+              <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+            <p className="text-gray-600">Manage users, organizations, events, and content</p>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={refreshStatistics} variant="outline" className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Refresh Statistics
+            </Button>
+            <Button onClick={loadData} variant="outline" className="flex items-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Refresh Data
+            </Button>
+          </div>
         </div>
-        <Button onClick={loadData} variant="outline" className="flex items-center gap-2">
-          <RefreshCw className="w-4 h-4" />
-          Refresh
-        </Button>
-      </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full grid-cols-6">
