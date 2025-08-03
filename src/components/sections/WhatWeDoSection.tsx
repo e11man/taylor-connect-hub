@@ -1,5 +1,6 @@
 import { Heart, Globe, Users, HandHeart } from "lucide-react";
 import { useContentSection } from "@/hooks/useContent";
+import { motion } from "framer-motion";
 
 const WhatWeDoSection = () => {
   const { content: whatWeDoContent } = useContentSection('about', 'what_we_do');
@@ -27,29 +28,106 @@ const WhatWeDoSection = () => {
     }
   ];
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.15,
+        delayChildren: 0.2
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 30,
+      scale: 0.95
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }
+    }
+  };
+
+  const titleVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 20,
+      filter: "blur(8px)"
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      filter: "blur(0px)",
+      transition: {
+        duration: 0.6,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }
+    }
+  };
+
+  const descriptionVariants = {
+    hidden: { 
+      opacity: 0, 
+      y: 15
+    },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: {
+        duration: 0.6,
+        delay: 0.1,
+        ease: [0.25, 0.46, 0.45, 0.94]
+      }
+    }
+  };
+
   return (
     <section id="what-we-do" className="bg-white section-padding">
       <div className="container-custom">
-        <div className="text-center max-w-4xl mx-auto mb-16">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={containerVariants}
+          className="text-center max-w-4xl mx-auto mb-16"
+        >
           {/* Section Header */}
-          <div className="animate-slide-up">
-            <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-              {whatWeDoContent.title || 'What We Do'}
-            </h2>
-            
-            <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-4xl mx-auto">
-              {whatWeDoContent.description || 'Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in Upland.'}
-            </p>
-          </div>
-        </div>
+          <motion.h2 
+            variants={titleVariants}
+            className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary"
+          >
+            {whatWeDoContent.title || 'What We Do'}
+          </motion.h2>
+          
+          <motion.p 
+            variants={descriptionVariants}
+            className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-4xl mx-auto"
+          >
+            {whatWeDoContent.description || 'Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in Upland.'}
+          </motion.p>
+        </motion.div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={containerVariants}
+          className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto"
+        >
           {services.map((service, index) => (
-            <div 
+            <motion.div 
               key={service.title}
-              className="group relative bg-white border-2 border-gray-200 rounded-3xl p-8 transition-all duration-500 hover:shadow-lg hover:scale-105 hover:border-[#00AFCE] animate-fade-in"
-              style={{ animationDelay: `${0.2 + index * 0.1}s` }}
+              variants={itemVariants}
+              className="group relative bg-white border-2 border-gray-200 rounded-3xl p-8 transition-all duration-500 hover:shadow-lg hover:scale-105 hover:border-[#00AFCE]"
             >
               <div className="flex items-start space-x-4">
                 <div className="flex-shrink-0">
@@ -66,9 +144,9 @@ const WhatWeDoSection = () => {
                   </p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );
