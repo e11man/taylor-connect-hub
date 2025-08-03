@@ -61,10 +61,10 @@ const ImpactSection = () => {
                     <stat.icon className="w-6 h-6 md:w-8 md:h-8 text-white" />
                   </div>
                 </div>
-                <div className="relative text-4xl md:text-5xl font-montserrat font-black mb-3 text-secondary group-hover:scale-110 transition-transform duration-300">
+                <div className="relative text-xl md:text-3xl lg:text-4xl xl:text-5xl font-montserrat font-black mb-3 text-secondary group-hover:scale-110 transition-transform duration-300">
                   {stat.value}
                 </div>
-                <div className="relative text-lg md:text-xl font-montserrat font-bold mb-2 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
+                <div className="relative text-xs md:text-sm lg:text-base xl:text-lg font-montserrat font-bold mb-2 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
                   {stat.label}
                 </div>
                 <div className="relative text-sm md:text-base text-muted-foreground font-montserrat font-semibold leading-relaxed">
