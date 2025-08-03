@@ -1,5 +1,8 @@
 import { Heart, Globe, Users, HandHeart } from "lucide-react";
 import { useContentSection } from "@/hooks/useContent";
+import AnimatedSection from "@/components/ui/animated-section";
+import AnimatedText from "@/components/ui/animated-text";
+import AnimatedCard from "@/components/ui/animated-card";
 
 const WhatWeDoSection = () => {
   const { content: whatWeDoContent } = useContentSection('about', 'what_we_do');
@@ -32,43 +35,51 @@ const WhatWeDoSection = () => {
       <div className="container-custom">
         <div className="text-center max-w-4xl mx-auto mb-16">
           {/* Section Header */}
-          <div className="animate-slide-up">
-            <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-              {whatWeDoContent.title || 'What We Do'}
-            </h2>
+          <AnimatedSection variant="fade" delay={0.1}>
+            <AnimatedText variant="blur" delay={0.2}>
+              <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
+                {whatWeDoContent.title || 'What We Do'}
+              </h2>
+            </AnimatedText>
             
-            <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-4xl mx-auto">
-              {whatWeDoContent.description || 'Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in Upland.'}
-            </p>
-          </div>
+            <AnimatedText variant="slideUp" delay={0.3}>
+              <p className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-4xl mx-auto">
+                {whatWeDoContent.description || 'Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in Upland.'}
+              </p>
+            </AnimatedText>
+          </AnimatedSection>
         </div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          {services.map((service, index) => (
-            <div 
-              key={service.title}
-              className="group relative bg-white border-2 border-gray-200 rounded-3xl p-8 transition-all duration-500 hover:shadow-lg hover:scale-105 hover:border-[#00AFCE] animate-fade-in"
-              style={{ animationDelay: `${0.2 + index * 0.1}s` }}
-            >
-              <div className="flex items-start space-x-4">
-                <div className="flex-shrink-0">
-                  <div className="w-12 h-12 bg-[#00AFCE] rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-                    <service.icon className="w-6 h-6 text-white" />
+        <AnimatedSection variant="stagger" delay={0.4}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            {services.map((service, index) => (
+              <AnimatedCard 
+                key={service.title}
+                index={index}
+                delay={0.1}
+                variant="lift"
+                className="group relative bg-white border-2 border-gray-200 rounded-3xl p-8 transition-all duration-500 hover:shadow-lg hover:scale-105 hover:border-[#00AFCE]"
+              >
+                <div className="flex items-start space-x-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 bg-[#00AFCE] rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+                      <service.icon className="w-6 h-6 text-white" />
+                    </div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl md:text-2xl font-montserrat font-bold mb-3 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
+                      {service.title}
+                    </h3>
+                    <p className="text-base md:text-lg text-muted-foreground leading-relaxed font-montserrat">
+                      {service.description}
+                    </p>
                   </div>
                 </div>
-                <div className="flex-1">
-                  <h3 className="text-xl md:text-2xl font-montserrat font-bold mb-3 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
-                    {service.title}
-                  </h3>
-                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed font-montserrat">
-                    {service.description}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
+              </AnimatedCard>
+            ))}
+          </div>
+        </AnimatedSection>
       </div>
     </section>
   );

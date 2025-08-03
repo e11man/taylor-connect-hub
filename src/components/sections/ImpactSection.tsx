@@ -1,6 +1,9 @@
 import { Users, Clock, Building } from "lucide-react";
 import { useContentSection } from "@/hooks/useContent";
 import { useSiteStatistics } from "@/hooks/useSiteStatistics";
+import AnimatedSection from "@/components/ui/animated-section";
+import AnimatedText from "@/components/ui/animated-text";
+import AnimatedCard from "@/components/ui/animated-card";
 
 const ImpactSection = () => {
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
@@ -33,38 +36,44 @@ const ImpactSection = () => {
       <div className="container-custom">
         <div className="text-center max-w-4xl mx-auto mb-16">
           {/* Section Header */}
-          <div className="animate-slide-up">
-            <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-              {aboutImpactContent.title || 'Our Impact'}
-            </h2>
-          </div>
+          <AnimatedSection variant="fade" delay={0.1}>
+            <AnimatedText variant="blur" delay={0.2}>
+              <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
+                {aboutImpactContent.title || 'Our Impact'}
+              </h2>
+            </AnimatedText>
+          </AnimatedSection>
         </div>
 
         {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto animate-fade-in" style={{ animationDelay: '0.3s' }}>
-          {stats.map((stat, index) => (
-            <div 
-              key={stat.label}
-              className="group relative bg-white border-2 border-gray-200 rounded-3xl p-8 md:p-10 text-center transition-all duration-500 hover:shadow-lg hover:scale-105 hover:border-[#00AFCE] overflow-hidden"
-              style={{ animationDelay: `${0.5 + index * 0.1}s` }}
-            >
-              <div className="relative flex justify-center mb-6">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-[#00AFCE] rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-                  <stat.icon className="w-6 h-6 md:w-8 md:h-8 text-white" />
+        <AnimatedSection variant="stagger" delay={0.3}>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+            {stats.map((stat, index) => (
+              <AnimatedCard 
+                key={stat.label}
+                index={index}
+                delay={0.1}
+                variant="lift"
+                className="group relative bg-white border-2 border-gray-200 rounded-3xl p-8 md:p-10 text-center transition-all duration-500 hover:shadow-lg hover:scale-105 hover:border-[#00AFCE] overflow-hidden"
+              >
+                <div className="relative flex justify-center mb-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-[#00AFCE] rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
+                    <stat.icon className="w-6 h-6 md:w-8 md:h-8 text-white" />
+                  </div>
                 </div>
-              </div>
-              <div className="relative text-4xl md:text-5xl font-montserrat font-black mb-3 text-secondary group-hover:scale-110 transition-transform duration-300">
-                {stat.value}
-              </div>
-              <div className="relative text-lg md:text-xl font-montserrat font-bold mb-2 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
-                {stat.label}
-              </div>
-              <div className="relative text-sm md:text-base text-muted-foreground font-montserrat font-semibold leading-relaxed">
-                {stat.description}
-              </div>
-            </div>
-          ))}
-        </div>
+                <div className="relative text-4xl md:text-5xl font-montserrat font-black mb-3 text-secondary group-hover:scale-110 transition-transform duration-300">
+                  {stat.value}
+                </div>
+                <div className="relative text-lg md:text-xl font-montserrat font-bold mb-2 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
+                  {stat.label}
+                </div>
+                <div className="relative text-sm md:text-base text-muted-foreground font-montserrat font-semibold leading-relaxed">
+                  {stat.description}
+                </div>
+              </AnimatedCard>
+            ))}
+          </div>
+        </AnimatedSection>
       </div>
     </section>
   );
