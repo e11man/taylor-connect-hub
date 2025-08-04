@@ -431,6 +431,69 @@ export const AdminDashboard = () => {
     max_participants: 0
   });
 
+  // Delete user function
+  const deleteUser = async (userId: string) => {
+    try {
+      setLoading(true);
+      
+      // First, delete all user event signups
+      const { error: userEventsError } = await supabase
+        .from('user_events')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (userEventsError) throw userEventsError;
+
+      // Delete from user_roles table
+      const { error: userRolesError } = await supabase
+        .from('user_roles')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (userRolesError) throw userRolesError;
+
+      // Delete from notification_preferences
+      const { error: notifPrefsError } = await supabase
+        .from('notification_preferences')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (notifPrefsError) throw notifPrefsError;
+
+      // Delete any notifications for this user
+      const { error: notificationsError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', userId);
+      
+      if (notificationsError) throw notificationsError;
+
+      // Finally, delete the user profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId);
+      
+      if (profileError) throw profileError;
+
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+      
+      // Reload data to reflect changes
+      await loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to delete user',
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load all data
   const loadData = async () => {
     setLoading(true);
@@ -695,12 +758,25 @@ export const AdminDashboard = () => {
 
   const promoteToPA = async (userId: string) => {
     try {
-      const { error } = await supabase
+      // Update both profiles and user_roles tables
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({ role: 'pa' })
         .eq('id', userId);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // Also update or insert into user_roles table
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .upsert({ 
+          user_id: userId, 
+          role: 'pa' 
+        }, { 
+          onConflict: 'user_id' 
+        });
+
+      if (roleError) throw roleError;
 
       toast({
         title: "Success",
@@ -797,7 +873,8 @@ export const AdminDashboard = () => {
     if (!selectedUser) return;
     
     try {
-      const { error } = await supabase
+      // Update profiles table
+      const { error: profileError } = await supabase
         .from('profiles')
         .update({
           email: editUserForm.email,
@@ -806,7 +883,19 @@ export const AdminDashboard = () => {
         })
         .eq('id', selectedUser.id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // Also update user_roles table
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .upsert({ 
+          user_id: selectedUser.id, 
+          role: editUserForm.role 
+        }, { 
+          onConflict: 'user_id' 
+        });
+
+      if (roleError) throw roleError;
 
       toast({
         title: "Success",
@@ -1183,26 +1272,37 @@ export const AdminDashboard = () => {
                         <td className="px-4 py-3 text-sm text-gray-500">
                           {new Date(user.created_at).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-2">
-                            {user.status === 'pending' && (
-                              <Button size="sm" onClick={() => approveUser(user.id)}>
-                                <CheckCircle className="w-4 h-4" />
-                              </Button>
-                            )}
-                            {user.role === 'user' && (
-                              <Button size="sm" variant="outline" onClick={() => promoteToPA(user.id)}>
-                                Promote to PA
-                              </Button>
-                            )}
-                            <Button size="sm" variant="outline" onClick={() => viewUser(user)}>
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => editUser(user)}>
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </td>
+                         <td className="px-4 py-3">
+                           <div className="flex gap-2">
+                             {user.status === 'pending' && (
+                               <Button size="sm" onClick={() => approveUser(user.id)}>
+                                 <CheckCircle className="w-4 h-4" />
+                               </Button>
+                             )}
+                             {user.role === 'user' && (
+                               <Button size="sm" variant="outline" onClick={() => promoteToPA(user.id)}>
+                                 Promote to PA
+                               </Button>
+                             )}
+                             <Button size="sm" variant="outline" onClick={() => viewUser(user)}>
+                               <Eye className="w-4 h-4" />
+                             </Button>
+                             <Button size="sm" variant="outline" onClick={() => editUser(user)}>
+                               <Edit className="w-4 h-4" />
+                             </Button>
+                             <Button 
+                               size="sm" 
+                               variant="destructive" 
+                               onClick={() => {
+                                 if (confirm(`Are you sure you want to delete user ${user.email}? This will remove them from all events and cannot be undone.`)) {
+                                   deleteUser(user.id);
+                                 }
+                               }}
+                             >
+                               <Trash2 className="w-4 h-4" />
+                             </Button>
+                           </div>
+                         </td>
                       </tr>
                     ))}
                   </tbody>
