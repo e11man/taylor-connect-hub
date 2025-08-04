@@ -48,11 +48,7 @@ const WhatWeDoSection = () => {
     visible: { 
       opacity: 1, 
       y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.46, 0.45, 0.94]
-      }
+      scale: 1
     }
   };
 
@@ -65,11 +61,7 @@ const WhatWeDoSection = () => {
     visible: { 
       opacity: 1, 
       y: 0,
-      filter: "blur(0px)",
-      transition: {
-        duration: 0.6,
-        ease: [0.25, 0.46, 0.45, 0.94]
-      }
+      filter: "blur(0px)"
     }
   };
 
@@ -80,12 +72,7 @@ const WhatWeDoSection = () => {
     },
     visible: { 
       opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.6,
-        delay: 0.1,
-        ease: [0.25, 0.46, 0.45, 0.94]
-      }
+      y: 0
     }
   };
 

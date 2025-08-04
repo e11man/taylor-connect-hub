@@ -433,6 +433,10 @@ export const AdminDashboard = () => {
 
   // Delete user function
   const deleteUser = async (userId: string) => {
+    if (!confirm('Are you sure you want to delete this user? This will also remove them from all events they signed up for.')) {
+      return;
+    }
+
     try {
       setLoading(true);
       
@@ -494,6 +498,144 @@ export const AdminDashboard = () => {
     }
   };
 
+  // Delete organization function
+  const deleteOrganization = async (orgId: string) => {
+    if (!confirm('Are you sure you want to delete this organization? This will also delete all their events and associated data.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // First get all events for this organization
+      const { data: orgEvents, error: eventsError } = await supabase
+        .from('events')
+        .select('id')
+        .eq('organization_id', orgId);
+
+      if (eventsError) throw eventsError;
+
+      // Delete all user_events for the organization's events
+      if (orgEvents && orgEvents.length > 0) {
+        const eventIds = orgEvents.map(event => event.id);
+        
+        const { error: userEventsError } = await supabase
+          .from('user_events')
+          .delete()
+          .in('event_id', eventIds);
+
+        if (userEventsError) throw userEventsError;
+
+        // Delete chat messages for the organization's events
+        const { error: chatError } = await supabase
+          .from('chat_messages')
+          .delete()
+          .in('event_id', eventIds);
+
+        if (chatError) throw chatError;
+
+        // Delete notifications for the organization's events
+        const { error: notificationsError } = await supabase
+          .from('notifications')
+          .delete()
+          .in('event_id', eventIds);
+
+        if (notificationsError) throw notificationsError;
+      }
+
+      // Delete all events for this organization
+      const { error: deleteEventsError } = await supabase
+        .from('events')
+        .delete()
+        .eq('organization_id', orgId);
+
+      if (deleteEventsError) throw deleteEventsError;
+
+      // Finally delete the organization
+      const { error: orgError } = await supabase
+        .from('organizations')
+        .delete()
+        .eq('id', orgId);
+
+      if (orgError) throw orgError;
+
+      toast({
+        title: "Success",
+        description: "Organization deleted successfully",
+      });
+      
+      // Reload data to reflect changes
+      await loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to delete organization',
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Delete event function
+  const deleteEvent = async (eventId: string) => {
+    if (!confirm('Are you sure you want to delete this event? This will remove all user sign-ups and related data.')) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      // Delete user events first
+      const { error: userEventsError } = await supabase
+        .from('user_events')
+        .delete()
+        .eq('event_id', eventId);
+
+      if (userEventsError) throw userEventsError;
+
+      // Delete chat messages
+      const { error: chatError } = await supabase
+        .from('chat_messages')
+        .delete()
+        .eq('event_id', eventId);
+
+      if (chatError) throw chatError;
+
+      // Delete notifications
+      const { error: notificationsError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('event_id', eventId);
+
+      if (notificationsError) throw notificationsError;
+
+      // Finally delete the event
+      const { error: eventError } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', eventId);
+
+      if (eventError) throw eventError;
+
+      toast({
+        title: "Success",
+        description: "Event deleted successfully",
+      });
+      
+      // Reload data to reflect changes
+      await loadData();
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to delete event',
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Load all data
   const loadData = async () => {
     setLoading(true);
@@ -526,7 +668,11 @@ export const AdminDashboard = () => {
         .order('created_at', { ascending: false });
 
       if (eventsError) throw eventsError;
-      setEvents(eventsData || []);
+      const formattedEvents = eventsData?.map(event => ({
+        ...event,
+        organization_name: event.organizations?.name || 'Unknown Organization'
+      })) || [];
+      setEvents(formattedEvents);
     } catch (err: any) {
       toast({
         title: "Error",
@@ -793,29 +939,6 @@ export const AdminDashboard = () => {
     }
   };
 
-  const deleteEvent = async (eventId: string) => {
-    try {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', eventId);
-
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "Event deleted successfully",
-      });
-
-      loadData(); // Refresh data
-    } catch (err: any) {
-      toast({
-        title: "Error",
-        description: err.message || 'Failed to delete event',
-        variant: "destructive",
-      });
-    }
-  };
 
   // View functions
   const viewUser = (user: User) => {
@@ -873,12 +996,12 @@ export const AdminDashboard = () => {
     if (!selectedUser) return;
     
     try {
-      // Update profiles table
+       // Update profiles table
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
           email: editUserForm.email,
-          role: editUserForm.role,
+          role: editUserForm.role as "pa" | "admin" | "user",
           status: editUserForm.status
         })
         .eq('id', selectedUser.id);
@@ -890,7 +1013,7 @@ export const AdminDashboard = () => {
         .from('user_roles')
         .upsert({ 
           user_id: selectedUser.id, 
-          role: editUserForm.role 
+          role: editUserForm.role as "pa" | "admin" | "user"
         }, { 
           onConflict: 'user_id' 
         });
@@ -1461,6 +1584,9 @@ export const AdminDashboard = () => {
                             </Button>
                             <Button size="sm" variant="outline" onClick={() => editOrganization(org)}>
                               <Edit className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="destructive" onClick={() => deleteOrganization(org.id)}>
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
                         </td>

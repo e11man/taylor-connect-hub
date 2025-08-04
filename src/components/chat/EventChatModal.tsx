@@ -97,7 +97,20 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
 
   const fetchMessages = async () => {
     const { data, error } = await supabase
-      .rpc('get_chat_messages', { p_event_id: eventId });
+      .from('chat_messages')
+      .select(`
+        id,
+        event_id,
+        user_id,
+        organization_id,
+        message,
+        is_anonymous,
+        created_at,
+        updated_at,
+        organizations(name)
+      `)
+      .eq('event_id', eventId)
+      .order('created_at', { ascending: true });
 
     if (error) {
       toast({
@@ -108,7 +121,12 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
       return;
     }
 
-    setMessages(data || []);
+    const formattedMessages = data?.map(msg => ({
+      ...msg,
+      organization_name: msg.organizations?.name || null
+    })) || [];
+
+    setMessages(formattedMessages);
   };
 
   const sendMessage = async () => {

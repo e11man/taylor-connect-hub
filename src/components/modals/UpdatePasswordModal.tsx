@@ -83,8 +83,11 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
     setIsLoading(true);
     try {
       // Step 1: Get the current password hash from the database
-      const { data: currentHashData, error: hashError } = await supabase
-        .rpc('get_user_password_hash', { p_user_id: user.id });
+      const { data: profileData, error: hashError } = await supabase
+        .from('profiles')
+        .select('password_hash')
+        .eq('id', user.id)
+        .single();
 
       if (hashError) {
         toast({
@@ -96,7 +99,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
       }
 
       // Step 2: Verify the current password on the client side
-      const isCurrentPasswordValid = await verifyPassword(currentPassword, currentHashData);
+      const isCurrentPasswordValid = await verifyPassword(currentPassword, profileData.password_hash);
       
       if (!isCurrentPasswordValid) {
         toast({
@@ -112,10 +115,12 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
 
       // Step 4: Update the password hash in the database
       const { error: updateError } = await supabase
-        .rpc('update_user_password_hash', {
-          p_user_id: user.id,
-          p_new_password_hash: newPasswordHash
-        });
+        .from('profiles')
+        .update({ 
+          password_hash: newPasswordHash, 
+          updated_at: new Date().toISOString() 
+        })
+        .eq('id', user.id);
 
       if (updateError) {
         toast({
