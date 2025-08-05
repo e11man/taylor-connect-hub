@@ -226,20 +226,49 @@ const DashboardOpportunities = () => {
     }
 
     try {
-      const response = await fetch('http://localhost:3001/api/event-signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: user.id,
-          event_id: eventId,
-        }),
-      });
+      let signupSuccessful = false;
+      let errorMessage = "";
 
-      const result = await response.json();
+      try {
+        // Try API route first (with service role key)
+        const response = await fetch(`${import.meta.env.DEV ? 'http://localhost:3001' : ''}/api/event-signup`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: user.id,
+            event_id: eventId,
+          }),
+        });
 
-      if (result.success) {
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            signupSuccessful = true;
+          } else {
+            errorMessage = result.error || "API signup failed";
+          }
+        } else {
+          // API server not available, try fallback
+          throw new Error("API server not available");
+        }
+      } catch (apiError) {
+        console.log("API signup failed, trying direct Supabase call:", apiError);
+        
+        // Fallback to direct Supabase call if API is not available
+        const { error } = await supabase
+          .from('user_events')
+          .insert([{ user_id: user.id, event_id: eventId }]);
+
+        if (error) {
+          errorMessage = error.message;
+        } else {
+          signupSuccessful = true;
+        }
+      }
+
+      if (signupSuccessful) {
         toast({
           title: "Success!",
           description: "You have successfully signed up for this event.",
@@ -249,8 +278,8 @@ const DashboardOpportunities = () => {
         refreshUserEvents();
       } else {
         toast({
-          title: "Sign Up Failed",
-          description: result.error || "Failed to sign up for the event.",
+          title: "Error",
+          description: errorMessage || "Failed to sign up for event",
           variant: "destructive",
         });
       }
@@ -268,20 +297,49 @@ const DashboardOpportunities = () => {
     if (!pendingEventId) return;
 
     try {
-      const response = await fetch('http://localhost:3001/api/event-signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_id: user?.id,
-          event_id: pendingEventId,
-        }),
-      });
+      let signupSuccessful = false;
+      let errorMessage = "";
 
-      const result = await response.json();
+      try {
+        // Try API route first (with service role key)
+        const response = await fetch(`${import.meta.env.DEV ? 'http://localhost:3001' : ''}/api/event-signup`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_id: user?.id,
+            event_id: pendingEventId,
+          }),
+        });
 
-      if (result.success) {
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            signupSuccessful = true;
+          } else {
+            errorMessage = result.error || "API signup failed";
+          }
+        } else {
+          // API server not available, try fallback
+          throw new Error("API server not available");
+        }
+      } catch (apiError) {
+        console.log("API signup failed, trying direct Supabase call:", apiError);
+        
+        // Fallback to direct Supabase call if API is not available
+        const { error } = await supabase
+          .from('user_events')
+          .insert([{ user_id: user?.id, event_id: pendingEventId }]);
+
+        if (error) {
+          errorMessage = error.message;
+        } else {
+          signupSuccessful = true;
+        }
+      }
+
+      if (signupSuccessful) {
         toast({
           title: "Success!",
           description: "You have successfully signed up for this event.",
@@ -291,8 +349,8 @@ const DashboardOpportunities = () => {
         refreshUserEvents();
       } else {
         toast({
-          title: "Sign Up Failed",
-          description: result.error || "Failed to sign up for the event.",
+          title: "Error",
+          description: errorMessage || "Failed to sign up for event",
           variant: "destructive",
         });
       }

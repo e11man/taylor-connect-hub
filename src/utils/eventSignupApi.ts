@@ -22,25 +22,61 @@ export async function signUpForEvent(
   signedUpBy?: string
 ): Promise<EventSignupResponse> {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/event-signup`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        user_id: userId,
-        event_id: eventId,
-        signed_up_by: signedUpBy
-      }),
-    });
+    try {
+      // Try API route first (with service role key)
+      const response = await fetch(`${API_BASE_URL}/api/event-signup`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          event_id: eventId,
+          signed_up_by: signedUpBy
+        }),
+      });
 
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to sign up for event');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          return data;
+        } else {
+          throw new Error(data.error || 'API signup failed');
+        }
+      } else {
+        // API server not available, try fallback
+        throw new Error('API server not available');
+      }
+    } catch (apiError) {
+      console.log('API signup failed, trying direct Supabase call:', apiError);
+      
+      // Import supabase here to avoid circular dependencies
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY
+      );
+      
+      // Fallback to direct Supabase call if API is not available
+      const { data, error } = await supabase
+        .from('user_events')
+        .insert([{ 
+          user_id: userId, 
+          event_id: eventId,
+          signed_up_by: signedUpBy || userId
+        }])
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      return {
+        success: true,
+        data
+      };
     }
-
-    return data;
   } catch (error) {
     console.error('Error signing up for event:', error);
     return {
