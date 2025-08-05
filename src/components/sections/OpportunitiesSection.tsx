@@ -154,40 +154,62 @@ const OpportunitiesSection = () => {
     setPendingEventId(null);
 
     try {
-      // Try API route first (with service role key)
-      const response = await fetch(`${import.meta.env.DEV ? 'http://localhost:3001' : ''}/api/event-signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          user_id: user.id,
-          event_id: eventId
-        })
-      });
+      let signupSuccessful = false;
+      let errorMessage = "";
 
-      if (!response.ok) {
+      try {
+        // Try API route first (with service role key)
+        const response = await fetch(`${import.meta.env.DEV ? 'http://localhost:3001' : ''}/api/event-signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            event_id: eventId
+          })
+        });
+
+        if (response.ok) {
+          const result = await response.json();
+          if (result.success) {
+            signupSuccessful = true;
+          } else {
+            errorMessage = result.error || "API signup failed";
+          }
+        } else {
+          // API server not available, try fallback
+          throw new Error("API server not available");
+        }
+      } catch (apiError) {
+        console.log("API signup failed, trying direct Supabase call:", apiError);
+        
         // Fallback to direct Supabase call if API is not available
         const { error } = await supabase
           .from('user_events')
           .insert([{ user_id: user.id, event_id: eventId }]);
 
         if (error) {
-          toast({
-            title: "Error",
-            description: error.message,
-            variant: "destructive",
-          });
-          return;
+          errorMessage = error.message;
+        } else {
+          signupSuccessful = true;
         }
       }
 
-      toast({
-        title: "Success!",
-        description: "You have successfully signed up for this event.",
-      });
-      fetchUserEvents();
-      fetchEventSignupCounts();
-      // Trigger refresh in other components (like UserDashboard)
-      refreshUserEvents();
+      if (signupSuccessful) {
+        toast({
+          title: "Success!",
+          description: "You have successfully signed up for this event.",
+        });
+        fetchUserEvents();
+        fetchEventSignupCounts();
+        // Trigger refresh in other components (like UserDashboard)
+        refreshUserEvents();
+      } else {
+        toast({
+          title: "Error",
+          description: errorMessage || "Failed to sign up for event",
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "Error",
