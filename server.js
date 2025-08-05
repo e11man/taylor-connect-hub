@@ -1847,6 +1847,48 @@ app.delete('/api/event-signup', async (req, res) => {
 });
 
 // Health check endpoint
+// Content-based statistics API - serves stats directly from content table
+app.get('/api/content-stats', async (req, res) => {
+  try {
+    // Fetch stats from content table
+    const { data: statsData, error } = await supabase
+      .from('content')
+      .select('key, value')
+      .eq('page', 'homepage')
+      .eq('section', 'stats')
+      .in('key', ['volunteers_count', 'hours_served_total', 'partner_orgs_count']);
+
+    if (error) throw error;
+
+    // Convert array to object for easier access
+    const stats = {};
+    statsData.forEach(item => {
+      stats[item.key] = item.value;
+    });
+
+    // Return in format expected by frontend
+    res.json({
+      success: true,
+      data: {
+        volunteers_count: stats.volunteers_count || '0',
+        hours_served_total: stats.hours_served_total || '0', 
+        partner_orgs_count: stats.partner_orgs_count || '0'
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching content stats:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message,
+      data: {
+        volunteers_count: '0',
+        hours_served_total: '0',
+        partner_orgs_count: '0'
+      }
+    });
+  }
+});
+
 app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Email server is running' });
 });

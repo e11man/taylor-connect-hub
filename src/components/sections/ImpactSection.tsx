@@ -1,31 +1,31 @@
 import { Users, Clock, Building } from "lucide-react";
 import { useContentSection } from "@/hooks/useContent";
-import { useSiteStatistics } from "@/hooks/useSiteStatistics";
+import { useContentStats } from "@/hooks/useContentStats";
 import AnimatedSection from "@/components/ui/animated-section";
 import { motion } from "framer-motion";
 
 const ImpactSection = () => {
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
   const { content: aboutImpactContent } = useContentSection('about', 'impact');
-  const { statistics: siteStats, loading: statsLoading } = useSiteStatistics();
+  const { stats: contentStats, loading: statsLoading } = useContentStats();
   
   const stats = [
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: siteStats?.active_volunteers?.display_value?.toLocaleString() || "0",
+      value: contentStats?.volunteers_count || "0",
       description: aboutImpactContent.volunteers_description || "Passionate individuals serving Upland"
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: siteStats?.hours_contributed?.display_value?.toLocaleString() || "0",
+      value: contentStats?.hours_served_total || "0",
       description: aboutImpactContent.hours_description || "Collective time dedicated to service"
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: siteStats?.partner_organizations?.display_value?.toLocaleString() || "0",
+      value: contentStats?.partner_orgs_count || "0",
       description: aboutImpactContent.organizations_description || "Local organizations making a difference"
     }
   ];
