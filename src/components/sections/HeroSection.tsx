@@ -6,13 +6,52 @@ import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
 import { useContentSection } from "@/hooks/useContent";
-import { useContentStats } from "@/hooks/useContentStats";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
   const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
-  const { stats: contentStats, loading: statsLoading } = useContentStats();
+  const [stats, setStats] = useState({
+    volunteers_count: "0",
+    hours_served_total: "0", 
+    partner_orgs_count: "0"
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
+  
+  // Load statistics directly from site_statistics table (same as admin console)
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        setStatsLoading(true);
+        const { data, error } = await supabase
+          .from('site_statistics')
+          .select('volunteers_count, hours_served_total, partner_orgs_count')
+          .limit(1);
+
+        if (error) {
+          console.error('Error loading stats:', error);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const statsData = data[0];
+          setStats({
+            volunteers_count: statsData.volunteers_count?.toString() || "0",
+            hours_served_total: statsData.hours_served_total?.toString() || "0",
+            partner_orgs_count: statsData.partner_orgs_count?.toString() || "0"
+          });
+        }
+      } catch (err) {
+        console.error('Error loading statistics:', err);
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    loadStats();
+  }, []);
   
   // Extract content with fallbacks
   const titleLine1 = heroContent.titleLine1 || "Connect.";
@@ -22,21 +61,21 @@ const HeroSection = () => {
   const ctaButton = heroContent.ctaButton || "Get Started";
   const secondaryButton = heroContent.secondaryButton || "Learn More";
   
-  const stats = [
+  const statsData = [
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: contentStats?.volunteers_count || "0"
+      value: stats.volunteers_count
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: contentStats?.hours_served_total || "0"
+      value: stats.hours_served_total
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: contentStats?.partner_orgs_count || "0"
+      value: stats.partner_orgs_count
     }
   ];
 
@@ -49,7 +88,7 @@ const HeroSection = () => {
   };
 
   // Show loading skeleton for the entire hero section on initial load
-  if ((heroLoading && Object.keys(heroContent).length === 0) || statsLoading) {
+  if ((heroLoading && Object.keys(heroContent).length === 0) || impactLoading || statsLoading) {
     return (
       <section id="home" className="bg-white section-padding">
         <div className="container-custom">
@@ -156,7 +195,7 @@ const HeroSection = () => {
           {/* Stats Section */}
           <AnimatedSection variant="stagger" delay={0.8}>
             <div className="grid grid-cols-3 md:grid-cols-3 gap-3 md:gap-6 lg:gap-8 max-w-4xl mx-auto">
-              {stats.map((stat, index) => (
+              {statsData.map((stat, index) => (
                 <AnimatedCard 
                   key={stat.label}
                   index={index}

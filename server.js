@@ -1850,13 +1850,13 @@ app.delete('/api/event-signup', async (req, res) => {
 // Content-based statistics API - serves stats directly from content table
 app.get('/api/content-stats', async (req, res) => {
   try {
-    // Fetch stats from content table
+    // Fetch stats from content table - corrected to use 'impact' section and correct keys
     const { data: statsData, error } = await supabase
       .from('content')
       .select('key, value')
       .eq('page', 'homepage')
-      .eq('section', 'stats')
-      .in('key', ['volunteers_count', 'hours_served_total', 'partner_orgs_count']);
+      .eq('section', 'impact')
+      .in('key', ['active_volunteers', 'hours_contributed', 'partner_organizations']);
 
     if (error) throw error;
 
@@ -1866,13 +1866,13 @@ app.get('/api/content-stats', async (req, res) => {
       stats[item.key] = item.value;
     });
 
-    // Return in format expected by frontend
+    // Return in format expected by frontend - map to the expected keys
     res.json({
       success: true,
       data: {
-        volunteers_count: stats.volunteers_count || '0',
-        hours_served_total: stats.hours_served_total || '0', 
-        partner_orgs_count: stats.partner_orgs_count || '0'
+        volunteers_count: stats.active_volunteers || '0',
+        hours_served_total: stats.hours_contributed || '0', 
+        partner_orgs_count: stats.partner_organizations || '0'
       }
     });
   } catch (error) {
