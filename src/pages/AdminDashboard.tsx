@@ -10,9 +10,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Check } from 'lucide-react';
+import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Check, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { ContentManagement } from '@/components/admin/ContentManagement';
+import { EventChatView } from '@/components/admin/EventChatView';
 
 interface User {
   id: string;
@@ -390,6 +391,7 @@ export const AdminDashboard = () => {
   const [editOrgModal, setEditOrgModal] = useState(false);
   const [viewEventModal, setViewEventModal] = useState(false);
   const [editEventModal, setEditEventModal] = useState(false);
+  const [chatEventModal, setChatEventModal] = useState(false);
   
   // Selected items for modals
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -940,6 +942,11 @@ export const AdminDashboard = () => {
   const viewEvent = (event: Event) => {
     setSelectedEvent(event);
     setViewEventModal(true);
+  };
+
+  const viewEventChat = (event: Event) => {
+    setSelectedEvent(event);
+    setChatEventModal(true);
   };
 
   // Edit functions
@@ -1616,13 +1623,16 @@ export const AdminDashboard = () => {
                         </td>
                         <td className="px-4 py-3">
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => viewEvent(event)}>
+                            <Button size="sm" variant="outline" onClick={() => viewEvent(event)} title="View Event">
                               <Eye className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="outline" onClick={() => editEvent(event)}>
+                            <Button size="sm" variant="outline" onClick={() => viewEventChat(event)} title="View Chat" className="text-green-600 hover:text-green-700 hover:bg-green-50">
+                              <MessageSquare className="w-4 h-4" />
+                            </Button>
+                            <Button size="sm" variant="outline" onClick={() => editEvent(event)} title="Edit Event">
                               <Edit className="w-4 h-4" />
                             </Button>
-                            <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)}>
+                            <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)} title="Delete Event">
                               <Trash2 className="w-4 h-4" />
                             </Button>
                           </div>
@@ -1937,6 +1947,19 @@ export const AdminDashboard = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Chat Event Modal */}
+      {selectedEvent && (
+        <EventChatView
+          isOpen={chatEventModal}
+          onClose={() => {
+            setChatEventModal(false);
+            setSelectedEvent(null);
+          }}
+          eventId={selectedEvent.id}
+          eventTitle={selectedEvent.title}
+        />
+      )}
     </div>
   );
 };
