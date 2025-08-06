@@ -40,7 +40,7 @@ const GroupSignupModal = ({
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [selectedUsers, setSelectedUsers] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState("");
-  const [showOnlyMyFloor, setShowOnlyMyFloor] = useState(true);
+  const [showOnlyMyFloor, setShowOnlyMyFloor] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [includeMyself, setIncludeMyself] = useState(false);
@@ -67,6 +67,8 @@ const GroupSignupModal = ({
         .eq('user_id', user.id)
         .single();
 
+      // RLS Fix: Get all active profiles first, then filter client-side
+      // This avoids the RLS issue with .neq() queries
       let query = supabase
         .from('profiles')
         .select(`
@@ -76,19 +78,22 @@ const GroupSignupModal = ({
           dorm,
           wing
         `)
-        .eq('status', 'active')
-        .neq('user_id', user.id); // Exclude current user from list
+        .eq('status', 'active');
 
-      // Filter by same floor if enabled
-      if (showOnlyMyFloor && currentUserProfile) {
-        query = query
-          .eq('dorm', currentUserProfile.dorm)
-          .eq('wing', currentUserProfile.wing);
-      }
-
-      const { data: profilesData, error } = await query;
+      const { data: allProfilesData, error } = await query;
 
       if (error) throw error;
+
+      // Client-side filtering to exclude current user and apply floor filtering
+      let profilesData = (allProfilesData || []).filter(profile => profile.user_id !== user.id);
+
+            // Filter by same floor if enabled
+      if (showOnlyMyFloor && currentUserProfile && currentUserProfile.dorm && currentUserProfile.wing) {
+        profilesData = profilesData.filter(profile => 
+          profile.dorm === currentUserProfile.dorm && 
+          profile.wing === currentUserProfile.wing
+        );
+      }
 
       // Get commitment counts for each user
       const userIds = profilesData?.map(p => p.user_id) || [];
@@ -104,7 +109,7 @@ const GroupSignupModal = ({
       }, {}) || {};
 
       // Filter users based on search term and add commitment count
-      const filteredUsers = (profilesData || [])
+      const filteredUsers = profilesData
         .map(profile => ({
           ...profile,
           commitments: commitmentCounts[profile.user_id] || 0
@@ -112,8 +117,8 @@ const GroupSignupModal = ({
         .filter(profile => {
           if (!searchTerm) return true;
           return profile.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                 profile.dorm.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                 profile.wing.toLowerCase().includes(searchTerm.toLowerCase());
+                 (profile.dorm && profile.dorm.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                 (profile.wing && profile.wing.toLowerCase().includes(searchTerm.toLowerCase()));
         })
         .sort((a, b) => {
           // Sort by same floor first, then by commitments (ascending)
@@ -291,7 +296,7 @@ const GroupSignupModal = ({
                   onCheckedChange={(checked) => setShowOnlyMyFloor(checked === true)}
                 />
                 <label htmlFor="sameFloor" className="text-sm font-medium">
-                  Show only users from my floor
+                  Show only users from my floor/wing
                 </label>
               </div>
               
@@ -315,8 +320,15 @@ const GroupSignupModal = ({
                 Loading users...
               </div>
             ) : users.length === 0 ? (
-              <div className="p-4 text-center text-muted-foreground">
-                {showOnlyMyFloor ? "No users found on your floor" : "No users found"}
+              <div className="p-4 text-center text-muted-foreground space-y-2">
+                <div>
+                  {showOnlyMyFloor ? "No users found on your floor" : "No users available for group signup"}
+                </div>
+                {showOnlyMyFloor && (
+                  <div className="text-xs">
+                    Try unchecking "Show only users from my floor" to see more users
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-1 p-1 sm:p-2">
