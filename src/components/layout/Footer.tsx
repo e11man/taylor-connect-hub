@@ -15,7 +15,6 @@ const Footer = () => {
   const footerLinks = [
     { name: linksContent.about || "About", href: "/about" },
     { name: linksContent.contact || "Contact", href: "#contact" },
-    { name: linksContent.opportunities || "Opportunities", href: "#opportunities" },
     { name: linksContent.privacy || "Privacy", href: "/privacy" },
     { name: linksContent.terms || "Terms", href: "/terms" }
   ];

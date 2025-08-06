@@ -57,7 +57,6 @@ const Header = () => {
   const NAV_LINKS = [
     { name: navContent.home || "Home", href: "/", isRoute: true },
     { name: navContent.about || "About", href: "/about", isRoute: true },
-    { name: navContent.opportunities || "Opportunities", href: isHomePage ? "#opportunities" : "/#opportunities", isRoute: false },
     { name: navContent.contact || "Contact", href: isHomePage ? "#contact" : "/#contact", isRoute: false }
   ];
 
