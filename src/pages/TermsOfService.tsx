@@ -1,10 +1,7 @@
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import AnimatedSection from "@/components/ui/animated-section";
-import AnimatedText from "@/components/ui/animated-text";
 import { DynamicText } from "@/components/content/DynamicText";
 import { useContentSection } from "@/hooks/useContent";
-import { motion } from "framer-motion";
 import { FileText, CheckCircle, AlertTriangle, Users, Shield, Clock } from "lucide-react";
 
 const TermsOfService = () => {
@@ -58,41 +55,30 @@ const TermsOfService = () => {
       <Header />
       <main>
         {/* Hero Section */}
-        <section className="bg-gradient-to-br from-[#00AFCE] to-[#0A2540] text-white py-20">
-          <div className="container-custom">
-            <AnimatedSection variant="fade" delay={0.1}>
-              <div className="text-center max-w-4xl mx-auto">
-                <AnimatedText
-                  variant="slide-up"
-                  delay={0.2}
-                  className="text-5xl md:text-6xl font-bold mb-6"
-                >
-                  <DynamicText 
-                    page="terms" 
-                    section="hero" 
-                    contentKey="title"
-                    fallback="Terms of Service"
-                    as="span"
-                  />
-                </AnimatedText>
-                <AnimatedText
-                  variant="slide-up"
-                  delay={0.3}
-                  className="text-xl md:text-2xl text-blue-100 mb-8"
-                >
-                  <DynamicText 
-                    page="terms" 
-                    section="hero" 
-                    contentKey="subtitle"
-                    fallback="Guidelines for using our platform"
-                    as="span"
-                  />
-                </AnimatedText>
-                <AnimatedText
-                  variant="slide-up"
-                  delay={0.4}
-                  className="text-lg text-blue-200"
-                >
+        <section className="bg-white border-b border-[#e6ebf1] py-16">
+          <div className="max-w-5xl mx-auto px-4">
+            <div className="text-center max-w-4xl mx-auto">
+              <h1 className="text-4xl md:text-5xl font-bold text-[#1B365F] mb-4">
+                <DynamicText 
+                  page="terms" 
+                  section="hero" 
+                  contentKey="title"
+                  fallback="Terms of Service"
+                  as="span"
+                />
+              </h1>
+              <p className="text-xl md:text-2xl text-[#525f7f] mb-6">
+                <DynamicText 
+                  page="terms" 
+                  section="hero" 
+                  contentKey="subtitle"
+                  fallback="Guidelines for using our platform"
+                  as="span"
+                />
+              </p>
+              <div className="inline-flex items-center gap-2 bg-[#E14F3D] bg-opacity-10 px-4 py-2 rounded-full">
+                <div className="w-2 h-2 bg-[#E14F3D] rounded-full"></div>
+                <p className="text-lg text-[#1B365F] font-medium">
                   <DynamicText 
                     page="terms" 
                     section="hero" 
@@ -100,52 +86,47 @@ const TermsOfService = () => {
                     fallback="Last updated: January 2024"
                     as="span"
                   />
-                </AnimatedText>
+                </p>
               </div>
-            </AnimatedSection>
+            </div>
           </div>
         </section>
 
         {/* Terms Features Grid */}
-        <section className="py-16 bg-gray-50">
-          <div className="container-custom">
-            <AnimatedSection variant="fade" delay={0.1}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {termsFeatures.map((feature, index) => (
-                  <motion.div
+        <section className="py-16 bg-[#f6f9fc]">
+          <div className="max-w-5xl mx-auto px-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {termsFeatures.map((feature, index) => {
+                const isOrange = index % 3 === 1;
+                const iconBg = isOrange ? 'bg-[#E14F3D]' : 'bg-[#00AFCE]';
+                const borderColor = isOrange ? 'border-[#E14F3D] border-opacity-20' : 'border-[#00AFCE] border-opacity-20';
+                
+                return (
+                  <div
                     key={feature.title}
-                    className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow duration-300"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ 
-                      opacity: 1, 
-                      y: 0,
-                      transition: { duration: 0.5, delay: index * 0.1 }
-                    }}
-                    viewport={{ once: true }}
-                    whileHover={{ y: -5 }}
+                    className={`bg-white rounded-lg p-6 shadow-sm border-2 ${borderColor}`}
                   >
-                    <div className="flex items-center mb-4">
-                      <div className="w-12 h-12 bg-[#00AFCE] rounded-lg flex items-center justify-center mr-4">
+                    <div className="flex items-start gap-4 mb-4">
+                      <div className={`w-12 h-12 ${iconBg} rounded-lg flex items-center justify-center flex-shrink-0`}>
                         <feature.icon className="w-6 h-6 text-white" />
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900">{feature.title}</h3>
+                      <h3 className="text-lg font-semibold text-[#1B365F]">{feature.title}</h3>
                     </div>
-                    <p className="text-gray-600">{feature.description}</p>
-                  </motion.div>
-                ))}
-              </div>
-            </AnimatedSection>
+                    <p className="text-[#525f7f]">{feature.description}</p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </section>
 
         {/* Main Content */}
         <section className="py-16">
-          <div className="container-custom max-w-4xl">
-            <AnimatedSection variant="fade" delay={0.1}>
-              <div className="prose prose-lg max-w-none">
+          <div className="max-w-4xl mx-auto px-4">
+            <div className="prose prose-lg max-w-none">
                 {/* Introduction */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-3xl font-bold text-[#1B365F] mb-6">
                     <DynamicText 
                       page="terms" 
                       section="main" 
@@ -154,7 +135,7 @@ const TermsOfService = () => {
                       as="span"
                     />
                   </h2>
-                  <p className="text-gray-700 leading-relaxed">
+                  <p className="text-[#525f7f] leading-relaxed">
                     <DynamicText 
                       page="terms" 
                       section="main" 
@@ -167,7 +148,7 @@ const TermsOfService = () => {
 
                 {/* Acceptance of Terms */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-3xl font-bold text-[#1B365F] mb-6">
                     <DynamicText 
                       page="terms" 
                       section="acceptance" 
@@ -176,7 +157,7 @@ const TermsOfService = () => {
                       as="span"
                     />
                   </h2>
-                  <p className="text-gray-700">
+                  <p className="text-[#525f7f]">
                     <DynamicText 
                       page="terms" 
                       section="acceptance" 
@@ -189,7 +170,7 @@ const TermsOfService = () => {
 
                 {/* Services Description */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-3xl font-bold text-[#1B365F] mb-6">
                     <DynamicText 
                       page="terms" 
                       section="services" 
@@ -198,7 +179,7 @@ const TermsOfService = () => {
                       as="span"
                     />
                   </h2>
-                  <p className="text-gray-700 mb-4">
+                  <p className="text-[#525f7f] mb-4">
                     <DynamicText 
                       page="terms" 
                       section="services" 
@@ -207,7 +188,7 @@ const TermsOfService = () => {
                       as="span"
                     />
                   </p>
-                  <ul className="list-disc list-inside space-y-2 text-gray-700">
+                  <ul className="list-disc list-inside space-y-2 text-[#525f7f]">
                     <li>
                       <DynamicText 
                         page="terms" 
@@ -249,7 +230,7 @@ const TermsOfService = () => {
 
                 {/* User Responsibilities */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-3xl font-bold text-[#1B365F] mb-6">
                     <DynamicText 
                       page="terms" 
                       section="user" 
@@ -260,7 +241,7 @@ const TermsOfService = () => {
                   </h2>
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                      <h3 className="text-xl font-semibold text-[#1B365F] mb-3">
                         <DynamicText 
                           page="terms" 
                           section="user" 
@@ -269,7 +250,7 @@ const TermsOfService = () => {
                           as="span"
                         />
                       </h3>
-                      <p className="text-gray-700">
+                      <p className="text-[#525f7f]">
                         <DynamicText 
                           page="terms" 
                           section="user" 
@@ -280,7 +261,7 @@ const TermsOfService = () => {
                       </p>
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                      <h3 className="text-xl font-semibold text-[#1B365F] mb-3">
                         <DynamicText 
                           page="terms" 
                           section="user" 
@@ -289,7 +270,7 @@ const TermsOfService = () => {
                           as="span"
                         />
                       </h3>
-                      <p className="text-gray-700">
+                      <p className="text-[#525f7f]">
                         <DynamicText 
                           page="terms" 
                           section="user" 
@@ -300,7 +281,7 @@ const TermsOfService = () => {
                       </p>
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                      <h3 className="text-xl font-semibold text-[#1B365F] mb-3">
                         <DynamicText 
                           page="terms" 
                           section="user" 
@@ -309,7 +290,7 @@ const TermsOfService = () => {
                           as="span"
                         />
                       </h3>
-                      <p className="text-gray-700">
+                      <p className="text-[#525f7f]">
                         <DynamicText 
                           page="terms" 
                           section="user" 
@@ -324,7 +305,7 @@ const TermsOfService = () => {
 
                 {/* Organization Responsibilities */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-3xl font-bold text-[#1B365F] mb-6">
                     <DynamicText 
                       page="terms" 
                       section="organization" 
@@ -335,7 +316,7 @@ const TermsOfService = () => {
                   </h2>
                   <div className="space-y-4">
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                      <h3 className="text-xl font-semibold text-[#1B365F] mb-3">
                         <DynamicText 
                           page="terms" 
                           section="organization" 
@@ -344,7 +325,7 @@ const TermsOfService = () => {
                           as="span"
                         />
                       </h3>
-                      <p className="text-gray-700">
+                      <p className="text-[#525f7f]">
                         <DynamicText 
                           page="terms" 
                           section="organization" 
@@ -355,7 +336,7 @@ const TermsOfService = () => {
                       </p>
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-gray-800 mb-3">
+                      <h3 className="text-xl font-semibold text-[#1B365F] mb-3">
                         <DynamicText 
                           page="terms" 
                           section="organization" 
@@ -364,7 +345,7 @@ const TermsOfService = () => {
                           as="span"
                         />
                       </h3>
-                      <p className="text-gray-700">
+                      <p className="text-[#525f7f]">
                         <DynamicText 
                           page="terms" 
                           section="organization" 
@@ -379,7 +360,7 @@ const TermsOfService = () => {
 
                 {/* Limitation of Liability */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-3xl font-bold text-[#1B365F] mb-6">
                     <DynamicText 
                       page="terms" 
                       section="liability" 
@@ -388,7 +369,7 @@ const TermsOfService = () => {
                       as="span"
                     />
                   </h2>
-                  <p className="text-gray-700">
+                  <p className="text-[#525f7f]">
                     <DynamicText 
                       page="terms" 
                       section="liability" 
@@ -401,7 +382,7 @@ const TermsOfService = () => {
 
                 {/* Termination */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-3xl font-bold text-[#1B365F] mb-6">
                     <DynamicText 
                       page="terms" 
                       section="termination" 
@@ -410,7 +391,7 @@ const TermsOfService = () => {
                       as="span"
                     />
                   </h2>
-                  <p className="text-gray-700">
+                  <p className="text-[#525f7f]">
                     <DynamicText 
                       page="terms" 
                       section="termination" 
@@ -423,7 +404,7 @@ const TermsOfService = () => {
 
                 {/* Contact Information */}
                 <div className="mb-12">
-                  <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  <h2 className="text-3xl font-bold text-[#1B365F] mb-6">
                     <DynamicText 
                       page="terms" 
                       section="contact" 
@@ -432,7 +413,7 @@ const TermsOfService = () => {
                       as="span"
                     />
                   </h2>
-                  <p className="text-gray-700">
+                  <p className="text-[#525f7f]">
                     <DynamicText 
                       page="terms" 
                       section="contact" 
@@ -443,7 +424,6 @@ const TermsOfService = () => {
                   </p>
                 </div>
               </div>
-            </AnimatedSection>
           </div>
         </section>
       </main>
