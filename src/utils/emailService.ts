@@ -7,17 +7,12 @@ function generateVerificationCode(): string {
 
 // Get the base URL for the email service
 const getEmailServiceUrl = () => {
-  // In development, use localhost:3001
   if (typeof window !== 'undefined') {
-    const hostname = window.location.hostname;
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return 'http://localhost:3001';
-    }
-    // In production, try the same domain with different port (if available)
-    // Otherwise fallback to localhost for now
-    return 'http://localhost:3001';
+    // Use the current domain for Vercel API routes
+    return window.location.origin;
   }
-  return 'http://localhost:3001';
+  // Fallback for server-side rendering
+  return 'http://localhost:3000';
 };
 
 export const sendVerificationCode = async (email: string, code?: string): Promise<{ success: boolean; code?: string }> => {
@@ -40,10 +35,10 @@ export const sendVerificationCode = async (email: string, code?: string): Promis
     }
     
     try {
-      // Call the server endpoint that uses the Python script with Resend
+      // Call the Vercel API route that uses Resend directly
       const emailServiceUrl = getEmailServiceUrl();
       
-      const response = await fetch(`${emailServiceUrl}/api/send-verification-code`, {
+      const response = await fetch(`${emailServiceUrl}/api/send-verification-email`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
