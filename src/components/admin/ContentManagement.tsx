@@ -8,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Search, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -30,6 +31,7 @@ export const ContentManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('all');
   
   // Debug: Log when editingItem changes
   useEffect(() => {
@@ -302,177 +304,385 @@ export const ContentManagement = () => {
           </div>
         ) : (
           <div>
-            {Object.entries(groupedContent).map(([page, sections]) => (
-              <Card key={page}>
-                <CardHeader>
-                  <CardTitle className="text-lg">{page.charAt(0).toUpperCase() + page.slice(1)} Page</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {Object.entries(sections).map(([section, items]) => (
-                    <div key={section} className="mb-6">
-                      <h4 className="text-md font-semibold mb-3 text-muted-foreground">
-                        {section.charAt(0).toUpperCase() + section.slice(1)} Section
-                      </h4>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Key</TableHead>
-                            <TableHead>Value / Status</TableHead>
-                            <TableHead className="w-32">Actions</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {items.map((item) => (
-                            <TableRow key={item.id}>
-                              <TableCell className="font-mono text-sm">{item.key}</TableCell>
-                                                             <TableCell className="max-w-xs truncate">
-                                 {item.key && isBooleanField(item.key) ? (
-                                  <div className="flex items-center gap-2">
-                                    <Switch
-                                      checked={item.value === 'true'}
-                                      onCheckedChange={async (checked) => {
-                                        const updatedItem = { ...item, value: checked ? 'true' : 'false' };
-                                        const result = await supabase
-                                          .from('content')
-                                          .update({ value: updatedItem.value })
-                                          .eq('id', updatedItem.id)
-                                          .select()
-                                          .single();
-                                        if (result.error) {
-                                          toast({
-                                            title: 'Error',
-                                            description: `Failed to update content: ${result.error.message}`,
-                                            variant: 'destructive',
-                                          });
-                                        } else {
-                                          toast({
-                                            title: 'Success',
-                                            description: 'Content updated successfully',
-                                          });
-                                          loadContent(); // Refresh the content
-                                        }
-                                      }}
-                                      className="data-[state=checked]:bg-[#00AFCE]"
-                                    />
-                                    <span className="text-sm text-muted-foreground">
-                                      {item.value === 'true' ? (
-                                        <span className="flex items-center gap-1 text-red-600">
-                                          <EyeOff className="h-3 w-3" />
-                                          Hidden
-                                        </span>
-                                      ) : (
-                                        <span className="flex items-center gap-1 text-green-600">
-                                          <Eye className="h-3 w-3" />
-                                          Visible
-                                        </span>
-                                      )}
-                                    </span>
-                                  </div>
-                                ) : (
-                                  item.value
-                                )}
-                              </TableCell>
-                              <TableCell>
-                                                                 <div className="flex gap-2">
-                                   <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
-                                     <DialogTrigger asChild>
-                                       <Button
-                                         variant="outline"
-                                         size="sm"
-                                         onClick={() => {
-                                           console.log('Edit button clicked for item:', item);
-                                           setEditingItem({ ...item });
-                                         }}
-                                       >
-                                         <Pencil className="h-3 w-3" />
-                                       </Button>
-                                     </DialogTrigger>
-                                    <DialogContent>
-                                      <DialogHeader>
-                                        <DialogTitle>Edit Content</DialogTitle>
-                                        <DialogDescription>
-                                          Update the content for {item.page}.{item.section}.{item.key}
-                                        </DialogDescription>
-                                      </DialogHeader>
-                                                                             {editingItem && (
-                                         <div className="py-4">
-                                           {editingItem.key && isBooleanField(editingItem.key) ? (
-                                            <div className="space-y-4">
-                                              <Label className="text-base font-medium">
-                                                {getBooleanFieldLabel(editingItem.key)}
-                                              </Label>
-                                              <div className="flex items-center gap-3">
-                                                <Switch
-                                                  checked={editingItem.value === 'true'}
-                                                  onCheckedChange={(checked) => setEditingItem({ ...editingItem, value: checked ? 'true' : 'false' })}
-                                                  className="data-[state=checked]:bg-[#00AFCE]"
-                                                />
-                                                <span className="text-sm text-muted-foreground">
-                                                  {editingItem.value === 'true' ? 'Hidden' : 'Visible'}
-                                                </span>
-                                              </div>
-                                              <p className="text-xs text-muted-foreground">
-                                                {editingItem.value === 'true' 
-                                                  ? 'This item will be hidden from the website.'
-                                                  : 'This item will be visible on the website.'
+            {/* Generate tabs for all unique sections */}
+            {(() => {
+              const allSections = new Set<string>();
+              Object.entries(groupedContent).forEach(([page, sections]) => {
+                Object.keys(sections).forEach(section => {
+                  allSections.add(`${page}-${section}`);
+                });
+              });
+              
+              const sectionTabs = Array.from(allSections).sort();
+              
+              return (
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid w-full grid-cols-6 max-h-12 overflow-x-auto">
+                    <TabsTrigger value="all" className="text-xs">
+                      All Content
+                    </TabsTrigger>
+                    {sectionTabs.slice(0, 5).map((sectionKey) => {
+                      const [page, section] = sectionKey.split('-');
+                      return (
+                        <TabsTrigger key={sectionKey} value={sectionKey} className="text-xs">
+                          {page.charAt(0).toUpperCase() + page.slice(1)} - {section.charAt(0).toUpperCase() + section.slice(1)}
+                        </TabsTrigger>
+                      );
+                    })}
+                  </TabsList>
+                  
+                  {/* All Content Tab */}
+                  <TabsContent value="all" className="space-y-4">
+                    {Object.entries(groupedContent).map(([page, sections]) => (
+                      <Card key={page}>
+                        <CardHeader>
+                          <CardTitle className="text-lg">{page.charAt(0).toUpperCase() + page.slice(1)} Page</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          {Object.entries(sections).map(([section, items]) => (
+                            <div key={section} className="mb-6">
+                              <h4 className="text-md font-semibold mb-3 text-muted-foreground">
+                                {section.charAt(0).toUpperCase() + section.slice(1)} Section
+                              </h4>
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Key</TableHead>
+                                    <TableHead>Value / Status</TableHead>
+                                    <TableHead className="w-32">Actions</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {items.map((item) => (
+                                    <TableRow key={item.id}>
+                                      <TableCell className="font-mono text-sm">{item.key}</TableCell>
+                                      <TableCell className="max-w-xs truncate">
+                                        {item.key && isBooleanField(item.key) ? (
+                                          <div className="flex items-center gap-2">
+                                            <Switch
+                                              checked={item.value === 'true'}
+                                              onCheckedChange={async (checked) => {
+                                                const updatedItem = { ...item, value: checked ? 'true' : 'false' };
+                                                const result = await supabase
+                                                  .from('content')
+                                                  .update({ value: updatedItem.value })
+                                                  .eq('id', updatedItem.id)
+                                                  .select()
+                                                  .single();
+                                                if (result.error) {
+                                                  toast({
+                                                    title: 'Error',
+                                                    description: `Failed to update content: ${result.error.message}`,
+                                                    variant: 'destructive',
+                                                  });
+                                                } else {
+                                                  toast({
+                                                    title: 'Success',
+                                                    description: 'Content updated successfully',
+                                                  });
+                                                  loadContent(); // Refresh the content
                                                 }
-                                              </p>
-                                            </div>
-                                          ) : (
-                                            <>
-                                              <Label htmlFor="edit-value">Value</Label>
-                                              <Textarea
-                                                id="edit-value"
-                                                value={editingItem.value}
-                                                onChange={(e) => setEditingItem({ ...editingItem, value: e.target.value })}
-                                                className="mt-2"
-                                              />
-                                            </>
-                                          )}
+                                              }}
+                                              className="data-[state=checked]:bg-[#00AFCE]"
+                                            />
+                                            <span className="text-sm text-muted-foreground">
+                                              {item.value === 'true' ? (
+                                                <span className="flex items-center gap-1 text-red-600">
+                                                  <EyeOff className="h-3 w-3" />
+                                                  Hidden
+                                                </span>
+                                              ) : (
+                                                <span className="flex items-center gap-1 text-green-600">
+                                                  <Eye className="h-3 w-3" />
+                                                  Visible
+                                                </span>
+                                              )}
+                                            </span>
+                                          </div>
+                                        ) : (
+                                          item.value
+                                        )}
+                                      </TableCell>
+                                      <TableCell>
+                                        <div className="flex gap-2">
+                                          <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
+                                            <DialogTrigger asChild>
+                                              <Button
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => {
+                                                  console.log('Edit button clicked for item:', item);
+                                                  setEditingItem({ ...item });
+                                                }}
+                                              >
+                                                <Pencil className="h-3 w-3" />
+                                              </Button>
+                                            </DialogTrigger>
+                                            <DialogContent>
+                                              <DialogHeader>
+                                                <DialogTitle>Edit Content</DialogTitle>
+                                                <DialogDescription>
+                                                  Update the content for {item.page}.{item.section}.{item.key}
+                                                </DialogDescription>
+                                              </DialogHeader>
+                                              {editingItem && (
+                                                <div className="py-4">
+                                                  {editingItem.key && isBooleanField(editingItem.key) ? (
+                                                    <div className="space-y-4">
+                                                      <Label className="text-base font-medium">
+                                                        {getBooleanFieldLabel(editingItem.key)}
+                                                      </Label>
+                                                      <div className="flex items-center gap-3">
+                                                        <Switch
+                                                          checked={editingItem.value === 'true'}
+                                                          onCheckedChange={(checked) => setEditingItem({ ...editingItem, value: checked ? 'true' : 'false' })}
+                                                          className="data-[state=checked]:bg-[#00AFCE]"
+                                                        />
+                                                        <span className="text-sm text-muted-foreground">
+                                                          {editingItem.value === 'true' ? 'Hidden' : 'Visible'}
+                                                        </span>
+                                                      </div>
+                                                      <p className="text-xs text-muted-foreground">
+                                                        {editingItem.value === 'true' 
+                                                          ? 'This item will be hidden from the website.'
+                                                          : 'This item will be visible on the website.'
+                                                        }
+                                                      </p>
+                                                    </div>
+                                                  ) : (
+                                                    <>
+                                                      <Label htmlFor="edit-value">Value</Label>
+                                                      <Textarea
+                                                        id="edit-value"
+                                                        value={editingItem.value}
+                                                        onChange={(e) => setEditingItem({ ...editingItem, value: e.target.value })}
+                                                        className="mt-2"
+                                                      />
+                                                    </>
+                                                  )}
+                                                </div>
+                                              )}
+                                              <DialogFooter>
+                                                <Button variant="outline" onClick={() => setEditingItem(null)}>
+                                                  Cancel
+                                                </Button>
+                                                <Button onClick={handleUpdate} disabled={loading}>
+                                                  Update
+                                                </Button>
+                                              </DialogFooter>
+                                            </DialogContent>
+                                          </Dialog>
+                                          <AlertDialog>
+                                            <AlertDialogTrigger asChild>
+                                              <Button variant="outline" size="sm">
+                                                <Trash2 className="h-3 w-3" />
+                                              </Button>
+                                            </AlertDialogTrigger>
+                                            <AlertDialogContent>
+                                              <AlertDialogHeader>
+                                                <AlertDialogTitle>Delete Content</AlertDialogTitle>
+                                                <AlertDialogDescription>
+                                                  Are you sure you want to delete this content item? This action cannot be undone.
+                                                </AlertDialogDescription>
+                                              </AlertDialogHeader>
+                                              <AlertDialogFooter>
+                                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                <AlertDialogAction onClick={() => handleDelete(item.id)}>
+                                                  Delete
+                                                </AlertDialogAction>
+                                              </AlertDialogFooter>
+                                            </AlertDialogContent>
+                                          </AlertDialog>
                                         </div>
-                                      )}
-                                      <DialogFooter>
-                                        <Button variant="outline" onClick={() => setEditingItem(null)}>
-                                          Cancel
-                                        </Button>
-                                        <Button onClick={handleUpdate} disabled={loading}>
-                                          Update
-                                        </Button>
-                                      </DialogFooter>
-                                    </DialogContent>
-                                  </Dialog>
-                                  <AlertDialog>
-                                    <AlertDialogTrigger asChild>
-                                      <Button variant="outline" size="sm">
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </AlertDialogTrigger>
-                                    <AlertDialogContent>
-                                      <AlertDialogHeader>
-                                        <AlertDialogTitle>Delete Content</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                          Are you sure you want to delete this content item? This action cannot be undone.
-                                        </AlertDialogDescription>
-                                      </AlertDialogHeader>
-                                      <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => handleDelete(item.id)}>
-                                          Delete
-                                        </AlertDialogAction>
-                                      </AlertDialogFooter>
-                                    </AlertDialogContent>
-                                  </AlertDialog>
-                                </div>
-                              </TableCell>
-                            </TableRow>
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
+                            </div>
                           ))}
-                        </TableBody>
-                      </Table>
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
-            ))}
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </TabsContent>
+                  
+                  {/* Individual Section Tabs */}
+                  {sectionTabs.map((sectionKey) => {
+                    const [page, section] = sectionKey.split('-');
+                    const sectionItems = groupedContent[page]?.[section] || [];
+                    
+                    return (
+                      <TabsContent key={sectionKey} value={sectionKey} className="space-y-4">
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg">
+                              {page.charAt(0).toUpperCase() + page.slice(1)} - {section.charAt(0).toUpperCase() + section.slice(1)} Section
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Key</TableHead>
+                                  <TableHead>Value / Status</TableHead>
+                                  <TableHead className="w-32">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {sectionItems.map((item) => (
+                                  <TableRow key={item.id}>
+                                    <TableCell className="font-mono text-sm">{item.key}</TableCell>
+                                    <TableCell className="max-w-xs truncate">
+                                      {item.key && isBooleanField(item.key) ? (
+                                        <div className="flex items-center gap-2">
+                                          <Switch
+                                            checked={item.value === 'true'}
+                                            onCheckedChange={async (checked) => {
+                                              const updatedItem = { ...item, value: checked ? 'true' : 'false' };
+                                              const result = await supabase
+                                                .from('content')
+                                                .update({ value: updatedItem.value })
+                                                .eq('id', updatedItem.id)
+                                                .select()
+                                                .single();
+                                              if (result.error) {
+                                                toast({
+                                                  title: 'Error',
+                                                  description: `Failed to update content: ${result.error.message}`,
+                                                  variant: 'destructive',
+                                                });
+                                              } else {
+                                                toast({
+                                                  title: 'Success',
+                                                  description: 'Content updated successfully',
+                                                });
+                                                loadContent(); // Refresh the content
+                                              }
+                                            }}
+                                            className="data-[state=checked]:bg-[#00AFCE]"
+                                          />
+                                          <span className="text-sm text-muted-foreground">
+                                            {item.value === 'true' ? (
+                                              <span className="flex items-center gap-1 text-red-600">
+                                                <EyeOff className="h-3 w-3" />
+                                                Hidden
+                                              </span>
+                                            ) : (
+                                              <span className="flex items-center gap-1 text-green-600">
+                                                <Eye className="h-3 w-3" />
+                                                Visible
+                                              </span>
+                                            )}
+                                          </span>
+                                        </div>
+                                      ) : (
+                                        item.value
+                                      )}
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex gap-2">
+                                        <Dialog open={editingItem?.id === item.id} onOpenChange={(open) => !open && setEditingItem(null)}>
+                                          <DialogTrigger asChild>
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => {
+                                                console.log('Edit button clicked for item:', item);
+                                                setEditingItem({ ...item });
+                                              }}
+                                            >
+                                              <Pencil className="h-3 w-3" />
+                                            </Button>
+                                          </DialogTrigger>
+                                          <DialogContent>
+                                            <DialogHeader>
+                                              <DialogTitle>Edit Content</DialogTitle>
+                                              <DialogDescription>
+                                                Update the content for {item.page}.{item.section}.{item.key}
+                                              </DialogDescription>
+                                            </DialogHeader>
+                                            {editingItem && (
+                                              <div className="py-4">
+                                                {editingItem.key && isBooleanField(editingItem.key) ? (
+                                                  <div className="space-y-4">
+                                                    <Label className="text-base font-medium">
+                                                      {getBooleanFieldLabel(editingItem.key)}
+                                                    </Label>
+                                                    <div className="flex items-center gap-3">
+                                                      <Switch
+                                                        checked={editingItem.value === 'true'}
+                                                        onCheckedChange={(checked) => setEditingItem({ ...editingItem, value: checked ? 'true' : 'false' })}
+                                                        className="data-[state=checked]:bg-[#00AFCE]"
+                                                      />
+                                                      <span className="text-sm text-muted-foreground">
+                                                        {editingItem.value === 'true' ? 'Hidden' : 'Visible'}
+                                                      </span>
+                                                    </div>
+                                                    <p className="text-xs text-muted-foreground">
+                                                      {editingItem.value === 'true' 
+                                                        ? 'This item will be hidden from the website.'
+                                                        : 'This item will be visible on the website.'
+                                                      }
+                                                    </p>
+                                                  </div>
+                                                ) : (
+                                                  <>
+                                                    <Label htmlFor="edit-value">Value</Label>
+                                                    <Textarea
+                                                      id="edit-value"
+                                                      value={editingItem.value}
+                                                      onChange={(e) => setEditingItem({ ...editingItem, value: e.target.value })}
+                                                      className="mt-2"
+                                                    />
+                                                  </>
+                                                )}
+                                              </div>
+                                            )}
+                                            <DialogFooter>
+                                              <Button variant="outline" onClick={() => setEditingItem(null)}>
+                                                Cancel
+                                              </Button>
+                                              <Button onClick={handleUpdate} disabled={loading}>
+                                                Update
+                                              </Button>
+                                            </DialogFooter>
+                                          </DialogContent>
+                                        </Dialog>
+                                        <AlertDialog>
+                                          <AlertDialogTrigger asChild>
+                                            <Button variant="outline" size="sm">
+                                              <Trash2 className="h-3 w-3" />
+                                            </Button>
+                                          </AlertDialogTrigger>
+                                          <AlertDialogContent>
+                                            <AlertDialogHeader>
+                                              <AlertDialogTitle>Delete Content</AlertDialogTitle>
+                                              <AlertDialogDescription>
+                                                Are you sure you want to delete this content item? This action cannot be undone.
+                                              </AlertDialogDescription>
+                                            </AlertDialogHeader>
+                                            <AlertDialogFooter>
+                                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                              <AlertDialogAction onClick={() => handleDelete(item.id)}>
+                                                Delete
+                                              </AlertDialogAction>
+                                            </AlertDialogFooter>
+                                          </AlertDialogContent>
+                                        </AlertDialog>
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </CardContent>
+                        </Card>
+                      </TabsContent>
+                    );
+                  })}
+                </Tabs>
+              );
+            })()}
             {filteredContent.length === 0 && !error && (
               <div className="text-center text-gray-500 py-8">No content found.</div>
             )}
