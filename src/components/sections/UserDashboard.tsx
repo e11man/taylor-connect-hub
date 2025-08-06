@@ -40,7 +40,7 @@ const UserDashboard = () => {
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'events' | 'opportunities' | 'settings' | 'email-notifications'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'opportunities' | 'settings'>('events');
   const [changeDormModalOpen, setChangeDormModalOpen] = useState(false);
   const [updatePasswordModalOpen, setUpdatePasswordModalOpen] = useState(false);
   const [chatModalOpen, setChatModalOpen] = useState(false);
@@ -198,17 +198,6 @@ const UserDashboard = () => {
               <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
               Settings
             </button>
-            <button
-              onClick={() => setActiveTab('email-notifications')}
-              className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm lg:text-base ${
-                activeTab === 'email-notifications' 
-                  ? 'bg-[#00AFCE] text-white' 
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-              Email Notifications
-            </button>
           </div>
         </div>
 
@@ -335,8 +324,6 @@ const UserDashboard = () => {
           </>
         ) : activeTab === 'opportunities' ? (
           <DashboardOpportunities />
-        ) : activeTab === 'settings' ? (
-          <NotificationPreferences />
         ) : (
           <div className="relative">
             <div className="blur-sm pointer-events-none">

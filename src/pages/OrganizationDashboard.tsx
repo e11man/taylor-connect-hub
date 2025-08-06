@@ -60,7 +60,6 @@ const OrganizationDashboard = () => {
   const [safetyGuidelinesModalOpen, setSafetyGuidelinesModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
-  const [activeTab, setActiveTab] = useState<'dashboard' | 'email-notifications'>('dashboard');
   
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -424,35 +423,6 @@ const OrganizationDashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Tab Navigation */}
-          <div className="mb-6">
-            <div className="flex gap-2 sm:gap-3 lg:gap-4">
-              <button
-                onClick={() => setActiveTab('dashboard')}
-                className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all text-xs sm:text-sm lg:text-base ${
-                  activeTab === 'dashboard' 
-                    ? 'bg-[#00AFCE] text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                Dashboard
-              </button>
-              <button
-                onClick={() => setActiveTab('email-notifications')}
-                className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm lg:text-base ${
-                  activeTab === 'email-notifications' 
-                    ? 'bg-[#00AFCE] text-white' 
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
-                Email Notifications
-              </button>
-            </div>
-          </div>
-
-          {activeTab === 'dashboard' ? (
-            <>
           {/* Events Section */}
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-montserrat font-bold text-primary">Your Opportunities</h2>
@@ -669,58 +639,57 @@ const OrganizationDashboard = () => {
                 </Card>
               ))}
             </div>
-          )}
-            </>
-          ) : (
-            <div className="relative">
-              <div className="blur-sm pointer-events-none">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageCircle className="h-5 w-5" />
-                      Organization Email Notifications
-                    </CardTitle>
-                    <CardDescription>
-                      Manage email notifications for your organization's events and activities
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-base">Event Notifications</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Get notified when volunteers sign up or cancel
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-base">Weekly Summary</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Receive weekly reports about your organization's activities
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label className="text-base">System Updates</Label>
-                        <p className="text-sm text-muted-foreground">
-                          Important announcements and platform updates
-                        </p>
-                      </div>
+                      )}
+
+          {/* Notification Settings Section */}
+          <div className="mt-12 relative">
+            <div className="blur-sm pointer-events-none">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MessageCircle className="h-5 w-5" />
+                    Email Notifications
+                  </CardTitle>
+                  <CardDescription>
+                    Manage email notifications for your organization's events and activities
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <Label className="text-base">Event Notifications</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Get notified when volunteers sign up or cancel
+                      </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
-                <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
-                  <MessageCircle className="w-16 h-16 mx-auto mb-4 text-[#00AFCE]" />
-                  <h3 className="text-2xl font-montserrat font-bold text-primary mb-2">
-                    Email Notifications Coming Soon
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Enhanced email notification features are currently in development and will be available soon.
-                  </p>
-                </div>
+                    <div className="space-y-2">
+                      <Label className="text-base">Weekly Summary</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Receive weekly reports about your organization's activities
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-base">System Updates</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Important announcements and platform updates
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
+              <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
+                <MessageCircle className="w-16 h-16 mx-auto mb-4 text-[#00AFCE]" />
+                <h3 className="text-2xl font-montserrat font-bold text-primary mb-2">
+                  Email Notifications Coming Soon
+                </h3>
+                <p className="text-muted-foreground">
+                  Enhanced email notification features are currently in development and will be available soon.
+                </p>
               </div>
             </div>
-          )}
+          </div>
 
           {/* Edit Modal */}
           <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
