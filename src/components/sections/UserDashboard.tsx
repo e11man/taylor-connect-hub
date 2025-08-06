@@ -325,7 +325,22 @@ const UserDashboard = () => {
         ) : activeTab === 'opportunities' ? (
           <DashboardOpportunities />
         ) : (
-          <NotificationPreferences />
+          <div className="relative">
+            <div className="blur-sm pointer-events-none">
+              <NotificationPreferences />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
+              <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
+                <MessageCircle className="w-16 h-16 mx-auto mb-4 text-[#00AFCE]" />
+                <h3 className="text-2xl font-montserrat font-bold text-primary mb-2">
+                  Email Notifications Coming Soon
+                </h3>
+                <p className="text-muted-foreground">
+                  Enhanced email notification features are currently in development and will be available soon.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
