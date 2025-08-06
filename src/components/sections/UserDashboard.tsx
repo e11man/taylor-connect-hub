@@ -40,7 +40,7 @@ const UserDashboard = () => {
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'events' | 'opportunities' | 'settings'>('events');
+  const [activeTab, setActiveTab] = useState<'events' | 'opportunities' | 'settings' | 'email-notifications'>('events');
   const [changeDormModalOpen, setChangeDormModalOpen] = useState(false);
   const [updatePasswordModalOpen, setUpdatePasswordModalOpen] = useState(false);
   const [chatModalOpen, setChatModalOpen] = useState(false);
@@ -198,6 +198,17 @@ const UserDashboard = () => {
               <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
               Settings
             </button>
+            <button
+              onClick={() => setActiveTab('email-notifications')}
+              className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm lg:text-base ${
+                activeTab === 'email-notifications' 
+                  ? 'bg-[#00AFCE] text-white' 
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              <MessageCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+              Email Notifications
+            </button>
           </div>
         </div>
 
@@ -324,8 +335,25 @@ const UserDashboard = () => {
           </>
         ) : activeTab === 'opportunities' ? (
           <DashboardOpportunities />
-        ) : (
+        ) : activeTab === 'settings' ? (
           <NotificationPreferences />
+        ) : (
+          <div className="relative">
+            <div className="blur-sm pointer-events-none">
+              <NotificationPreferences />
+            </div>
+            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
+              <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
+                <MessageCircle className="w-16 h-16 mx-auto mb-4 text-[#00AFCE]" />
+                <h3 className="text-2xl font-montserrat font-bold text-primary mb-2">
+                  Email Notifications Coming Soon
+                </h3>
+                <p className="text-muted-foreground">
+                  Enhanced email notification features are currently in development and will be available soon.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
