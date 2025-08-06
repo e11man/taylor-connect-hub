@@ -59,6 +59,7 @@ const OrganizationDashboard = () => {
   const [hasAttemptedSubmit, setHasAttemptedSubmit] = useState(false);
   const [safetyGuidelinesModalOpen, setSafetyGuidelinesModalOpen] = useState(false);
   const [profileModalOpen, setProfileModalOpen] = useState(false);
+  const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
   
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -127,10 +128,33 @@ const OrganizationDashboard = () => {
         const filteredData = filterActiveEvents(filterUpcomingEvents(eventsData || []));
         setEvents(filteredData);
       }
+
+      // Fetch signup counts for the events
+      await fetchEventSignupCounts();
     } catch (error) {
       console.error('Error:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchEventSignupCounts = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_events')
+        .select('event_id');
+
+      if (error) {
+        console.error('Error fetching signup counts:', error);
+      } else {
+        const counts = data?.reduce((acc: Record<string, number>, curr) => {
+          acc[curr.event_id] = (acc[curr.event_id] || 0) + 1;
+          return acc;
+        }, {}) || {};
+        setEventSignupCounts(counts);
+      }
+    } catch (error) {
+      console.error('Error fetching signup counts:', error);
     }
   };
 
@@ -201,6 +225,8 @@ const OrganizationDashboard = () => {
       
       // Trigger refresh in other components
       refreshEvents();
+      // Refresh signup counts
+      fetchEventSignupCounts();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -244,6 +270,8 @@ const OrganizationDashboard = () => {
       
       // Trigger refresh in other components
       refreshEvents();
+      // Refresh signup counts
+      fetchEventSignupCounts();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -276,6 +304,8 @@ const OrganizationDashboard = () => {
       // Trigger refresh in other components (both events and user events since signups are deleted)
       refreshEvents();
       refreshUserEvents();
+      // Refresh signup counts
+      fetchEventSignupCounts();
     } catch (error: any) {
       toast({
         title: "Error",
@@ -569,7 +599,7 @@ const OrganizationDashboard = () => {
                       {event.max_participants && (
                         <div className="flex items-center gap-2">
                           <Users className="w-4 h-4" />
-                          Max {event.max_participants} volunteers
+                          {eventSignupCounts[event.id] || 0} / {event.max_participants} volunteers
                         </div>
                       )}
                     </div>
