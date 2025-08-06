@@ -31,6 +31,19 @@ const Header = () => {
     (user.role === 'admin' && user.user_type !== 'student' && user.user_type !== 'external')
   );
   
+  // Function to get the appropriate dashboard URL based on user type
+  const getDashboardUrl = () => {
+    if (!user) return '/dashboard';
+    switch (user.user_type) {
+      case 'organization':
+        return '/organization-dashboard';
+      case 'admin':
+        return '/admin/dashboard';
+      default:
+        return '/dashboard';
+    }
+  };
+  
   // Debug: Log user info to help troubleshoot
   if (user) {
     console.log('Current user:', {
@@ -51,7 +64,7 @@ const Header = () => {
   // Add dashboard link for logged-in users
   const USER_NAV_LINKS = user ? [
     ...NAV_LINKS,
-    { name: "Dashboard", href: "/dashboard", isRoute: true }
+    { name: "Dashboard", href: getDashboardUrl(), isRoute: true }
   ] : NAV_LINKS;
 
   // Lock scroll when mobile nav is open
@@ -253,7 +266,7 @@ const Header = () => {
                 </PrimaryButton>
               )}
               <Link
-                to="/dashboard"
+                to={getDashboardUrl()}
                 onClick={() => {
                   closeMenu();
                 }}
@@ -389,7 +402,7 @@ const Header = () => {
                   {userMenuOpen && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-2 z-50">
                       <Link
-                        to="/dashboard"
+                        to={getDashboardUrl()}
                         onClick={() => setUserMenuOpen(false)}
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 transition-colors"
                       >
