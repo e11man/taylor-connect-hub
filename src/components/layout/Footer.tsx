@@ -1,4 +1,5 @@
 import { Heart, Facebook, Instagram, Twitter, Linkedin, Youtube } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import AnimatedSection from "@/components/ui/animated-section";
 import { motion } from "framer-motion";
 import { DynamicText } from "@/components/content/DynamicText";
@@ -6,6 +7,8 @@ import { useContentSection } from "@/hooks/useContent";
 import tuLogo from "@/assets/tu_logo.png";
 
 const Footer = () => {
+  const location = useLocation();
+  const isHomePage = location.pathname === '/';
   const { content: linksContent } = useContentSection('footer', 'links');
   const { content: brandContent } = useContentSection('footer', 'brand');
   const { content: copyrightContent } = useContentSection('footer', 'copyright');
@@ -14,7 +17,7 @@ const Footer = () => {
   
   const footerLinks = [
     { name: linksContent.about || "About", href: "/about" },
-    { name: linksContent.contact || "Contact", href: "#contact" },
+    { name: linksContent.contact || "Contact", href: isHomePage ? "#contact" : "/#contact" },
     { name: linksContent.privacy || "Privacy", href: "/privacy" },
     { name: linksContent.terms || "Terms", href: "/terms" }
   ];
@@ -22,35 +25,35 @@ const Footer = () => {
   const socialMediaLinks = [
     {
       icon: Facebook,
-      url: socialContent.facebook_url || "#",
+      url: socialContent.facebook_url || "https://www.facebook.com/TaylorUniversity",
       label: socialContent.facebook_label || "Facebook",
       color: "hover:bg-blue-600",
       hidden: socialContent.facebook_hidden === 'true'
     },
     {
       icon: Instagram,
-      url: socialContent.instagram_url || "#",
+      url: socialContent.instagram_url || "https://www.instagram.com/tayloruniversity",
       label: socialContent.instagram_label || "Instagram",
       color: "hover:bg-gradient-to-r from-purple-500 to-pink-500",
       hidden: socialContent.instagram_hidden === 'true'
     },
     {
       icon: Twitter,
-      url: socialContent.twitter_url || "#",
+      url: socialContent.twitter_url || "https://twitter.com/TaylorU",
       label: socialContent.twitter_label || "Twitter",
       color: "hover:bg-blue-400",
       hidden: socialContent.twitter_hidden === 'true'
     },
     {
       icon: Linkedin,
-      url: socialContent.linkedin_url || "#",
+      url: socialContent.linkedin_url || "https://www.linkedin.com/school/taylor-university",
       label: socialContent.linkedin_label || "LinkedIn",
       color: "hover:bg-blue-700",
       hidden: socialContent.linkedin_hidden === 'true'
     },
     {
       icon: Youtube,
-      url: socialContent.youtube_url || "#",
+      url: socialContent.youtube_url || "https://www.youtube.com/user/TaylorUniversity",
       label: socialContent.youtube_label || "YouTube",
       color: "hover:bg-red-600",
       hidden: socialContent.youtube_hidden === 'true'

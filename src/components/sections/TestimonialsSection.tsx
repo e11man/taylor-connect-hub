@@ -1,4 +1,6 @@
-import { Quote } from "lucide-react";
+import { Users, Quote, Star, ChevronLeft, ChevronRight } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import AnimatedSection from "@/components/ui/animated-section";
@@ -9,6 +11,7 @@ import { motion } from "framer-motion";
 import { useContentSection } from "@/hooks/useContent";
 
 const TestimonialsSection = () => {
+  const navigate = useNavigate();
   const { content: testimonialsContent } = useContentSection('homepage', 'testimonials');
   const { content: testimonial1Content } = useContentSection('homepage', 'testimonials');
   const { content: testimonial2Content } = useContentSection('homepage', 'testimonials');
@@ -223,6 +226,7 @@ const TestimonialsSection = () => {
                 <SecondaryButton 
                   size="lg" 
                   className="w-full min-h-[48px] text-base md:text-lg font-semibold"
+                  onClick={() => navigate("/organization-register")}
                 >
                   Partner With Us
                 </SecondaryButton>
@@ -231,6 +235,12 @@ const TestimonialsSection = () => {
                 <PrimaryButton 
                   size="lg" 
                   className="w-full min-h-[48px] text-base md:text-lg font-semibold"
+                  onClick={() => {
+                    const contactSection = document.getElementById('contact');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
                 >
                   Start Volunteering
                 </PrimaryButton>
