@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Calendar, MapPin, Users, MessageCircle, Search, Clock, Filter, X } from "lucide-react";
 import { formatEventDate, formatEventTime, formatEventTimeRange, formatParticipants } from "@/utils/formatEvent";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
@@ -12,7 +12,7 @@ import GroupSignupModal from "@/components/modals/GroupSignupModal";
 import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { filterUpcomingEvents, filterActiveEvents } from '@/utils/eventFilters';
+import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability } from '@/utils/eventFilters';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -27,6 +27,9 @@ interface Event {
   max_participants: number;
   image_url: string;
   organization_id: string;
+  currentParticipants?: number;
+  availableSpots?: number;
+  isFull?: boolean;
 }
 
 interface UserEvent {
@@ -56,6 +59,25 @@ const DashboardOpportunities = () => {
   const [dateFilter, setDateFilter] = useState('all');
   const [locationFilter, setLocationFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showFullEvents, setShowFullEvents] = useState(false);
+
+  // Process events to add availability information
+  const processedEvents = useMemo(() => {
+    return events.map(event => {
+      const currentParticipants = eventSignupCounts[event.id] || 0;
+      const { availableSpots, isFull } = calculateEventAvailability({
+        ...event,
+        currentParticipants
+      });
+      
+      return {
+        ...event,
+        currentParticipants,
+        availableSpots,
+        isFull
+      };
+    });
+  }, [events, eventSignupCounts]);
 
   useEffect(() => {
     fetchEvents();
@@ -67,7 +89,7 @@ const DashboardOpportunities = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [events, searchTerm, dateFilter, locationFilter, statusFilter, userEvents]);
+  }, [events, searchTerm, dateFilter, locationFilter, statusFilter, userEvents, showFullEvents]);
 
   const fetchEvents = async () => {
     try {
@@ -131,7 +153,7 @@ const DashboardOpportunities = () => {
   };
 
   const applyFilters = () => {
-    let filtered = [...events];
+    let filtered = [...processedEvents];
 
     // Search filter
     if (searchTerm) {
@@ -184,15 +206,15 @@ const DashboardOpportunities = () => {
           filtered = filtered.filter(event => !signedUpEventIds.includes(event.id));
           break;
         case 'available':
-          filtered = filtered.filter(event => {
-            const currentCount = eventSignupCounts[event.id] || 0;
-            return currentCount < event.max_participants;
-          });
+          filtered = filtered.filter(event => !event.isFull);
           break;
         default:
           break;
       }
     }
+
+    // Full events filter
+    filtered = filterEventsByAvailability(filtered, showFullEvents);
 
     setFilteredEvents(filtered);
   };
@@ -317,6 +339,7 @@ const DashboardOpportunities = () => {
     setDateFilter('all');
     setLocationFilter('all');
     setStatusFilter('all');
+    setShowFullEvents(false);
   };
 
   const getUniqueLocations = () => {
@@ -397,8 +420,9 @@ const DashboardOpportunities = () => {
           </Select>
         </div>
 
-        {/* Filter Row 2 - Status */}
-        <div className="w-full">
+        {/* Filter Row 2 - Status and Full Events */}
+        <div className="grid grid-cols-2 gap-2 sm:gap-3">
+          {/* Status Filter */}
           <Select value={statusFilter} onValueChange={setStatusFilter}>
             <SelectTrigger className="w-full h-12 text-sm">
               <SelectValue placeholder="Status" />
@@ -410,6 +434,19 @@ const DashboardOpportunities = () => {
               <SelectItem value="available">Available Spots</SelectItem>
             </SelectContent>
           </Select>
+
+          {/* Full Events Filter */}
+          <div className="flex items-center justify-center h-12 px-3 bg-white rounded-md border border-input">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showFullEvents}
+                onChange={(e) => setShowFullEvents(e.target.checked)}
+                className="w-4 h-4 text-[#00AFCE] bg-gray-100 border-gray-300 rounded focus:ring-[#00AFCE] focus:ring-2"
+              />
+              <span>Show full events</span>
+            </label>
+          </div>
         </div>
 
         {/* Active Filters Display */}
@@ -469,8 +506,6 @@ const DashboardOpportunities = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredEvents.map((event) => {
             const isUserSignedUp = isSignedUp(event.id);
-            const currentCount = eventSignupCounts[event.id] || 0;
-            const isFull = currentCount >= event.max_participants;
 
             return (
               <div
@@ -478,9 +513,16 @@ const DashboardOpportunities = () => {
                 className="bg-white rounded-xl p-4 sm:p-6 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300"
               >
                 {/* Title and Description */}
-                <h3 className="text-base sm:text-lg font-montserrat font-bold mb-2 sm:mb-3 text-primary line-clamp-2">
-                  {event.title}
-                </h3>
+                <div className="flex items-start justify-between mb-2 sm:mb-3">
+                  <h3 className="text-base sm:text-lg font-montserrat font-bold text-primary line-clamp-2 flex-1">
+                    {event.title}
+                  </h3>
+                  {event.isFull && (
+                    <div className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium ml-2 flex-shrink-0">
+                      Event Full
+                    </div>
+                  )}
+                </div>
                 <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 line-clamp-3">
                   {event.description}
                 </p>
@@ -513,7 +555,7 @@ const DashboardOpportunities = () => {
                     <Users className="w-3 h-3 text-[#00AFCE] flex-shrink-0" />
                     <span className="font-medium text-primary">Participants:</span>
                     <span className="text-muted-foreground">
-                      {formatParticipants(currentCount, event.max_participants)}
+                      {event.currentParticipants || 0} / {event.max_participants} participants
                     </span>
                   </div>
                 </div>
@@ -527,10 +569,10 @@ const DashboardOpportunities = () => {
                   ) : (
                     <PrimaryButton
                       onClick={() => handleSignUp(event.id)}
-                      disabled={isFull}
+                      disabled={event.isFull}
                       className="w-full h-10 sm:h-auto"
                     >
-                      {isFull ? 'Full' : 'Sign Up'}
+                      {event.isFull ? 'Full' : 'Sign Up'}
                     </PrimaryButton>
                   )}
                   

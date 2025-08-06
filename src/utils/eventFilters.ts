@@ -15,6 +15,10 @@ export interface Event {
   image_url: string;
   created_at: string;
   updated_at: string;
+  // New properties for availability
+  currentParticipants?: number;
+  availableSpots?: number;
+  isFull?: boolean;
 }
 
 /**
@@ -63,6 +67,37 @@ export const isEventExpired = (event: Event): boolean => {
  */
 export const filterActiveEvents = (events: Event[]): Event[] => {
   return events.filter(event => !isEventExpired(event));
+};
+
+/**
+ * Check if an event is full (reached maximum participants)
+ */
+export const isEventFull = (event: Event): boolean => {
+  const currentParticipants = event.currentParticipants || 0;
+  const maxParticipants = event.max_participants || 0;
+  return maxParticipants > 0 && currentParticipants >= maxParticipants;
+};
+
+/**
+ * Calculate event availability information
+ */
+export const calculateEventAvailability = (event: Event): { currentParticipants: number; availableSpots: number; isFull: boolean } => {
+  const currentParticipants = event.currentParticipants || 0;
+  const maxParticipants = event.max_participants || 0;
+  const availableSpots = Math.max(0, maxParticipants - currentParticipants);
+  const isFull = maxParticipants > 0 && currentParticipants >= maxParticipants;
+  
+  return { currentParticipants, availableSpots, isFull };
+};
+
+/**
+ * Filter events by availability (hide full events by default)
+ */
+export const filterEventsByAvailability = (events: Event[], showFullEvents: boolean = false): Event[] => {
+  if (showFullEvents) {
+    return events;
+  }
+  return events.filter(event => !isEventFull(event));
 };
 
 /**
