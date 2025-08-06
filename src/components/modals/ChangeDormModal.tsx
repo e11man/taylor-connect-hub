@@ -4,9 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Home } from 'lucide-react';
+import { updateUserDorm, validateDormData } from '@/utils/dormUpdate';
 
 const dormAndFloorData = {
   "Away From Campus": ["Upland (abroad)"],
@@ -93,7 +93,8 @@ export const ChangeDormModal = ({
   }, [selectedDorm, currentDorm]);
 
   const handleSave = async () => {
-    if (!selectedDorm || !selectedWing) {
+    // Validate input data
+    if (!validateDormData(selectedDorm, selectedWing)) {
       toast({
         title: "Error",
         description: "Please select both a dorm and wing",
@@ -113,13 +114,10 @@ export const ChangeDormModal = ({
 
     setIsLoading(true);
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({ 
-          dorm: selectedDorm, 
-          wing: selectedWing 
-        })
-        .eq('user_id', user.id);
+      const { data, error } = await updateUserDorm(user.id, {
+        dorm: selectedDorm,
+        wing: selectedWing
+      });
 
       if (error) {
         toast({
@@ -129,13 +127,14 @@ export const ChangeDormModal = ({
         });
       } else {
         toast({
-          title: "Success",
-          description: "Your dorm information has been updated",
+          title: "Success", 
+          description: `Your dorm has been updated to ${selectedDorm} - ${selectedWing}`,
         });
         onUpdate?.();
         onClose();
       }
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Unexpected error in handleSave:', error);
       toast({
         title: "Error",
         description: "An unexpected error occurred. Please try again.",

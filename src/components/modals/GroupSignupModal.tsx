@@ -60,16 +60,21 @@ const GroupSignupModal = ({
     
     setLoading(true);
     try {
-      // Get current user's profile first
-      const { data: currentUserProfile } = await supabase
+      // Get current user's profile first - use 'id' field, not 'user_id'
+      const { data: currentUserProfile, error: profileError } = await supabase
         .from('profiles')
         .select('dorm, wing')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single();
 
-      // RLS Fix: Get all active profiles first, then filter client-side
+      if (profileError) {
+        console.error('Error fetching current user profile:', profileError);
+        throw profileError;
+      }
+
+      // Get all active profiles first, then filter client-side
       // This avoids the RLS issue with .neq() queries
-      let query = supabase
+      const { data: allProfilesData, error } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -80,14 +85,12 @@ const GroupSignupModal = ({
         `)
         .eq('status', 'active');
 
-      const { data: allProfilesData, error } = await query;
-
       if (error) throw error;
 
       // Client-side filtering to exclude current user and apply floor filtering
-      let profilesData = (allProfilesData || []).filter(profile => profile.user_id !== user.id);
+      let profilesData = (allProfilesData || []).filter(profile => profile.id !== user.id);
 
-            // Filter by same floor if enabled
+      // Filter by same floor if enabled
       if (showOnlyMyFloor && currentUserProfile && currentUserProfile.dorm && currentUserProfile.wing) {
         profilesData = profilesData.filter(profile => 
           profile.dorm === currentUserProfile.dorm && 
@@ -96,7 +99,7 @@ const GroupSignupModal = ({
       }
 
       // Get commitment counts for each user
-      const userIds = profilesData?.map(p => p.user_id) || [];
+      const userIds = profilesData?.map(p => p.id) || [];
       const { data: commitmentsData } = await supabase
         .from('user_events')
         .select('user_id')
@@ -112,13 +115,14 @@ const GroupSignupModal = ({
       const filteredUsers = profilesData
         .map(profile => ({
           ...profile,
-          commitments: commitmentCounts[profile.user_id] || 0
+          commitments: commitmentCounts[profile.id] || 0
         }))
         .filter(profile => {
           if (!searchTerm) return true;
-          return profile.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                 (profile.dorm && profile.dorm.toLowerCase().includes(searchTerm.toLowerCase())) ||
-                 (profile.wing && profile.wing.toLowerCase().includes(searchTerm.toLowerCase()));
+          const searchLower = searchTerm.toLowerCase();
+          return profile.email.toLowerCase().includes(searchLower) ||
+                 (profile.dorm && profile.dorm.toLowerCase().includes(searchLower)) ||
+                 (profile.wing && profile.wing.toLowerCase().includes(searchLower));
         })
         .sort((a, b) => {
           // Sort by same floor first, then by commitments (ascending)
@@ -333,12 +337,12 @@ const GroupSignupModal = ({
             ) : (
               <div className="space-y-1 p-1 sm:p-2">
                 {users.map((userProfile) => {
-                  const isSelected = selectedUsers.has(userProfile.user_id);
+                  const isSelected = selectedUsers.has(userProfile.id);
                   const cannotSignUp = userProfile.commitments >= 2;
                   
                   return (
                     <div
-                      key={userProfile.user_id}
+                      key={userProfile.id}
                       className={`flex items-center justify-between p-2 sm:p-3 rounded-lg border transition-all cursor-pointer ${
                         isSelected 
                           ? 'bg-accent/10 border-accent' 
@@ -346,7 +350,7 @@ const GroupSignupModal = ({
                           ? 'bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed'
                           : 'hover:bg-gray-50 border-gray-200'
                       }`}
-                      onClick={() => !cannotSignUp && handleUserToggle(userProfile.user_id)}
+                      onClick={() => !cannotSignUp && handleUserToggle(userProfile.id)}
                     >
                       <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                         <Checkbox
