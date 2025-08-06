@@ -1,4 +1,5 @@
 import { ArrowRight, Users, Clock, Building } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import AnimatedSection from "@/components/ui/animated-section";
@@ -11,6 +12,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
   const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
   const [stats, setStats] = useState({
@@ -175,6 +177,7 @@ const HeroSection = () => {
               >
                 <SecondaryButton 
                   size="lg"
+                  onClick={() => navigate("/about")}
                 >
                   {secondaryButton}
                 </SecondaryButton>
@@ -185,6 +188,12 @@ const HeroSection = () => {
               >
                 <PrimaryButton 
                   size="lg"
+                  onClick={() => {
+                    const contactSection = document.getElementById('contact');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
                 >
                   {ctaButton} <ArrowRight className="ml-2 w-5 h-5" />
                 </PrimaryButton>

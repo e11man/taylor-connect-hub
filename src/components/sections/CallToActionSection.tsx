@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import communityGarden from "@/assets/community-garden.jpg";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import UserAuthModal from "@/components/modals/UserAuthModal";
@@ -9,6 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useContentSection } from "@/hooks/useContent";
 
 const CallToActionSection = () => {
+  const navigate = useNavigate();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const { user } = useAuth();
   const { content: ctaContent } = useContentSection('homepage', 'cta');
@@ -92,9 +94,7 @@ const CallToActionSection = () => {
               >
                 <PrimaryButton
                   onClick={() => {
-                    // Navigate to commitments page or open modal if commitments are managed via modal
-                    // For now, let's just log a message or open a placeholder modal
-                    alert("Viewing my commitments!");
+                    navigate("/dashboard");
                   }}
                 >
                   View My Commitments

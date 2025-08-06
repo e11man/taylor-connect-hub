@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import AnimatedSection from "@/components/ui/animated-section";
@@ -7,6 +8,7 @@ import { motion } from "framer-motion";
 import { useContentSection } from "@/hooks/useContent";
 
 const AboutHeroSection = () => {
+  const navigate = useNavigate();
   const { content: heroContent } = useContentSection('about', 'hero');
   
   const buttonVariants = {
@@ -70,6 +72,12 @@ const AboutHeroSection = () => {
               <motion.div variants={buttonVariants}>
                 <SecondaryButton 
                   size="lg"
+                  onClick={() => {
+                    const contactSection = document.getElementById('contact');
+                    if (contactSection) {
+                      contactSection.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }}
                 >
                   {heroContent.secondaryButton || 'Learn More'}
                 </SecondaryButton>
@@ -77,6 +85,7 @@ const AboutHeroSection = () => {
               <motion.div variants={buttonVariants}>
                 <PrimaryButton 
                   size="lg"
+                  onClick={() => navigate("/")}
                 >
                   {heroContent.ctaButton || 'Find Opportunities'} <ArrowRight className="ml-2 w-5 h-5" />
                 </PrimaryButton>
