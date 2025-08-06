@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { SearchProvider } from "@/contexts/SearchContext";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ContentProvider } from "@/components/content/ContentProvider";
+import { Analytics } from "@vercel/analytics/react";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import OrganizationLogin from "./pages/OrganizationLogin";
@@ -70,6 +71,7 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </ContentProvider>
+              <Analytics />
             </TooltipProvider>
           </SearchProvider>
         </AuthProvider>
