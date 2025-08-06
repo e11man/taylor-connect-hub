@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Plus, Pencil, Trash2, Search, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ContentItem {
   id: string;
@@ -47,6 +48,7 @@ export const ContentManagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   // Helper function to check if a field is a boolean field
   const isBooleanField = (key: string) => {
@@ -138,15 +140,18 @@ export const ContentManagement = () => {
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error('Supabase create error:', error);
         throw new Error(error.message);
       }
 
-      console.log('✅ SUPABASE CREATE SUCCESS:', data);
+      if (!data || data.length === 0) {
+        throw new Error('Failed to create content - no data returned');
+      }
+
+      console.log('✅ SUPABASE CREATE SUCCESS:', data[0]);
       
       toast({
         title: 'Success! ✅',
@@ -182,7 +187,7 @@ export const ContentManagement = () => {
 
     setLoading(true);
     try {
-      // Try direct Supabase update first for reliability
+      // Use direct Supabase update without .single() to avoid JSON object error
       const { data, error } = await supabase
         .from('content')
         .update({ 
@@ -190,15 +195,18 @@ export const ContentManagement = () => {
           updated_at: new Date().toISOString()
         })
         .eq('id', editingItem.id)
-        .select()
-        .single();
+        .select();
 
       if (error) {
         console.error('Supabase update error:', error);
         throw new Error(error.message);
       }
 
-      console.log('✅ SUPABASE UPDATE SUCCESS:', data);
+      if (!data || data.length === 0) {
+        throw new Error('No content found with the specified ID');
+      }
+
+      console.log('✅ SUPABASE UPDATE SUCCESS:', data[0]);
       toast({
         title: 'Success',
         description: 'Content updated successfully',
