@@ -1,21 +1,20 @@
-import type { NextApiRequest, NextApiResponse } from 'next';
 import sgMail from '@sendgrid/mail';
 
 // Initialize SendGrid
-sgMail.setApiKey(process.env.SENDGRID_API_KEY!);
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-interface SignupNotification {
-  email: string;
-  userId: string;
-  eventId: string;
-  eventName: string;
-  signedUpBy: string;
-}
+export default async function handler(req, res) {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -28,11 +27,11 @@ export default async function handler(
     }
 
     // Prepare email messages
-    const emailPromises = signups.map(async (signup: SignupNotification) => {
+    const emailPromises = signups.map(async (signup) => {
       const msg = {
         to: signup.email,
         from: {
-          email: process.env.SENDGRID_FROM_EMAIL!,
+          email: process.env.SENDGRID_FROM_EMAIL,
           name: 'Taylor Serves'
         },
         subject: `You've been signed up for: ${signup.eventName}`,
@@ -99,19 +98,21 @@ This is an automated message from Taylor Serves.
       return res.status(207).json({
         message: 'Partial success',
         sent: results.length - failures.length,
-        failed: failures.length
+        failed: failures.length,
+        errors: failures.map(f => f.reason?.message || 'Unknown error')
       });
     }
 
-    res.status(200).json({ 
-      message: 'All notifications sent successfully',
-      sent: results.length 
+    res.status(200).json({
+      message: 'All emails sent successfully',
+      sent: results.length
     });
+
   } catch (error) {
-    console.error('Notification error:', error);
-    res.status(500).json({ 
-      error: 'Failed to send notifications',
-      details: error instanceof Error ? error.message : 'Unknown error'
+    console.error('Error sending emails:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: error.message
     });
   }
-}
+} 
