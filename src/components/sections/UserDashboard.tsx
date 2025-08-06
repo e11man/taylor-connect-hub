@@ -302,7 +302,7 @@ const UserDashboard = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="border-blue-500 text-blue-500 hover:bg-blue-500 hover:text-white text-sm sm:text-base px-3 sm:px-4 py-2"
+                    className="border-[#E14F3D] text-[#E14F3D] hover:bg-[#E14F3D] hover:text-white text-sm sm:text-base px-3 sm:px-4 py-2"
                     onClick={() => setUpdatePasswordModalOpen(true)}
                   >
                     Update Password

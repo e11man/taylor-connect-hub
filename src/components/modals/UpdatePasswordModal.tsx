@@ -162,7 +162,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <Lock className="w-5 h-5 text-blue-500" />
+            <Lock className="w-5 h-5 text-[#E14F3D]" />
             Update Password
           </DialogTitle>
           <DialogDescription>
@@ -244,7 +244,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
             <Button
               onClick={handleUpdatePassword}
               disabled={isLoading || !currentPassword || !newPassword || !confirmPassword}
-              className="flex-1 h-12"
+              className="flex-1 h-12 bg-[#E14F3D] hover:bg-[#E14F3D]/90 text-white"
             >
               {isLoading ? 'Updating...' : 'Update Password'}
             </Button>
