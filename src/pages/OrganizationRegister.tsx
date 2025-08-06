@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff, Building2, User2, AlignLeft, Globe, Phone, Loader2, Info } from 'lucide-react';
 import PrimaryButton from '../components/buttons/PrimaryButton';
 import Header from '@/components/layout/Header';
@@ -31,9 +31,10 @@ const OrganizationRegister: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { signUp } = useAuth();
+  const navigate = useNavigate();
 
   const validate = () => {
-    let newErrors: Record<string, string> = {};
+    const newErrors: Record<string, string> = {};
     if (!formData.organizationName) {
       newErrors.organizationName = 'Organization name is required';
     }
@@ -109,14 +110,13 @@ const OrganizationRegister: React.FC = () => {
           phoneNumber: '',
         });
         
-        toast({
-          title: "Organization Registered Successfully! 🎉",
-          description: "Your organization is now pending admin approval. You'll receive an email when approved.",
-        });
-      } catch (error: any) {
+        // Redirect to pending approval page instead of showing toast
+        navigate('/organization-pending');
+      } catch (error: unknown) {
+        const errorMessage = error instanceof Error ? error.message : "Failed to create account. Please try again.";
         toast({
           title: "Registration failed",
-          description: error.message || "Failed to create account. Please try again.",
+          description: errorMessage,
           variant: "destructive",
         });
       } finally {

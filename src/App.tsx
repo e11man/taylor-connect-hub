@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import OrganizationLogin from "./pages/OrganizationLogin";
 import OrganizationRegister from "./pages/OrganizationRegister";
+import OrganizationPendingApproval from "./pages/OrganizationPendingApproval";
 import OrganizationDashboard from "./pages/OrganizationDashboard";
 import AdminLogin from "./pages/AdminLogin";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -53,6 +54,7 @@ const App = () => (
                   <Route path="/about" element={<About />} />
                   <Route path="/organization-login" element={<OrganizationLogin />} />
                   <Route path="/organization-register" element={<OrganizationRegister />} />
+                  <Route path="/organization-pending" element={<OrganizationPendingApproval />} />
                   <Route path="/organization-dashboard" element={<OrganizationDashboard />} />
                   <Route path="/admin" element={<AdminLogin />} />
                   <Route path="/admin/login" element={<AdminLogin />} />
