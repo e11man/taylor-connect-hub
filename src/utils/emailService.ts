@@ -22,8 +22,6 @@ const getEmailServiceUrl = () => {
 
 export const sendVerificationCode = async (email: string, code?: string): Promise<{ success: boolean; code?: string }> => {
   try {
-    console.log(`🔐 Sending verification code to: ${email}`);
-    
     // Generate verification code if not provided
     const verificationCode = code || generateVerificationCode();
     
@@ -37,16 +35,13 @@ export const sendVerificationCode = async (email: string, code?: string): Promis
       .eq('email', email);
 
     if (updateError) {
-      console.error('❌ Failed to update verification code in database:', updateError);
+      console.error('Failed to update verification code in database:', updateError);
       return { success: false };
     }
-    
-    console.log('✅ Verification code updated in database');
     
     try {
       // Call the server endpoint that uses the Python script with Resend
       const emailServiceUrl = getEmailServiceUrl();
-      console.log(`📧 Calling email service at: ${emailServiceUrl}`);
       
       const response = await fetch(`${emailServiceUrl}/api/send-verification-code`, {
         method: 'POST',
@@ -61,22 +56,18 @@ export const sendVerificationCode = async (email: string, code?: string): Promis
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Email service HTTP error:', response.status, errorText);
+        console.error('Email service HTTP error:', response.status, errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const result = await response.json();
-      console.log('✅ Email sent successfully via Resend:', result);
       
       return { success: true, code: result.code || verificationCode };
     } catch (emailError) {
-      console.error('⚠️ Email sending failed, but verification code is stored in database:', emailError);
+      console.error('Email sending failed, but verification code is stored in database:', emailError);
       
       // Even if email fails, we still have the code in the database
-      // For development, log the code so testing can continue
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🔐 DEV MODE - Verification code for ${email}: ${verificationCode}`);
-      }
+      // The verification code is stored and can be used for verification
       
       // Return success with a warning - the code is stored even if email failed
       return { 
@@ -86,7 +77,7 @@ export const sendVerificationCode = async (email: string, code?: string): Promis
       };
     }
   } catch (error) {
-    console.error('💥 Complete failure in sendVerificationCode:', error);
+    console.error('Complete failure in sendVerificationCode:', error);
     return { success: false };
   }
 };

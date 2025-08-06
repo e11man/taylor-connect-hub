@@ -17,7 +17,6 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
   const [isLoading, setIsLoading] = useState(false);
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
-  const [currentCode, setCurrentCode] = useState<string>('');
   const { toast } = useToast();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -34,27 +33,6 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
 
     return () => clearInterval(timer);
   }, []);
-
-  // Get the current verification code for development
-  useEffect(() => {
-    const getCurrentCode = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('verification_code')
-          .eq('email', email)
-          .single();
-        
-        if (!error && data?.verification_code) {
-          setCurrentCode(data.verification_code);
-        }
-      } catch (error) {
-        console.error('Failed to get current code:', error);
-      }
-    };
-    
-    getCurrentCode();
-  }, [email]);
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) return; // Only allow single digit
@@ -201,12 +179,7 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
         <p className="text-muted-foreground">
           We've sent a 6-digit verification code to <strong>{email}</strong>
         </p>
-        {/* Development helper - show current code */}
-        {process.env.NODE_ENV === 'development' && currentCode && (
-          <div className="mt-2 p-2 bg-yellow-100 border border-yellow-300 rounded text-sm">
-            <strong>DEV MODE:</strong> Verification code: <code className="bg-yellow-200 px-1 rounded">{currentCode}</code>
-          </div>
-        )}
+
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">

@@ -147,8 +147,6 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
  */
 export const loginUser = async (email: string, password: string): Promise<AuthResponse> => {
   try {
-    console.log('🔍 Login attempt for:', email);
-    
     // Get user from profiles table
     const { data: user, error } = await supabase
       .from('profiles')
@@ -156,26 +154,16 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
       .eq('email', email)
       .single();
       
-    console.log('📊 Database query result:', { user, error });
-      
     if (error || !user) {
-      console.log('❌ User not found or error:', error);
       return { error: { message: 'Invalid email or password' } };
     }
-    
-    console.log('✅ User found:', { id: user.id, email: user.email, status: user.status });
     
     // Verify password
-    console.log('🔐 Verifying password...');
     const isValidPassword = await verifyPassword(password, user.password_hash);
-    console.log('🔐 Password verification result:', isValidPassword);
     
     if (!isValidPassword) {
-      console.log('❌ Password verification failed');
       return { error: { message: 'Invalid email or password' } };
     }
-    
-    console.log('✅ Password verified successfully');
     
     // For organizations, check organization status first (not profile status)
     if (user.user_type === 'organization') {
@@ -210,24 +198,18 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
         .eq('id', user.id);
     } else {
       // For non-organization users, check profile status
-      console.log('👤 Checking user status:', user.status);
       if (user.status === 'pending') {
         // Check if this is a Taylor user who needs verification
         if (user.user_type === 'student' && user.verification_code) {
-          console.log('📧 User needs email verification, verification code exists');
           return { error: { message: 'EMAIL_VERIFICATION_REQUIRED: Please verify your email address before signing in. Check your email for a verification code.' } };
         }
-        console.log('⏳ User pending approval');
         return { error: { message: 'Account pending approval' } };
       }
       
       if (user.status === 'blocked') {
-        console.log('🚫 User blocked');
         return { error: { message: 'Account blocked' } };
       }
     }
-    
-    console.log('✅ User status check passed, creating session');
     
     // Create session
     const session = {
@@ -241,10 +223,8 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
       access_token: generateAccessToken(user.id)
     };
     
-    console.log('🎉 Login successful, session created:', session);
     return { data: { session } };
   } catch (error) {
-    console.error('💥 Login error:', error);
     return { error: { message: 'Login failed. Please try again.' } };
   }
 };
