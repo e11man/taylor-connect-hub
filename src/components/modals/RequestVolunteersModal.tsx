@@ -26,7 +26,7 @@ const RequestVolunteersModal = ({ isOpen, onClose }: RequestVolunteersModalProps
         {/* Modal Content */}
         <div className="text-center">
           {/* Icon */}
-          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-[#E14F3D] rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
+          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-accent rounded-xl sm:rounded-2xl flex items-center justify-center mx-auto mb-4 sm:mb-6">
             <span className="text-xl sm:text-2xl font-bold text-white font-montserrat">🤝</span>
           </div>
 
@@ -72,7 +72,7 @@ const RequestVolunteersModal = ({ isOpen, onClose }: RequestVolunteersModalProps
               Get in touch and we'll let you know when individual requests are available
             </p>
             <PrimaryButton 
-              className="w-full bg-[#E14F3D] hover:bg-[#E14F3D]/90 py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl touch-manipulation"
+              className="w-full py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl touch-manipulation"
               onClick={() => {
                 const subject = encodeURIComponent('Notify me when individual volunteer requests are available');
                 const body = encodeURIComponent(`Hi Community Connect team,\n\nI'm interested in being notified when individual volunteer requests become available on your platform.\n\nPlease add me to your notification list.\n\nThank you!\n\nBest regards`);

@@ -144,8 +144,8 @@ const SearchSection = () => {
                     className={`
                       px-4 sm:px-6 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-montserrat font-semibold transition-all duration-300 border-2 whitespace-nowrap text-sm sm:text-base min-h-[44px] sm:min-h-[48px] snap-start
                       ${activeCategory === category.id
-                        ? 'bg-[#E14F3D] text-white border-[#E14F3D] shadow-lg'
-                        : 'bg-white text-gray-700 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE]'
+                        ? 'bg-accent text-white border-accent shadow-lg'
+                        : 'bg-white text-gray-700 border-gray-200 hover:border-secondary hover:text-secondary'
                       }
                     `}
                     variants={{

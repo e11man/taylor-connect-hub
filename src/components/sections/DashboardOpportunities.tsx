@@ -218,79 +218,9 @@ const DashboardOpportunities = () => {
       return;
     }
 
-    // Check if user is a PA and needs to accept safety guidelines
-    if (isPA) {
-      setPendingEventId(eventId);
-      setSafetyModalOpen(true);
-      return;
-    }
-
-    try {
-      let signupSuccessful = false;
-      let errorMessage = "";
-
-      try {
-        // Try API route first (with service role key)
-        const response = await fetch(`${import.meta.env.DEV ? 'http://localhost:3001' : ''}/api/event-signup`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            user_id: user.id,
-            event_id: eventId,
-          }),
-        });
-
-        if (response.ok) {
-          const result = await response.json();
-          if (result.success) {
-            signupSuccessful = true;
-          } else {
-            errorMessage = result.error || "API signup failed";
-          }
-        } else {
-          // API server not available, try fallback
-          throw new Error("API server not available");
-        }
-      } catch (apiError) {
-        console.log("API signup failed, trying direct Supabase call:", apiError);
-        
-        // Fallback to direct Supabase call if API is not available
-        const { error } = await supabase
-          .from('user_events')
-          .insert([{ user_id: user.id, event_id: eventId }]);
-
-        if (error) {
-          errorMessage = error.message;
-        } else {
-          signupSuccessful = true;
-        }
-      }
-
-      if (signupSuccessful) {
-        toast({
-          title: "Success!",
-          description: "You have successfully signed up for this event.",
-        });
-        fetchUserEvents();
-        fetchEventSignupCounts();
-        refreshUserEvents();
-      } else {
-        toast({
-          title: "Error",
-          description: errorMessage || "Failed to sign up for event",
-          variant: "destructive",
-        });
-      }
-    } catch (error) {
-      console.error('Error signing up for event:', error);
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      });
-    }
+    // Show safety guidelines modal for all users
+    setPendingEventId(eventId);
+    setSafetyModalOpen(true);
   };
 
   const handleSafetyAccept = async () => {

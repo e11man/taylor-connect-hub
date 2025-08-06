@@ -102,7 +102,7 @@ const TestimonialsSection = () => {
                     <div className="flex justify-between items-start mb-4 md:mb-6">
                       <motion.div 
                         className={`w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center shadow-md ${
-                          testimonial.highlight ? 'bg-[#E14F3D]' : 'bg-[#00AFCE]'
+                          testimonial.highlight ? 'bg-accent' : 'bg-secondary'
                         }`}
                         whileHover={{ 
                           scale: 1.1, 
@@ -144,7 +144,7 @@ const TestimonialsSection = () => {
                     >
                       <motion.div 
                         className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center font-montserrat font-bold text-white text-sm md:text-base ${
-                          testimonial.highlight ? 'bg-[#E14F3D]' : 'bg-[#00AFCE]'
+                          testimonial.highlight ? 'bg-accent' : 'bg-secondary'
                         }`}
                         whileHover={{ 
                           scale: 1.1,
