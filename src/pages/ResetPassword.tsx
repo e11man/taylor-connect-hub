@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { DynamicText } from '@/components/content/DynamicText';
 
 const ResetPassword = () => {
   const [password, setPassword] = useState('');
@@ -104,12 +105,32 @@ const ResetPassword = () => {
           <Card className="w-full max-w-md">
             <CardContent className="text-center py-8">
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-primary mb-2">Password Updated!</h2>
+              <h2 className="text-2xl font-bold text-primary mb-2">
+                <DynamicText
+                  page="resetPassword"
+                  section="success"
+                  contentKey="title"
+                  fallback="Password Updated!"
+                  as="span"
+                />
+              </h2>
               <p className="text-muted-foreground mb-4">
-                Your password has been successfully updated. You will be redirected to the login page shortly.
+                <DynamicText
+                  page="resetPassword"
+                  section="success"
+                  contentKey="description"
+                  fallback="Your password has been successfully updated. You will be redirected to the login page shortly."
+                  as="span"
+                />
               </p>
               <Button onClick={() => navigate('/')} className="w-full">
-                Go to Home
+                <DynamicText
+                  page="resetPassword"
+                  section="success"
+                  contentKey="homeButton"
+                  fallback="Go to Home"
+                  as="span"
+                />
               </Button>
             </CardContent>
           </Card>
@@ -128,8 +149,24 @@ const ResetPassword = () => {
             <div className="mx-auto mb-4 w-12 h-12 bg-primary rounded-full flex items-center justify-center">
               <Lock className="w-6 h-6 text-primary-foreground" />
             </div>
-            <CardTitle className="text-2xl font-bold">Reset Your Password</CardTitle>
-            <p className="text-muted-foreground">Enter your new password below</p>
+            <CardTitle className="text-2xl font-bold">
+              <DynamicText
+                page="resetPassword"
+                section="main"
+                contentKey="title"
+                fallback="Reset Your Password"
+                as="span"
+              />
+            </CardTitle>
+            <p className="text-muted-foreground">
+              <DynamicText
+                page="resetPassword"
+                section="main"
+                contentKey="subtitle"
+                fallback="Enter your new password below"
+                as="span"
+              />
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordReset} className="space-y-4">
@@ -140,7 +177,15 @@ const ResetPassword = () => {
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
+                <Label htmlFor="password">
+                  <DynamicText
+                    page="resetPassword"
+                    section="form"
+                    contentKey="new_password_label"
+                    fallback="New Password"
+                    as="span"
+                  />
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -160,12 +205,26 @@ const ResetPassword = () => {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Password must be at least 6 characters long
+                  <DynamicText
+                    page="resetPassword"
+                    section="form"
+                    contentKey="password_requirements"
+                    fallback="Password must be at least 6 characters long"
+                    as="span"
+                  />
                 </p>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">
+                  <DynamicText
+                    page="resetPassword"
+                    section="form"
+                    contentKey="confirm_password_label"
+                    fallback="Confirm New Password"
+                    as="span"
+                  />
+                </Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
@@ -191,7 +250,23 @@ const ResetPassword = () => {
                 className="w-full" 
                 disabled={loading || !password || !confirmPassword}
               >
-                {loading ? 'Updating Password...' : 'Update Password'}
+                {loading ? (
+                  <DynamicText
+                    page="resetPassword"
+                    section="form"
+                    contentKey="updating"
+                    fallback="Updating Password..."
+                    as="span"
+                  />
+                ) : (
+                  <DynamicText
+                    page="resetPassword"
+                    section="form"
+                    contentKey="update_button"
+                    fallback="Update Password"
+                    as="span"
+                  />
+                )}
               </Button>
             </form>
           </CardContent>

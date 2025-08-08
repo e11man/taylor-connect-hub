@@ -14,6 +14,7 @@ import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useSearch } from "@/contexts/SearchContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability } from '@/utils/eventFilters';
+import { DynamicText } from '@/components/content/DynamicText';
 
 interface Event {
   id: string;
@@ -267,7 +268,7 @@ const OpportunitiesSection = () => {
         <div className="container-custom">
           <div className="text-center">
             <p className="text-xl text-muted-foreground">
-              {searchLoading ? 'Searching events...' : 'Loading events...'}
+              <DynamicText page="opportunities" section="main" contentKey="loading" fallback="Loading events..." as="span" />
             </p>
           </div>
         </div>
@@ -282,7 +283,9 @@ const OpportunitiesSection = () => {
           <div className="text-center">
             <div className="flex flex-col items-center gap-4">
               <Search className="w-12 h-12 text-gray-400" />
-              <p className="text-xl text-muted-foreground">Search Error</p>
+              <p className="text-xl text-muted-foreground">
+                <DynamicText page="opportunities" section="main" contentKey="search_error_title" fallback="Search Error" as="span" />
+              </p>
               <p className="text-sm text-gray-500">{searchError}</p>
             </div>
           </div>
@@ -298,8 +301,12 @@ const OpportunitiesSection = () => {
           <div className="text-center">
             <div className="flex flex-col items-center gap-4">
               <Search className="w-12 h-12 text-gray-400" />
-              <p className="text-xl text-muted-foreground">No events found</p>
-              <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+              <p className="text-xl text-muted-foreground">
+                <DynamicText page="opportunities" section="main" contentKey="no_events" fallback="No events found" as="span" />
+              </p>
+              <p className="text-sm text-gray-500">
+                <DynamicText page="opportunities" section="main" contentKey="adjust_filters" fallback="Try adjusting your search or filters" as="span" />
+              </p>
             </div>
           </div>
         </div>
@@ -312,7 +319,9 @@ const OpportunitiesSection = () => {
       <div className="container-custom">
         {/* Filter Controls */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold text-primary">Volunteer Opportunities</h2>
+          <h2 className="text-2xl md:text-3xl font-bold text-primary">
+            <DynamicText page="opportunities" section="main" contentKey="title" fallback="Volunteer Opportunities" as="span" />
+          </h2>
           <div className="flex items-center gap-2">
             <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
               <input
@@ -321,7 +330,9 @@ const OpportunitiesSection = () => {
                 onChange={(e) => setShowFullEvents(e.target.checked)}
                 className="w-4 h-4 text-[#00AFCE] bg-gray-100 border-gray-300 rounded focus:ring-[#00AFCE] focus:ring-2"
               />
-              <span>Show full events</span>
+              <span>
+                <DynamicText page="opportunities" section="filters" contentKey="show_full_events" fallback="Show full events" as="span" />
+              </span>
             </label>
           </div>
         </div>
@@ -350,7 +361,7 @@ const OpportunitiesSection = () => {
                   </h3>
                   {event.isFull && (
                     <div className="bg-red-100 text-red-800 px-2 py-1 rounded text-xs font-medium ml-2 flex-shrink-0">
-                      Event Full
+                      <DynamicText page="opportunities" section="labels" contentKey="event_full" fallback="Event Full" as="span" />
                     </div>
                   )}
                 </div>
@@ -362,7 +373,9 @@ const OpportunitiesSection = () => {
                 <div className="space-y-2 md:space-y-3 mb-4 md:mb-6">
                   <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
                     <Calendar className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
-                    <span className="font-medium text-primary">Date:</span>
+                    <span className="font-medium text-primary">
+                      <DynamicText page="opportunities" section="labels" contentKey="date" fallback="Date:" as="span" />
+                    </span>
                     <span className="text-muted-foreground truncate">
                       {formatEventDate(event.date)}
                     </span>
@@ -370,7 +383,9 @@ const OpportunitiesSection = () => {
                   
                   <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
                     <Clock className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
-                    <span className="font-medium text-primary">Time:</span>
+                    <span className="font-medium text-primary">
+                      <DynamicText page="opportunities" section="labels" contentKey="time" fallback="Time:" as="span" />
+                    </span>
                     <span className="text-muted-foreground">
                       {formatEventTimeRange(event.arrival_time, event.estimated_end_time)}
                     </span>
@@ -378,15 +393,19 @@ const OpportunitiesSection = () => {
 
                   <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
                     <MapPin className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
-                    <span className="font-medium text-primary">Location:</span>
+                    <span className="font-medium text-primary">
+                      <DynamicText page="opportunities" section="labels" contentKey="location" fallback="Location:" as="span" />
+                    </span>
                     <span className="text-muted-foreground truncate">{event.location}</span>
                   </div>
 
                   <div className="flex items-center gap-2 md:gap-3 text-xs md:text-sm">
                     <Users className="w-3 h-3 md:w-4 md:h-4 text-[#00AFCE] flex-shrink-0" />
-                    <span className="font-medium text-primary">Participants:</span>
+                    <span className="font-medium text-primary">
+                      <DynamicText page="opportunities" section="labels" contentKey="participants" fallback="Participants:" as="span" />
+                    </span>
                     <span className="text-muted-foreground">
-                      {event.currentParticipants || 0} / {event.max_participants} participants
+                      {event.currentParticipants || 0} / {event.max_participants} <DynamicText page="opportunities" section="labels" contentKey="participants_suffix" fallback="participants" as="span" />
                     </span>
                   </div>
                 </div>
@@ -399,35 +418,14 @@ const OpportunitiesSection = () => {
                     const isPAUser = user && isPA;
                     const userSignedUp = isSignedUp(event.id);
                     
-                    // Debug log for PA detection
-                    if (user) {
-                      console.log('🔍 PA Detection:', {
-                        userId: user.id,
-                        userRole,
-                        isPA,
-                        isPAUser,
-                        userRoleLoading
-                      });
-                    }
-                    
                     // For PA users
                     if (isPAUser) {
                       return (
                         <div className="flex flex-col gap-2">
                           {userSignedUp ? (
-                            <>
-                              <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-xl font-semibold min-h-[44px] flex items-center justify-center">
-                                Signed Up ✓
-                              </div>
-                              <button
-                                onClick={() => handleGroupSignup(event)}
-                                className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[44px] touch-manipulation"
-                                data-testid="add-group-button"
-                              >
-                                <Users className="w-4 h-4" />
-                                Add Group
-                              </button>
-                            </>
+                            <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-xl font-semibold min-h-[44px] flex items-center justify-center">
+                              <DynamicText page="opportunities" section="labels" contentKey="signed_up" fallback="Signed Up ✓" as="span" />
+                            </div>
                           ) : (
                             <>
                               <PrimaryButton 
@@ -435,7 +433,7 @@ const OpportunitiesSection = () => {
                                 className="w-full min-h-[44px] touch-manipulation"
                                 disabled={userEvents.length >= 2}
                               >
-                                Sign Up
+                                <DynamicText page="opportunities" section="buttons" contentKey="sign_up" fallback="Sign Up" as="span" />
                               </PrimaryButton>
                               <SecondaryButton
                                 onClick={() => handleGroupSignup(event)}
@@ -443,7 +441,9 @@ const OpportunitiesSection = () => {
                                 data-testid="add-group-button"
                               >
                                 <Users className="w-4 h-4" />
-                                Add Group
+                                <span className="ml-2">
+                                  <DynamicText page="opportunities" section="buttons" contentKey="add_group" fallback="Add Group" as="span" />
+                                </span>
                               </SecondaryButton>
                             </>
                           )}
@@ -456,7 +456,7 @@ const OpportunitiesSection = () => {
                       <>
                         {userSignedUp ? (
                           <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-xl font-semibold min-h-[44px] flex items-center justify-center">
-                            Signed Up ✓
+                            <DynamicText page="opportunities" section="labels" contentKey="signed_up" fallback="Signed Up ✓" as="span" />
                           </div>
                         ) : (
                           <PrimaryButton 
@@ -464,7 +464,11 @@ const OpportunitiesSection = () => {
                             className="w-full min-h-[44px] touch-manipulation"
                             disabled={userEvents.length >= 2 && userRole !== 'pa'}
                           >
-                            {userEvents.length >= 2 && userRole !== 'pa' ? 'Max Reached' : 'Sign Up'}
+                            {userEvents.length >= 2 && userRole !== 'pa' ? (
+                              <DynamicText page="opportunities" section="buttons" contentKey="max_reached" fallback="Max Reached" as="span" />
+                            ) : (
+                              <DynamicText page="opportunities" section="buttons" contentKey="sign_up" fallback="Sign Up" as="span" />
+                            )}
                           </PrimaryButton>
                         )}
                       </>
