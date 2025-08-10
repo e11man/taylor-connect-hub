@@ -11,6 +11,7 @@ import { EventChatModal } from "@/components/chat/EventChatModal";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import DashboardOpportunities from "./DashboardOpportunities";
+import AddressLink from "@/components/ui/AddressLink";
 
 interface UserEvent {
   id: string;
@@ -258,7 +259,7 @@ const UserDashboard = () => {
                     <div className="flex items-start gap-2 sm:gap-3 text-xs sm:text-sm">
                       <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0 mt-0.5" />
                       <span className="font-medium text-primary">Location:</span>
-                      <span className="text-muted-foreground break-words">{userEvent.events.location}</span>
+                      <AddressLink address={userEvent.events.location} className="text-muted-foreground break-words" />
                     </div>
                   </div>
                   

@@ -6,6 +6,7 @@ import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
+import CountUpNumber from "@/components/ui/CountUpNumber";
 import { useContentSection } from "@/hooks/useContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, useEffect } from "react";
@@ -227,7 +228,7 @@ const HeroSection = () => {
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.2 }}
                     >
-                      {stat.value}
+                      <CountUpNumber value={stat.value} />
                     </motion.div>
                     <div className="relative text-xs md:text-sm lg:text-base xl:text-lg text-gray-600 font-montserrat font-semibold tracking-wide leading-tight">
                       {stat.label}

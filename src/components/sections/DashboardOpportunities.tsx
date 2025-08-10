@@ -16,6 +16,7 @@ import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, c
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SignupSuccess } from "@/components/ui/SignupSuccess";
+import AddressLink from "@/components/ui/AddressLink";
 
 interface Event {
   id: string;
@@ -571,7 +572,7 @@ const DashboardOpportunities = () => {
                   <div className="flex items-start gap-1.5 sm:gap-2 text-xs">
                     <MapPin className="w-3 h-3 text-[#00AFCE] flex-shrink-0 mt-0.5" />
                     <span className="font-medium text-primary">Location:</span>
-                    <span className="text-muted-foreground break-words">{event.location}</span>
+                    <AddressLink address={event.location} className="text-muted-foreground break-words" />
                   </div>
                   
                   <div className="flex items-center gap-1.5 sm:gap-2 text-xs">

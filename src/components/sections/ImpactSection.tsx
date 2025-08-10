@@ -2,6 +2,7 @@ import { Users, Clock, Building } from "lucide-react";
 import { useContentSection } from "@/hooks/useContent";
 import AnimatedSection from "@/components/ui/animated-section";
 import { motion } from "framer-motion";
+import CountUpNumber from "@/components/ui/CountUpNumber";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -164,7 +165,7 @@ const ImpactSection = () => {
                     </div>
                   </div>
                   <div className="relative text-xl md:text-3xl lg:text-4xl xl:text-5xl font-montserrat font-black mb-3 text-secondary group-hover:scale-110 transition-transform duration-300">
-                    {stat.value}
+                    <CountUpNumber value={stat.value} />
                   </div>
                   <div className="relative text-xs md:text-sm lg:text-base xl:text-lg font-montserrat font-bold mb-2 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
                     {stat.label}
