@@ -6,9 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
-import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
-import { ChangeDormModal } from "@/components/modals/ChangeDormModal";
-import { UpdatePasswordModal } from "@/components/modals/UpdatePasswordModal";
+import { ProfileSettings } from "@/components/settings/ProfileSettings";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -40,9 +38,7 @@ const UserDashboard = () => {
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'events' | 'opportunities' | 'settings'>('events');
-  const [changeDormModalOpen, setChangeDormModalOpen] = useState(false);
-  const [updatePasswordModalOpen, setUpdatePasswordModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<'events' | 'opportunities' | 'profile'>('events');
   const [chatModalOpen, setChatModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<UserEvent['events'] | null>(null);
   const { user, userEventsRefreshTrigger, refreshUserEvents } = useAuth();
@@ -188,15 +184,15 @@ const UserDashboard = () => {
               Browse Opportunities
             </button>
             <button
-              onClick={() => setActiveTab('settings')}
+              onClick={() => setActiveTab('profile')}
               className={`px-3 sm:px-4 lg:px-6 py-2 sm:py-3 rounded-full font-semibold transition-all flex items-center justify-center gap-1.5 sm:gap-2 text-xs sm:text-sm lg:text-base ${
-                activeTab === 'settings' 
+                activeTab === 'profile' 
                   ? 'bg-[#00AFCE] text-white' 
                   : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               }`}
             >
               <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
-              Settings
+              Profile
             </button>
           </div>
         </div>
@@ -286,76 +282,50 @@ const UserDashboard = () => {
           )}
             </div>
 
-            {/* My Dorm/Wing */}
-            <div className="mb-8 sm:mb-12">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-6 gap-4">
-                <h2 className="text-xl sm:text-2xl md:text-3xl font-montserrat font-bold text-primary">
-                  My Dorm/Wing
-                </h2>
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-3">
-                  <Button
-                    variant="outline"
-                    className="border-[#00AFCE] text-[#00AFCE] hover:bg-[#00AFCE] hover:text-white text-sm sm:text-base px-3 sm:px-4 py-2"
-                    onClick={() => setChangeDormModalOpen(true)}
-                  >
-                    Change Dorm
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-[#E14F3D] text-[#E14F3D] hover:bg-[#E14F3D] hover:text-white text-sm sm:text-base px-3 sm:px-4 py-2"
-                    onClick={() => setUpdatePasswordModalOpen(true)}
-                  >
-                    Update Password
-                  </Button>
-                </div>
-              </div>
-              
-              {userProfile && (
-                <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 mx-2 sm:mx-0">
-                  <p className="text-base sm:text-lg font-medium text-primary break-words">
-                    {userProfile.dorm} - {userProfile.wing}
-                  </p>
-                  <p className="text-muted-foreground mt-1 text-sm sm:text-base break-all">
-                    {userProfile.email}
-                  </p>
-                </div>
-              )}
-            </div>
           </>
         ) : activeTab === 'opportunities' ? (
           <DashboardOpportunities />
         ) : (
-          <div className="relative">
-            <div className="blur-sm pointer-events-none">
-              <NotificationPreferences />
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
-              <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
-                <MessageCircle className="w-16 h-16 mx-auto mb-4 text-[#00AFCE]" />
-                <h3 className="text-2xl font-montserrat font-bold text-primary mb-2">
-                  Email Notifications Coming Soon
-                </h3>
-                <p className="text-muted-foreground">
-                  Enhanced email notification features are currently in development and will be available soon.
-                </p>
+          <div className="space-y-6">
+            <ProfileSettings />
+            
+            {/* Blurred Notifications Section */}
+            <div className="relative">
+              <div className="blur-sm pointer-events-none">
+                <div className="bg-white rounded-xl sm:rounded-2xl p-6 border-2 border-gray-200">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 bg-[#00AFCE] rounded-full flex items-center justify-center">
+                      <span className="text-white text-lg">🔔</span>
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-primary">Advanced Notifications</h3>
+                      <p className="text-sm text-muted-foreground">Coming soon features</p>
+                    </div>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-gray-200 rounded"></div>
+                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+                  </div>
+                </div>
+              </div>
+              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
+                <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
+                  <div className="w-16 h-16 mx-auto mb-4 text-[#00AFCE] text-4xl">🔔</div>
+                  <h3 className="text-2xl font-montserrat font-bold text-primary mb-2">
+                    Advanced Notifications Coming Soon
+                  </h3>
+                  <p className="text-muted-foreground">
+                    Enhanced notification features are currently in development and will be available soon.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         )}
       </div>
 
-      <ChangeDormModal
-        isOpen={changeDormModalOpen}
-        onClose={() => setChangeDormModalOpen(false)}
-        currentDorm={userProfile?.dorm}
-        currentWing={userProfile?.wing}
-        onUpdate={fetchUserData}
-      />
 
-      <UpdatePasswordModal
-        isOpen={updatePasswordModalOpen}
-        onClose={() => setUpdatePasswordModalOpen(false)}
-      />
 
       {selectedEvent && (
         <EventChatModal
