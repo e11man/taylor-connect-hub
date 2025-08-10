@@ -1130,7 +1130,6 @@ app.post('/api/contact-form', async (req, res) => {
       // Set up environment to use the virtual environment
       const env = { ...process.env };
       const venvPath = path.join(process.cwd(), 'database-service', 'venv');
-      env.PYTHONPATH = path.join(venvPath, 'lib', 'python3.13', 'site-packages');
       env.VIRTUAL_ENV = venvPath;
       env.PATH = path.join(venvPath, 'bin') + ':' + env.PATH;
       
