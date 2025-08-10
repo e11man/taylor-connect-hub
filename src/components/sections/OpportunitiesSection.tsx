@@ -32,6 +32,12 @@ interface Event {
   contact_person?: string | null;
   contact_person_phone?: string | null;
   special_instructions?: string | null;
+  category?: string;
+  difficulty_level?: string;
+  requirements?: string;
+  contact_info?: string;
+  created_at?: string;
+  updated_at?: string;
   currentParticipants?: number;
   availableSpots?: number;
   isFull?: boolean;
@@ -324,41 +330,35 @@ const OpportunitiesSection = () => {
   return (
     <section className="bg-white section-padding">
       <div className="container-custom">
-        {/* Filter Controls */}
-        <div className="flex items-center justify-between mb-6">
+        {/* Section Header */}
+        <div className="mb-6">
           <h2 className="text-2xl md:text-3xl font-bold text-primary">Volunteer Opportunities</h2>
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showFullEvents}
-                onChange={(e) => setShowFullEvents(e.target.checked)}
-                className="w-4 h-4 text-[#00AFCE] bg-gray-100 border-gray-300 rounded focus:ring-[#00AFCE] focus:ring-2"
-              />
-              <span>Show full events</span>
-            </label>
-            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-              <input
-                type="checkbox"
-                checked={showAllOccurrences}
-                onChange={(e) => setShowAllOccurrences(e.target.checked)}
-                className="w-4 h-4 text-[#00AFCE] bg-gray-100 border-gray-300 rounded focus:ring-[#00AFCE] focus:ring-2"
-              />
-              <span>Show all occurrences</span>
-            </label>
-          </div>
         </div>
 
         {/* Opportunities Horizontal Scroll */}
         <div className="mb-8 md:mb-12">
-          <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scroll-smooth snap-x snap-mandatory" style={{
-            msOverflowStyle: 'none',
-            scrollbarWidth: 'none',
-            WebkitOverflowScrolling: 'touch'
-          }}>
-            <style>
-              {`.overflow-x-auto::-webkit-scrollbar { display: none; }`}
-            </style>
+          <div className="relative">
+            {/* Scroll hint text */}
+            <div className="text-center mb-3 md:mb-4">
+              <p className="text-xs md:text-sm text-muted-foreground font-medium">
+                Swipe to see more opportunities →
+              </p>
+            </div>
+            
+            {/* Left gradient overlay */}
+            <div className="absolute left-0 top-0 bottom-0 w-8 md:w-12 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none opacity-60" />
+            
+            {/* Right gradient overlay */}
+            <div className="absolute right-0 top-0 bottom-0 w-8 md:w-12 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none opacity-60" />
+            
+            <div className="flex gap-4 md:gap-6 overflow-x-auto pb-4 md:pb-6 scroll-smooth snap-x snap-mandatory" style={{
+              msOverflowStyle: 'none',
+              scrollbarWidth: 'none',
+              WebkitOverflowScrolling: 'touch'
+            }}>
+              <style>
+                {`.overflow-x-auto::-webkit-scrollbar { display: none; }`}
+              </style>
           {displayEvents.map((event, index) => (
             <div 
               key={event.id}
@@ -508,6 +508,7 @@ const OpportunitiesSection = () => {
               </div>
             </div>
           ))}
+            </div>
           </div>
         </div>
 

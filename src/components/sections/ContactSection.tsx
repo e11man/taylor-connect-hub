@@ -179,8 +179,8 @@ const ContactSection = () => {
                         >
                           {info.title}
                         </motion.h4>
-                        <span className="text-lg font-medium text-foreground mb-1">{info.content}</span>
-                        <span className="text-sm text-muted-foreground font-montserrat font-semibold">{info.description}</span>
+                        <div className="text-lg font-medium text-foreground mb-2">{info.content}</div>
+                        <div className="text-sm text-muted-foreground font-montserrat font-semibold">{info.description}</div>
                       </div>
                     </div>
                   </motion.div>
