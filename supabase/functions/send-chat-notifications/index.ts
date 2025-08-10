@@ -7,8 +7,34 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Initialize Resend with latest API
+// Initialize Resend with production API
 const resend = new Resend(Deno.env.get('RESEND_API_KEY'));
+
+// Production configuration
+const BATCH_SIZE = 10; // Process notifications in batches
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
+const RATE_LIMIT_DELAY_MS = 100; // Delay between emails to respect rate limits
+
+// Utility function for delays
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Retry function with exponential backoff
+const retryWithBackoff = async <T>(
+  fn: () => Promise<T>,
+  retries: number = MAX_RETRIES,
+  delayMs: number = RETRY_DELAY_MS
+): Promise<T> => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries > 0) {
+      await delay(delayMs);
+      return retryWithBackoff(fn, retries - 1, delayMs * 2);
+    }
+    throw error;
+  }
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -21,27 +47,38 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    console.log('Starting chat notification processing...');
+    const startTime = Date.now();
+    const requestId = crypto.randomUUID();
+    
+    // Production logging with request ID
+    console.log(`[${requestId}] Starting notification processing at ${new Date().toISOString()}`);
 
-    // Get pending notifications using the new optimized function
+    // Get pending notifications using the optimized function
     const { data: notifications, error: notificationsError } = await supabaseClient
       .rpc('get_pending_notifications');
 
     if (notificationsError) {
-      console.error('Error fetching notifications:', notificationsError);
-      return new Response(JSON.stringify({ error: notificationsError.message }), {
+      console.error(`[${requestId}] Error fetching notifications:`, notificationsError);
+      return new Response(JSON.stringify({ 
+        error: 'Failed to fetch notifications',
+        requestId,
+        details: notificationsError.message 
+      }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    console.log(`Found ${notifications?.length || 0} notifications to send`);
+    const totalNotifications = notifications?.length || 0;
+    console.log(`[${requestId}] Found ${totalNotifications} notifications to process`);
 
-    if (!notifications || notifications.length === 0) {
+    if (totalNotifications === 0) {
       return new Response(JSON.stringify({ 
         success: true, 
         message: 'No pending notifications',
-        processed: 0 
+        processed: 0,
+        requestId,
+        processingTimeMs: Date.now() - startTime
       }), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
@@ -50,22 +87,36 @@ serve(async (req) => {
     let processedCount = 0;
     let successCount = 0;
     let errorCount = 0;
+    const errors: Array<{ notificationId: string; error: string }> = [];
 
-    // Process each notification
-    for (const notification of notifications) {
-      try {
-        console.log(`Processing notification ${notification.id} for user ${notification.user_email}`);
-        
-        const {
-          id,
-          user_email,
-          event_title,
-          message,
-          sender_name,
-          sender_type,
-          event_description,
-          organization_name
-        } = notification;
+    // Process notifications in batches for better performance
+    const batches = [];
+    for (let i = 0; i < notifications.length; i += BATCH_SIZE) {
+      batches.push(notifications.slice(i, i + BATCH_SIZE));
+    }
+
+    console.log(`[${requestId}] Processing ${batches.length} batches of up to ${BATCH_SIZE} notifications each`);
+
+    // Process each batch
+    for (let batchIndex = 0; batchIndex < batches.length; batchIndex++) {
+      const batch = batches[batchIndex];
+      console.log(`[${requestId}] Processing batch ${batchIndex + 1}/${batches.length} with ${batch.length} notifications`);
+
+      // Process notifications in the current batch
+      for (const notification of batch) {
+        try {
+          const {
+            id,
+            user_email,
+            event_title,
+            message,
+            sender_name,
+            sender_type,
+            event_description,
+            organization_name
+          } = notification;
+
+          console.log(`[${requestId}] Processing notification ${id} for ${user_email}`);
 
         // Create improved email content
         const htmlContent = `
@@ -138,61 +189,127 @@ serve(async (req) => {
           </html>
         `;
 
-        // Send email notification using latest Resend API
-        const emailResponse = await resend.emails.send({
-          from: 'Taylor Connect Hub <noreply@ellmangroup.org>',
-          to: [user_email],
-          subject: `New message in "${event_title}" chat`,
-          html: htmlContent,
-        });
+          // Send email with retry logic and rate limiting
+          const emailResponse = await retryWithBackoff(async () => {
+            return await resend.emails.send({
+              from: 'Taylor Connect Hub <noreply@ellmangroup.org>',
+              to: [user_email],
+              subject: `New message in "${event_title}" chat`,
+              html: htmlContent,
+            });
+          });
 
-        if (emailResponse.error) {
-          console.error('Error sending email:', emailResponse.error);
-          errorCount++;
-          continue;
-        }
+          if (emailResponse.error) {
+            const errorMsg = `Failed to send email: ${emailResponse.error}`;
+            console.error(`[${requestId}] ${errorMsg}`);
+            errors.push({ notificationId: id, error: errorMsg });
+            errorCount++;
+            continue;
+          }
 
-        // Mark notification as sent using the new function
-        const { error: markError } = await supabaseClient
-          .rpc('mark_notification_sent', { p_notification_id: id });
+          // Mark notification as sent
+          const { error: markError } = await supabaseClient
+            .rpc('mark_notification_sent', { p_notification_id: id });
 
-        if (markError) {
-          console.error('Error marking notification as sent:', markError);
-          errorCount++;
-        } else {
-          successCount++;
-          console.log(`Successfully sent notification to ${user_email} for event ${event_title}`);
-        }
+          if (markError) {
+            const errorMsg = `Failed to mark notification as sent: ${markError.message}`;
+            console.error(`[${requestId}] ${errorMsg}`);
+            errors.push({ notificationId: id, error: errorMsg });
+            errorCount++;
+          } else {
+            successCount++;
+            console.log(`[${requestId}] Successfully sent notification ${id} to ${user_email}`);
+          }
 
-        processedCount++;
+          processedCount++;
+
+          // Rate limiting: delay between emails
+          if (processedCount < totalNotifications) {
+            await delay(RATE_LIMIT_DELAY_MS);
+          }
 
       } catch (error) {
-        console.error('Error processing notification:', error);
-        errorCount++;
-        continue;
+          const errorMsg = `Unexpected error processing notification ${notification.id}: ${error.message}`;
+          console.error(`[${requestId}] ${errorMsg}`);
+          errors.push({ notificationId: notification.id, error: errorMsg });
+          errorCount++;
+          processedCount++;
+        }
+      }
+
+      // Add delay between batches to prevent overwhelming the email service
+      if (batchIndex < batches.length - 1) {
+        console.log(`[${requestId}] Completed batch ${batchIndex + 1}, waiting before next batch...`);
+        await delay(1000); // 1 second delay between batches
       }
     }
 
-    console.log(`Processing complete: ${processedCount} processed, ${successCount} successful, ${errorCount} errors`);
+    const endTime = Date.now();
+    const processingTimeMs = endTime - startTime;
+    const processingTimeSec = (processingTimeMs / 1000).toFixed(2);
 
-    return new Response(JSON.stringify({ 
-      success: true, 
-      processed: processedCount,
-      successful: successCount,
-      errors: errorCount,
-      message: `Processed ${processedCount} notifications with ${successCount} successful and ${errorCount} errors`
-    }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    // Production logging with comprehensive metrics
+    console.log(`[${requestId}] PROCESSING COMPLETE:`);
+    console.log(`[${requestId}] - Total notifications: ${totalNotifications}`);
+    console.log(`[${requestId}] - Processed: ${processedCount}`);
+    console.log(`[${requestId}] - Successful: ${successCount}`);
+    console.log(`[${requestId}] - Errors: ${errorCount}`);
+    console.log(`[${requestId}] - Processing time: ${processingTimeSec}s`);
+    console.log(`[${requestId}] - Batches processed: ${batches.length}`);
+    
+    if (errors.length > 0) {
+      console.error(`[${requestId}] ERRORS ENCOUNTERED:`);
+      errors.forEach((err, index) => {
+        console.error(`[${requestId}] Error ${index + 1}: Notification ${err.notificationId} - ${err.error}`);
+      });
+    }
+
+    const response = {
+      success: true,
+      requestId,
+      message: `Processed ${processedCount}/${totalNotifications} notifications in ${processingTimeSec}s`,
+      stats: {
+        total: totalNotifications,
+        processed: processedCount,
+        successful: successCount,
+        errors: errorCount,
+        batches: batches.length,
+        processingTimeMs,
+        processingTimeSec: parseFloat(processingTimeSec)
+      },
+      errors: errors.length > 0 ? errors : undefined
+    };
+
+    return new Response(
+      JSON.stringify(response),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    );
 
   } catch (error) {
-    console.error('Error in send-chat-notifications function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      stack: error.stack 
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    const endTime = Date.now();
+    const processingTimeMs = endTime - startTime;
+    
+    console.error(`[${requestId}] CRITICAL ERROR in send-chat-notifications:`);
+    console.error(`[${requestId}] Error: ${error.message}`);
+    console.error(`[${requestId}] Stack: ${error.stack}`);
+    console.error(`[${requestId}] Processing time before error: ${processingTimeMs}ms`);
+    
+    return new Response(
+      JSON.stringify({
+        success: false,
+        error: 'Internal server error',
+        message: 'Failed to process chat notifications',
+        requestId,
+        details: error.message,
+        processingTimeMs
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      }
+    );
   }
 });

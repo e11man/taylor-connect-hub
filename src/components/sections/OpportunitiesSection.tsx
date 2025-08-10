@@ -356,10 +356,7 @@ const OpportunitiesSection = () => {
               scrollbarWidth: 'none',
               WebkitOverflowScrolling: 'touch'
             }}>
-              <style>
-                {`.overflow-x-auto::-webkit-scrollbar { display: none; }`}
-              </style>
-          {displayEvents.map((event, index) => (
+              {displayEvents.map((event, index) => (
             <div 
               key={event.id}
               className="group animate-scale-in flex-shrink-0 w-[85vw] sm:w-72 md:w-80 min-w-[85vw] sm:min-w-72 md:min-w-80 snap-start"
