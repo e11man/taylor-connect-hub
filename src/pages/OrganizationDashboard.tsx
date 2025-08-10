@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useIsMobile } from '@/hooks/use-mobile';
 import SafetyGuidelinesModal from '@/components/modals/SafetyGuidelinesModal';
 import OrganizationProfileModal from '@/components/modals/OrganizationProfileModal';
-import { filterUpcomingEvents, filterActiveEvents } from '@/utils/eventFilters';
+import { filterActiveEvents } from '@/utils/eventFilters';
 import { SignupSuccess } from '@/components/ui/SignupSuccess';
 
 interface Event {
@@ -285,6 +285,7 @@ const OrganizationDashboard = () => {
       }
 
       setOrganization(orgData);
+      console.log('Organization data:', orgData);
 
       // Get organization's events
       const { data: eventsData, error: eventsError } = await supabase
@@ -296,9 +297,11 @@ const OrganizationDashboard = () => {
       if (eventsError) {
         console.error('Error fetching events:', eventsError);
       } else {
-        // Apply filtering: show only upcoming events (not within 12 hours of start)
-        // and filter out expired events
-        const filteredData = filterActiveEvents(filterUpcomingEvents(eventsData || []));
+        // For organization dashboard, show all events (not filtered by 12-hour rule)
+        // Only filter out expired events
+        console.log('Raw events data:', eventsData);
+        const filteredData = filterActiveEvents(eventsData || []);
+        console.log('Filtered events data:', filteredData);
         setEvents(filteredData);
       }
 

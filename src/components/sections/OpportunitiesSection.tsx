@@ -14,7 +14,7 @@ import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useSearch } from "@/contexts/SearchContext";
 import { SignupSuccess } from "@/components/ui/SignupSuccess";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability, filterNextOccurrencePerSeries } from '@/utils/eventFilters';
+import { filterActiveEvents, filterEventsByAvailability, calculateEventAvailability, filterNextOccurrencePerSeries } from '@/utils/eventFilters';
 import AddressLink from "@/components/ui/AddressLink";
 
 interface Event {
@@ -118,9 +118,9 @@ const OpportunitiesSection = () => {
       if (error) {
         console.error('Error fetching events:', error);
       } else {
-        // Apply filtering: show only upcoming events (not within 12 hours of start)
-        // and filter out expired events
-        const filteredData = filterActiveEvents(filterUpcomingEvents(data || []));
+        // For public opportunities, show all events (not filtered by 12-hour rule)
+        // Only filter out expired events
+        const filteredData = filterActiveEvents(data || []);
         setEvents(filteredData);
       }
     } catch (error) {

@@ -12,7 +12,7 @@ import GroupSignupModal from "@/components/modals/GroupSignupModal";
 import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability, filterNextOccurrencePerSeries } from '@/utils/eventFilters';
+import { filterActiveEvents, filterEventsByAvailability, calculateEventAvailability, filterNextOccurrencePerSeries } from '@/utils/eventFilters';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SignupSuccess } from "@/components/ui/SignupSuccess";
@@ -109,9 +109,9 @@ const DashboardOpportunities = () => {
       if (error) {
         console.error('Error fetching events:', error);
       } else {
-        // Apply filtering: show only upcoming events (not within 12 hours of start)
-        // and filter out expired events
-        const filteredData = filterActiveEvents(filterUpcomingEvents(data || []));
+        // For public opportunities, show all events (not filtered by 12-hour rule)
+        // Only filter out expired events
+        const filteredData = filterActiveEvents(data || []);
         setEvents(filteredData);
       }
     } catch (error) {
