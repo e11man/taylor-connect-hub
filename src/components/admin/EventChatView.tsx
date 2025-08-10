@@ -6,7 +6,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { Send, MessageSquare, User, Shield, X } from 'lucide-react';
+import { Send, MessageSquare, User, Shield } from 'lucide-react';
 import { sendChatMessage } from '@/utils/chatNotificationService';
 
 interface ChatMessage {
@@ -299,14 +299,6 @@ export const EventChatView: React.FC<EventChatViewProps> = ({
                 </p>
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onClose}
-              className="h-8 w-8 p-0"
-            >
-              <X className="w-4 h-4" />
-            </Button>
           </div>
         </DialogHeader>
 
@@ -342,18 +334,12 @@ export const EventChatView: React.FC<EventChatViewProps> = ({
                         </div>
                       )}
                       
-                      <div className={`flex ${message.organization_name === 'Community Connect' || isCurrentUser(message) ? 'justify-end' : 'justify-start'} mb-2`}>
-                        <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${
-                          message.organization_name === 'Community Connect'
-                            ? 'bg-[#00AFCE] text-white rounded-br-md'
-                            : isCurrentUser(message)
-                            ? 'bg-[#1B365F] text-white rounded-br-md'
-                            : isAdmin(message)
-                            ? 'bg-purple-500 text-white rounded-bl-md'
-                            : message.organization_id
-                            ? 'bg-[#00AFCE] text-white rounded-bl-md'
-                            : 'bg-gray-100 text-gray-900 rounded-bl-md'
-                        }`}>
+                      {(() => {
+                        const isOrgOrAdmin = !!message.organization_id || message.organization_name === 'Community Connect' || isAdmin(message);
+                        const alignRight = isOrgOrAdmin;
+                        return (
+                          <div className={`flex ${alignRight ? 'justify-end' : 'justify-start'} mb-2`}>
+                            <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${alignRight ? 'bg-[#00AFCE] text-white rounded-br-md' : 'bg-gray-100 text-gray-900 rounded-bl-md'}`}>
                           {/* Sender info */}
                           <div className="flex items-center gap-2 mb-2">
                             <User className="w-3 h-3" />
@@ -386,8 +372,10 @@ export const EventChatView: React.FC<EventChatViewProps> = ({
                           <div className="text-xs opacity-75 mt-2">
                             {formatTime(message.created_at)}
                           </div>
-                        </div>
-                      </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   );
                 })}

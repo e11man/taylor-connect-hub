@@ -17,6 +17,7 @@ interface ChatMessage {
   organization_id: string | null;
   created_at: string;
   organization_name: string | null;
+  user_role?: string;
 }
 
 interface EventChatModalProps {
@@ -107,7 +108,8 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
         is_anonymous,
         created_at,
         updated_at,
-        organizations(name)
+        organizations(name),
+        profiles!left(role)
       `)
       .eq('event_id', eventId)
       .order('created_at', { ascending: true });
@@ -121,9 +123,10 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
       return;
     }
 
-    const formattedMessages = data?.map(msg => ({
+    const formattedMessages = data?.map((msg: any) => ({
       ...msg,
-      organization_name: msg.organizations?.name || null
+      organization_name: msg.organizations?.name || null,
+      user_role: msg.profiles?.role || 'user',
     })) || [];
 
     setMessages(formattedMessages);
@@ -204,31 +207,34 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
             </div>
           ) : (
             <div className="space-y-6">
-              {messages.map((message) => (
-                <div key={message.id} className="flex flex-col">
-                  {/* Message bubble */}
-                  <div className={`flex ${message.organization_id ? 'justify-end' : 'justify-start'} mb-1`}>
-                    <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${
-                      message.organization_id 
-                        ? 'bg-[#00AFCE] text-white rounded-br-md' 
-                        : 'bg-gray-100 text-gray-900 rounded-bl-md'
-                    }`}>
-                      <p className="text-sm leading-relaxed break-words">{message.message}</p>
+              {messages.map((message) => {
+                const alignRight = !!message.organization_id || message.user_role === 'admin';
+                return (
+                  <div key={message.id} className="flex flex-col">
+                    {/* Message bubble */}
+                    <div className={`flex ${alignRight ? 'justify-end' : 'justify-start'} mb-1`}>
+                      <div className={`max-w-[70%] px-4 py-3 rounded-2xl ${
+                        alignRight
+                          ? 'bg-[#00AFCE] text-white rounded-br-md'
+                          : 'bg-gray-100 text-gray-900 rounded-bl-md'
+                      }`}>
+                        <p className="text-sm leading-relaxed break-words">{message.message}</p>
+                      </div>
+                    </div>
+                    
+                    {/* Sender and time info */}
+                    <div className={`flex ${alignRight ? 'justify-end' : 'justify-start'} px-2`}>
+                      <div className="flex items-center gap-2 text-xs text-gray-500">
+                        <span className="font-medium">
+                          {formatMessageSender(message)}
+                        </span>
+                        <span>•</span>
+                        <span>{formatTime(message.created_at)}</span>
+                      </div>
                     </div>
                   </div>
-                  
-                  {/* Sender and time info */}
-                  <div className={`flex ${message.organization_id ? 'justify-end' : 'justify-start'} px-2`}>
-                    <div className="flex items-center gap-2 text-xs text-gray-500">
-                      <span className="font-medium">
-                        {formatMessageSender(message)}
-                      </span>
-                      <span>•</span>
-                      <span>{formatTime(message.created_at)}</span>
-                    </div>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </ScrollArea>
