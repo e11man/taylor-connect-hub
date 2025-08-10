@@ -1,9 +1,10 @@
 # TODO:
 
-- [x] test-user-registration: Create a test script to verify user registration functionality (priority: High)
-- [x] check-rls-policies: Check current RLS policies and permissions on profiles table (priority: High)
-- [x] test-taylor-user: Test Taylor user registration with proper email format (priority: High)
-- [x] test-external-user: Test external user registration with non-Taylor email (priority: High)
-- [x] fix-user-id-constraint: Fix user_id constraint issue in profiles table (priority: High)
-- [x] test-web-registration: Test actual user registration in the web application (priority: High)
-- [x] run-test-analyze: Run the test script and analyze any errors (priority: Medium)
+- [x] 1: Create chat_messages table with correct schema for direct authentication (priority: High)
+- [x] 2: Create notification_preferences table for chat notifications (priority: High)
+- [x] 3: Create notifications table for tracking sent notifications (priority: High)
+- [x] 4: Apply the migration to create all chat-related tables (priority: High)
+- [x] 6: Fix parameter order in sendChatMessage function call (priority: High)
+- [x] 7: Implement optimistic updates in useChatMessages hook (priority: High)
+- [x] 5: Test chat loading and sending functionality (priority: Medium)
+- [x] 8: Test real-time chat message display (priority: Medium)

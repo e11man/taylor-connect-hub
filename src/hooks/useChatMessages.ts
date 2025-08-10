@@ -76,28 +76,55 @@ export const useChatMessages = (eventId: string) => {
       throw new Error('Message content and event ID are required');
     }
 
+    // Create optimistic message
+    const optimisticMessage: ChatMessage = {
+      id: `temp-${Date.now()}`,
+      message: content.trim(),
+      is_anonymous: isAnonymous,
+      user_id: userId,
+      organization_id: organizationId,
+      created_at: new Date().toISOString(),
+      user_email: 'You',
+      user_role: 'user'
+    };
+
+    // Add optimistic message immediately
+    setMessages(prev => [...prev, optimisticMessage]);
+
     try {
       const result = await sendChatMessage(
-        content.trim(),
         eventId,
-        userId,
+        content.trim(),
         isAnonymous,
+        userId,
         organizationId
       );
 
       if (!result.success) {
+        // Remove optimistic message on failure
+        setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
         throw new Error(result.error || 'Failed to send message');
       }
 
-      // Refresh messages after sending
-      await fetchMessages();
+      // Replace optimistic message with real message
+      if (result.messageId) {
+        setMessages(prev => 
+          prev.map(msg => 
+            msg.id === optimisticMessage.id 
+              ? { ...optimisticMessage, id: result.messageId! }
+              : msg
+          )
+        );
+      }
       
       return { success: true };
     } catch (err) {
+      // Remove optimistic message on error
+      setMessages(prev => prev.filter(msg => msg.id !== optimisticMessage.id));
       console.error('Error sending message:', err);
       throw err;
     }
-  }, [eventId, fetchMessages]);
+  }, [eventId]);
 
   const subscribeToMessages = useCallback(() => {
     if (!eventId) return null;

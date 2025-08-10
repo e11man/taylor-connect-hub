@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/components/ui/use-toast';
 import { Send, MessageCircle } from 'lucide-react';
-import { sendChatMessage } from '@/utils/chatNotificationService';
+import { useChatMessages } from '@/hooks/useChatMessages';
 
 interface ChatMessage {
   id: string;
@@ -29,12 +29,11 @@ interface EventChatModalProps {
 }
 
 export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizationId }: EventChatModalProps) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [newMessage, setNewMessage] = useState('');
-  const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const { messages, loading, sendMessage: sendChatMessageHook } = useChatMessages(eventId);
 
   // Check if current user is the host organization
   const [isHost, setIsHost] = useState(false);
@@ -59,32 +58,7 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
     checkHostStatus();
   }, [user, organizationId]);
 
-  useEffect(() => {
-    if (!isOpen) return;
 
-    fetchMessages();
-
-    // Set up real-time subscription
-    const channel = supabase
-      .channel('chat-messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'chat_messages',
-          filter: `event_id=eq.${eventId}`
-        },
-        (payload) => {
-          setMessages(prev => [...prev, payload.new as ChatMessage]);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [isOpen, eventId]);
 
   useEffect(() => {
     // Scroll to bottom when new messages arrive
@@ -96,59 +70,18 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
     }
   }, [messages]);
 
-  const fetchMessages = async () => {
-    const { data, error } = await supabase
-      .from('chat_messages')
-      .select(`
-        id,
-        event_id,
-        user_id,
-        organization_id,
-        message,
-        is_anonymous,
-        created_at,
-        updated_at,
-        organizations(name),
-        profiles!left(role)
-      `)
-      .eq('event_id', eventId)
-      .order('created_at', { ascending: true });
 
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to load chat messages",
-        variant: "destructive",
-      });
-      return;
-    }
 
-    const formattedMessages = data?.map((msg: any) => ({
-      ...msg,
-      organization_name: msg.organizations?.name || null,
-      user_role: msg.profiles?.role || 'user',
-    })) || [];
-
-    setMessages(formattedMessages);
-  };
-
-  const sendMessage = async () => {
+  const handleSendMessage = async () => {
     if (!newMessage.trim()) return;
-
-    setLoading(true);
     
     try {
-      const result = await sendChatMessage(
-        eventId,
+      await sendChatMessageHook(
         newMessage.trim(),
         !isHost, // Only hosts are not anonymous
         user?.id,
         isHost && userOrganization ? userOrganization.id : undefined
       );
-
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to send message');
-      }
 
       setNewMessage('');
 
@@ -164,8 +97,6 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
         description: "Failed to send message",
         variant: "destructive",
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -259,11 +190,11 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type your message..."
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
                   className="pr-12 py-3 rounded-full border-2 border-gray-200 focus:border-[#00AFCE] transition-colors"
                 />
                 <Button 
-                  onClick={sendMessage} 
+                  onClick={handleSendMessage} 
                   disabled={loading || !newMessage.trim()}
                   size="sm"
                   className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 p-0"
