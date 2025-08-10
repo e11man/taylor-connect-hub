@@ -3,6 +3,8 @@ import { X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { DynamicText } from '@/components/content/DynamicText';
+import { useContent } from '@/hooks/useContent';
 
 const TestEmailVerification: React.FC = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -10,6 +12,25 @@ const TestEmailVerification: React.FC = () => {
   const [countdown, setCountdown] = useState(45);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  // Dynamic content
+  const { content: pageTitle } = useContent('emailVerification', 'page', 'title', 'Verify Your Email');
+  const { content: sentToPrefix } = useContent('emailVerification', 'page', 'sentToPrefix', 'We sent a 6-digit code to');
+  const { content: verifyButton } = useContent('emailVerification', 'buttons', 'verify', 'Verify Email');
+  const { content: verifyingButton } = useContent('emailVerification', 'buttons', 'verifying', 'Verifying...');
+  const { content: didntReceive } = useContent('emailVerification', 'resend', 'prompt', "Didn't receive the code?");
+  const { content: resendCode } = useContent('emailVerification', 'resend', 'button', 'Resend Code');
+  const { content: resendInPrefix } = useContent('emailVerification', 'resend', 'resendInPrefix', 'Resend in');
+  const { content: hideMyEmail } = useContent('emailVerification', 'mobile', 'hideMyEmail', 'Hide My Email');
+  const { content: toastCodeSentTitle } = useContent('emailVerification', 'toast', 'codeSentTitle', 'Code Sent! 📧');
+  const { content: toastCodeSentDescPrefix } = useContent('emailVerification', 'toast', 'codeSentDescPrefix', 'Verification code sent to');
+  const { content: toastErrorTitle } = useContent('emailVerification', 'toast', 'errorTitle', 'Error');
+  const { content: toastSendFailedDesc } = useContent('emailVerification', 'toast', 'sendFailedDescription', 'Failed to send verification code. Check console for details.');
+  const { content: invalidCodeTitle } = useContent('emailVerification', 'errors', 'invalidCodeTitle', 'Invalid Code');
+  const { content: invalidCodeDescription } = useContent('emailVerification', 'errors', 'invalidCodeDescription', 'Please enter the complete 6-digit code.');
+  const { content: verificationFailedTitle } = useContent('emailVerification', 'errors', 'verificationFailedTitle', 'Verification Failed');
+  const { content: verifiedTitle } = useContent('emailVerification', 'success', 'verifiedTitle', 'Verified! 🎉');
+  const { content: verifiedDescription } = useContent('emailVerification', 'success', 'verifiedDescription', 'Email verification successful.');
+  const { content: verificationErrorDescription } = useContent('emailVerification', 'errors', 'verificationErrorDescription', 'Verification failed. Please try again.');
   
   const email = 'josh_ellman@taylor.edu';
 
@@ -55,13 +76,13 @@ const TestEmailVerification: React.FC = () => {
       }
 
       toast({
-        title: "Code Sent! 📧",
-        description: `Verification code sent to ${email}`,
+        title: toastCodeSentTitle,
+        description: `${toastCodeSentDescPrefix} ${email}`,
       });
     } catch (error: any) {
       toast({
-        title: "Error",
-        description: error.message || "Failed to send verification code. Check console for details.",
+        title: toastErrorTitle,
+        description: error.message || toastSendFailedDesc,
         variant: "destructive",
       });
       console.error('Failed to trigger signup:', error);
@@ -95,8 +116,8 @@ const TestEmailVerification: React.FC = () => {
     const code = otp.join('');
     if (code.length !== 6) {
       toast({
-        title: "Invalid Code",
-        description: "Please enter the complete 6-digit code.",
+        title: invalidCodeTitle,
+        description: invalidCodeDescription,
         variant: "destructive",
       });
       return;
@@ -112,20 +133,20 @@ const TestEmailVerification: React.FC = () => {
       
       if (error) {
         toast({
-          title: "Verification Failed",
+          title: verificationFailedTitle,
           description: error.message,
           variant: "destructive",
         });
       } else {
         toast({
-          title: "Verified! 🎉",
-          description: "Email verification successful.",
+          title: verifiedTitle,
+          description: verifiedDescription,
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "Verification failed. Please try again.",
+        title: toastErrorTitle,
+        description: verificationErrorDescription,
         variant: "destructive",
       });
     } finally {
@@ -177,9 +198,12 @@ const TestEmailVerification: React.FC = () => {
         </button>
 
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Verify Your Email</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <DynamicText page="emailVerification" section="page" contentKey="title" fallback="Verify Your Email" />
+          </h2>
           <p className="text-gray-600">
-            We sent a 6-digit code to<br />
+            <DynamicText page="emailVerification" section="page" contentKey="sentToPrefix" fallback="We sent a 6-digit code to" />
+            <br />
             <strong className="text-gray-900">{email}</strong>
           </p>
         </div>
@@ -208,20 +232,24 @@ const TestEmailVerification: React.FC = () => {
             disabled={isLoading || otp.join('').length !== 6}
             className="w-full h-12 bg-[#E4A89A] hover:bg-[#d49889] text-white font-medium rounded-lg"
           >
-            {isLoading ? 'Verifying...' : 'Verify Email'}
+            {isLoading ? verifyingButton : verifyButton}
           </Button>
 
           <div className="text-center space-y-2">
-            <p className="text-sm text-gray-600">Didn't receive the code?</p>
+            <p className="text-sm text-gray-600">
+              <DynamicText page="emailVerification" section="resend" contentKey="prompt" fallback="Didn't receive the code?" />
+            </p>
             {canResend ? (
               <button
                 onClick={handleResend}
                 className="text-sm text-accent hover:underline font-medium"
               >
-                Resend Code
+                <DynamicText page="emailVerification" section="resend" contentKey="button" fallback="Resend Code" />
               </button>
             ) : (
-              <p className="text-sm text-gray-500">Resend in {countdown}s</p>
+              <p className="text-sm text-gray-500">
+                {resendInPrefix} {countdown}s
+              </p>
             )}
           </div>
         </div>
@@ -232,7 +260,9 @@ const TestEmailVerification: React.FC = () => {
         <div className="max-w-sm mx-auto">
           <div className="text-white text-sm mb-4 flex justify-between items-center">
             <span className="truncate">{email}</span>
-            <button className="text-accent ml-2">Hide My Email</button>
+            <button className="text-accent ml-2">
+              <DynamicText page="emailVerification" section="mobile" contentKey="hideMyEmail" fallback="Hide My Email" />
+            </button>
           </div>
           
           <div className="grid grid-cols-3 gap-2">

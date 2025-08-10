@@ -8,7 +8,8 @@ import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
-import { useContentSection } from "@/hooks/useContent";
+import { useContentSection, useContent } from "@/hooks/useContent";
+import { DynamicText } from "@/components/content/DynamicText";
 
 const ContactSection = () => {
   const [formData, setFormData] = useState({
@@ -108,13 +109,13 @@ const ContactSection = () => {
           <div className="text-center mb-12">
             <AnimatedText variant="blur" delay={0.2}>
               <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-                {contactContent.title || 'Get In Touch'}
+                <DynamicText page="contact" section="main" contentKey="title" fallback="Get In Touch" />
               </h2>
             </AnimatedText>
             
             <AnimatedText variant="fade" delay={0.3}>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                {contactContent.description || 'Have questions or want to learn more about our volunteer opportunities? Send us a message and we\'ll get back to you soon.'}
+                <DynamicText page="contact" section="main" contentKey="description" fallback="Have questions or want to learn more about our volunteer opportunities? Send us a message and we'll get back to you soon." />
               </p>
             </AnimatedText>
           </div>
@@ -124,7 +125,9 @@ const ContactSection = () => {
           {/* Contact Information */}
           <AnimatedSection variant="slideLeft" delay={0.4}>
             <AnimatedText variant="slideUp" delay={0.5}>
-              <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-8 text-primary">{aboutContactContent.contact_info_title || 'Contact Information'}</h3>
+              <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-8 text-primary">
+                <DynamicText page="about" section="contact" contentKey="contact_info_title" fallback="Contact Information" />
+              </h3>
             </AnimatedText>
             
             <motion.div 
@@ -204,7 +207,7 @@ const ContactSection = () => {
                   }}
                   viewport={{ once: false }}
                 >
-                  {aboutContactContent.quick_response_title || 'Quick Response'}
+                  <DynamicText page="about" section="contact" contentKey="quick_response_title" fallback="Quick Response" />
                 </motion.h4>
                 <motion.p 
                   className="text-muted-foreground text-sm leading-relaxed"
@@ -216,7 +219,7 @@ const ContactSection = () => {
                   }}
                   viewport={{ once: false }}
                 >
-                  {aboutContactContent.quick_response_description || 'We typically respond to messages within 24 hours during business days. For urgent matters, please call us directly.'}
+                  <DynamicText page="about" section="contact" contentKey="quick_response_description" fallback="We typically respond to messages within 24 hours during business days. For urgent matters, please call us directly." />
                 </motion.p>
               </motion.div>
             </AnimatedCard>
@@ -232,7 +235,9 @@ const ContactSection = () => {
               }}
             >
               <AnimatedText variant="slideUp" delay={0.6}>
-                <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-6 text-primary">{aboutContactContent.send_message_title || 'Send us a Message'}</h3>
+              <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-6 text-primary">
+                <DynamicText page="about" section="contact" contentKey="send_message_title" fallback="Send us a Message" />
+              </h3>
               </AnimatedText>
               
               <motion.form 
@@ -252,7 +257,7 @@ const ContactSection = () => {
               >
                 <motion.div variants={formFieldVariants}>
                   <label htmlFor="name" className="block text-sm font-montserrat font-semibold text-primary mb-2">
-                    {contactForm.name_label || "Your Name *"}
+                    <DynamicText page="contact" section="form" contentKey="name_label" fallback="Your Name *" />
                   </label>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -266,7 +271,7 @@ const ContactSection = () => {
                       required
                       value={formData.name}
                       onChange={handleChange}
-                      placeholder="Enter your full name"
+                      placeholder={contactForm.name_placeholder || 'Enter your full name'}
                       className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#00AFCE] transition-all duration-300"
                     />
                   </motion.div>
@@ -274,7 +279,7 @@ const ContactSection = () => {
 
                 <motion.div variants={formFieldVariants}>
                   <label htmlFor="email" className="block text-sm font-montserrat font-semibold text-primary mb-2">
-                    {contactForm.email_label || "Your Email *"}
+                    <DynamicText page="contact" section="form" contentKey="email_label" fallback="Your Email *" />
                   </label>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -288,7 +293,7 @@ const ContactSection = () => {
                       required
                       value={formData.email}
                       onChange={handleChange}
-                      placeholder="Enter your email address"
+                      placeholder={contactForm.email_placeholder || 'Enter your email address'}
                       className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#00AFCE] transition-all duration-300"
                     />
                   </motion.div>
@@ -296,7 +301,7 @@ const ContactSection = () => {
 
                 <motion.div variants={formFieldVariants}>
                   <label htmlFor="message" className="block text-sm font-montserrat font-semibold text-primary mb-2">
-                    {contactForm.message_label || "Your Message *"}
+                    <DynamicText page="contact" section="form" contentKey="message_label" fallback="Your Message *" />
                   </label>
                   <motion.div
                     whileHover={{ scale: 1.02 }}
@@ -310,7 +315,7 @@ const ContactSection = () => {
                       value={formData.message}
                       onChange={handleChange}
                       rows={6}
-                      placeholder="Tell us how we can help you..."
+                      placeholder={contactForm.message_placeholder || 'Tell us how we can help you...'}
                       className="w-full px-4 py-3 rounded-xl border-2 border-gray-200 focus:border-[#00AFCE] transition-all duration-300 resize-none"
                     />
                   </motion.div>
@@ -329,7 +334,7 @@ const ContactSection = () => {
                       className="w-full"
                     >
                       <Send className="mr-2 w-5 h-5" />
-                      {contactForm.send_button || "Send Message"}
+                      {contactForm.send_button || 'Send Message'}
                     </PrimaryButton>
                   </motion.div>
                 </motion.div>

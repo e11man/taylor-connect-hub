@@ -8,6 +8,7 @@ import { useContent } from "@/hooks/useContent";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from '@/contexts/AuthContext';
+import { DynamicText } from '@/components/content/DynamicText';
 
 const OrganizationLogin = () => {
   const [email, setEmail] = useState('');
@@ -22,6 +23,11 @@ const OrganizationLogin = () => {
   const { content: emailLabel } = useContent('organizationLogin', 'form', 'emailLabel', 'Email');
   const { content: passwordLabel } = useContent('organizationLogin', 'form', 'passwordLabel', 'Password');
   const { content: submitButton } = useContent('organizationLogin', 'form', 'submitButton', 'Sign In');
+  const { content: signingIn } = useContent('organizationLogin', 'form', 'signingIn', 'Signing in...');
+  const { content: emailPlaceholder } = useContent('organizationLogin', 'form', 'emailPlaceholder', 'Enter your email');
+  const { content: passwordPlaceholder } = useContent('organizationLogin', 'form', 'passwordPlaceholder', 'Enter your password');
+  const { content: noAccountPrompt } = useContent('organizationLogin', 'links', 'noAccountPrompt', "Don't have an account?");
+  const { content: signUpLink } = useContent('organizationLogin', 'links', 'signUp', 'Sign up');
   const { content: successTitle } = useContent('organizationLogin', 'messages', 'successTitle', 'Welcome Back!');
   const { content: successDescription } = useContent('organizationLogin', 'messages', 'successDescription', 'Successfully signed in to your organization account.');
   const { content: errorTitle } = useContent('organizationLogin', 'messages', 'errorTitle', 'Sign In Failed');
@@ -87,10 +93,10 @@ const OrganizationLogin = () => {
                 {/* Removed Lock icon as per new_code */}
               </div>
               <h1 className="text-3xl md:text-4xl font-montserrat font-bold mb-4 text-primary">
-                {pageTitle}
+                <DynamicText page="organizationLogin" section="title" contentKey="default" fallback="Organization Login" />
               </h1>
               <p className="text-lg text-muted-foreground font-montserrat">
-                {pageDescription}
+                <DynamicText page="organizationLogin" section="description" contentKey="default" fallback="Sign in to your organization account" />
               </p>
             </div>
 
@@ -109,7 +115,7 @@ const OrganizationLogin = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="Enter your email"
+                      placeholder={emailPlaceholder}
                       className="pl-10 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
                     />
@@ -128,7 +134,7 @@ const OrganizationLogin = () => {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Enter your password"
+                      placeholder={passwordPlaceholder}
                       className="pl-10 pr-12 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
                     />
@@ -147,23 +153,19 @@ const OrganizationLogin = () => {
                   className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
                   disabled={isLoading}
                 >
-                  {isLoading ? (
-                    "Signing in..."
-                  ) : (
-                    submitButton
-                  )}
+                  {isLoading ? signingIn : submitButton}
                 </Button>
               </form>
 
               {/* Sign Up Link */}
               <div className="mt-6 text-center">
                 <p className="text-sm text-muted-foreground font-montserrat">
-                  Don't have an account?{" "}
+                  {noAccountPrompt}{" "}
                   <Link
                     to="/organization-register"
                     className="text-[#00AFCE] hover:text-[#00AFCE]/80 font-semibold transition-colors"
                   >
-                    Sign up
+                    {signUpLink}
                   </Link>
                 </p>
               </div>

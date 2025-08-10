@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { sendVerificationCode } from '@/utils/emailService';
+import { DynamicText } from '@/components/content/DynamicText';
+import { useContent } from '@/hooks/useContent';
 
 interface Taylor2FAVerificationProps {
   email: string;
@@ -19,6 +21,32 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
   const [countdown, setCountdown] = useState(60);
   const { toast } = useToast();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // Dynamic content
+  const { content: invalidCodeTitle } = useContent('twoFA', 'errors', 'invalidCodeTitle', 'Invalid Code');
+  const { content: invalidCodeDesc } = useContent('twoFA', 'errors', 'invalidCodeDescription', 'Please enter the complete 6-digit verification code.');
+  const { content: verificationFailedTitle } = useContent('twoFA', 'errors', 'verificationFailedTitle', 'Verification Failed');
+  const { content: userNotFoundDesc } = useContent('twoFA', 'errors', 'userNotFoundDescription', 'User not found. Please try again.');
+  const { content: incorrectCodeDesc } = useContent('twoFA', 'errors', 'incorrectCodeDescription', 'The verification code you entered is incorrect. Please try again.');
+  const { content: failedActivateDesc } = useContent('twoFA', 'errors', 'failedActivateDescription', 'Failed to activate account. Please try again.');
+  const { content: accountVerifiedTitle } = useContent('twoFA', 'success', 'accountVerifiedTitle', 'Account Verified! 🎉');
+  const { content: accountVerifiedDesc } = useContent('twoFA', 'success', 'accountVerifiedDescription', 'Your account has been successfully verified. You can now sign in.');
+  const { content: errorTitle } = useContent('twoFA', 'toast', 'errorTitle', 'Error');
+  const { content: unexpectedError } = useContent('twoFA', 'toast', 'unexpectedError', 'An unexpected error occurred. Please try again.');
+  const { content: resendFailedTitle } = useContent('twoFA', 'errors', 'resendFailedTitle', 'Resend Failed');
+  const { content: resendFailedGenerateDesc } = useContent('twoFA', 'errors', 'resendFailedGenerateDescription', 'Failed to generate new code. Please try again.');
+  const { content: codeResentTitle } = useContent('twoFA', 'success', 'codeResentTitle', 'Code Resent');
+  const { content: codeResentDesc } = useContent('twoFA', 'success', 'codeResentDescription', 'A new verification code has been sent to your email address.');
+  const { content: resendFailedSendDesc } = useContent('twoFA', 'errors', 'resendFailedSendDescription', 'Failed to send verification code. Please try again.');
+  const { content: headerTitle } = useContent('twoFA', 'page', 'title', 'Verify Your Email');
+  const { content: headerSubtitlePrefix } = useContent('twoFA', 'page', 'subtitlePrefix', "We've sent a 6-digit verification code to");
+  const { content: codeInputLabel } = useContent('twoFA', 'form', 'codeInputLabel', 'Enter Verification Code');
+  const { content: codeInputPlaceholder } = useContent('twoFA', 'form', 'codeInputPlaceholder', '0');
+  const { content: verifyingButton } = useContent('twoFA', 'buttons', 'verifying', 'Verifying...');
+  const { content: verifyCodeButton } = useContent('twoFA', 'buttons', 'verifyCode', 'Verify Code');
+  const { content: didntReceive } = useContent('twoFA', 'resend', 'prompt', "Didn't receive the code?");
+  const { content: resendCodeButton } = useContent('twoFA', 'buttons', 'resendCode', 'Resend Code');
+  const { content: resendInPrefix } = useContent('twoFA', 'resend', 'resendInPrefix', 'Resend in');
+  const { content: backToSignUp } = useContent('twoFA', 'buttons', 'backToSignUp', 'Back to Sign Up');
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -58,8 +86,8 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
     const otpString = otp.join('');
     if (otpString.length !== 6) {
       toast({
-        title: "Invalid Code",
-        description: "Please enter the complete 6-digit verification code.",
+        title: invalidCodeTitle,
+        description: invalidCodeDesc,
         variant: "destructive",
       });
       return;
@@ -76,8 +104,8 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
 
       if (error || !data) {
         toast({
-          title: "Verification Failed",
-          description: "User not found. Please try again.",
+          title: verificationFailedTitle,
+          description: userNotFoundDesc,
           variant: "destructive",
         });
         return;
@@ -85,8 +113,8 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
 
       if (data.verification_code !== otpString) {
         toast({
-          title: "Invalid Code",
-          description: "The verification code you entered is incorrect. Please try again.",
+          title: invalidCodeTitle,
+          description: incorrectCodeDesc,
           variant: "destructive",
         });
         return;
@@ -103,23 +131,23 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
 
       if (updateError) {
         toast({
-          title: "Verification Failed",
-          description: "Failed to activate account. Please try again.",
+          title: verificationFailedTitle,
+          description: failedActivateDesc,
           variant: "destructive",
         });
         return;
       }
 
       toast({
-        title: "Account Verified! 🎉",
-        description: "Your account has been successfully verified. You can now sign in.",
+        title: accountVerifiedTitle,
+        description: accountVerifiedDesc,
       });
       
       onVerificationComplete();
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: errorTitle,
+        description: unexpectedError,
         variant: "destructive",
       });
     } finally {
@@ -142,8 +170,8 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
 
       if (updateError) {
         toast({
-          title: "Resend Failed",
-          description: "Failed to generate new code. Please try again.",
+          title: resendFailedTitle,
+          description: resendFailedGenerateDesc,
           variant: "destructive",
         });
         return;
@@ -156,8 +184,8 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
       }
 
       toast({
-        title: "Code Resent",
-        description: "A new verification code has been sent to your email address.",
+        title: codeResentTitle,
+        description: codeResentDesc,
       });
       
       setCanResend(false);
@@ -165,8 +193,8 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
       setOtp(['', '', '', '', '', '']);
     } catch (error) {
       toast({
-        title: "Resend Failed",
-        description: "Failed to send verification code. Please try again.",
+        title: resendFailedTitle,
+        description: resendFailedSendDesc,
         variant: "destructive",
       });
     }
@@ -175,15 +203,19 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="text-center">
-        <CardTitle className="text-2xl font-bold">Verify Your Email</CardTitle>
+        <CardTitle className="text-2xl font-bold">
+          <DynamicText page="twoFA" section="page" contentKey="title" fallback="Verify Your Email" />
+        </CardTitle>
         <p className="text-muted-foreground">
-          We've sent a 6-digit verification code to <strong>{email}</strong>
+          {headerSubtitlePrefix} <strong>{email}</strong>
         </p>
 
       </CardHeader>
       <CardContent className="space-y-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium">Enter Verification Code</label>
+          <label className="text-sm font-medium">
+            <DynamicText page="twoFA" section="form" contentKey="codeInputLabel" fallback="Enter Verification Code" />
+          </label>
           <div className="flex gap-2 justify-center">
             {otp.map((digit, index) => (
               <Input
@@ -197,7 +229,7 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
                 onChange={(e) => handleOtpChange(index, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(index, e)}
                 className="w-12 h-12 text-center text-lg font-mono"
-                placeholder="0"
+                placeholder={codeInputPlaceholder}
               />
             ))}
           </div>
@@ -208,12 +240,12 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
           disabled={otp.join('').length !== 6 || isLoading}
           className="w-full"
         >
-          {isLoading ? "Verifying..." : "Verify Code"}
+          {isLoading ? verifyingButton : verifyCodeButton}
         </Button>
 
         <div className="text-center space-y-2">
           <p className="text-sm text-muted-foreground">
-            Didn't receive the code?
+            <DynamicText page="twoFA" section="resend" contentKey="prompt" fallback="Didn't receive the code?" />
           </p>
           <Button
             variant="outline"
@@ -221,7 +253,7 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
             disabled={!canResend}
             className="w-full"
           >
-            {canResend ? "Resend Code" : `Resend in ${countdown}s`}
+            {canResend ? resendCodeButton : `${resendInPrefix} ${countdown}s`}
           </Button>
         </div>
 
@@ -230,7 +262,7 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
           onClick={onBack}
           className="w-full"
         >
-          Back to Sign Up
+          {backToSignUp}
         </Button>
       </CardContent>
     </Card>

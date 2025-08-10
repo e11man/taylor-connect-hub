@@ -8,6 +8,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { ForgotPasswordModal } from "@/components/modals/ForgotPasswordModal";
 import { Taylor2FAVerification } from "@/components/auth/Taylor2FAVerification";
 import { sendVerificationCode } from "@/utils/emailService";
+import { DynamicText } from "@/components/content/DynamicText";
+import { useContent } from "@/hooks/useContent";
 
 interface TaylorUserLoginProps {
   onClose?: () => void;
@@ -24,6 +26,24 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
 
   const { toast } = useToast();
   const { signIn } = useAuth();
+  // Dynamic content
+  const { content: headerTitle } = useContent('userLogin', 'header', 'title', 'Welcome Back');
+  const { content: headerSubtitle } = useContent('userLogin', 'header', 'subtitle', 'Sign in to your Taylor Connect Hub account.');
+  const { content: emailPlaceholder } = useContent('userLogin', 'form', 'emailPlaceholder', 'Email Address');
+  const { content: passwordPlaceholder } = useContent('userLogin', 'form', 'passwordPlaceholder', 'Password');
+  const { content: signInButton } = useContent('userLogin', 'buttons', 'signIn', 'Sign In');
+  const { content: signingInButton } = useContent('userLogin', 'buttons', 'signingIn', 'Signing In...');
+  const { content: sendingCodeButton } = useContent('userLogin', 'buttons', 'sendingCode', 'Sending Code...');
+  const { content: forgotPasswordLink } = useContent('userLogin', 'links', 'forgotPassword', 'Forgot your password?');
+  const { content: toastVerificationSentTitle } = useContent('userLogin', 'toast', 'verificationEmailSentTitle', 'Verification Email Sent! 📧');
+  const { content: toastVerificationSentDesc } = useContent('userLogin', 'toast', 'verificationEmailSentDescription', "We've sent a new verification code to your email address.");
+  const { content: toastFailedSendCodeTitle } = useContent('userLogin', 'toast', 'failedToSendCodeTitle', 'Failed to Send Code');
+  const { content: toastFailedSendCodeDesc } = useContent('userLogin', 'toast', 'failedToSendCodeDescription', 'Please try again or contact support.');
+  const { content: toastErrorTitle } = useContent('userLogin', 'toast', 'errorTitle', 'Error');
+  const { content: toastErrorSendVerificationDesc } = useContent('userLogin', 'toast', 'failedToSendVerificationDescription', 'Failed to send verification code. Please try again.');
+  const { content: toastLoginFailedTitle } = useContent('userLogin', 'toast', 'loginFailedTitle', 'Login Failed');
+  const { content: toastWelcomeTitle } = useContent('userLogin', 'toast', 'welcomeTitle', 'Welcome back! 👋');
+  const { content: toastWelcomeDesc } = useContent('userLogin', 'toast', 'welcomeDescription', 'You have successfully logged in.');
 
   const handleLogin = async () => {
     if (!email || !password) return;
@@ -44,22 +64,22 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
             const { success } = await sendVerificationCode(email);
             if (success) {
               toast({
-                title: "Verification Email Sent! 📧",
-                description: "We've sent a new verification code to your email address.",
+                title: toastVerificationSentTitle,
+                description: toastVerificationSentDesc,
               });
               // Show verification modal
               setShowVerification(true);
             } else {
               toast({
-                title: "Failed to Send Code",
-                description: "Please try again or contact support.",
+                title: toastFailedSendCodeTitle,
+                description: toastFailedSendCodeDesc,
                 variant: "destructive",
               });
             }
           } catch (error) {
             toast({
-              title: "Error",
-              description: "Failed to send verification code. Please try again.",
+              title: toastErrorTitle,
+              description: toastErrorSendVerificationDesc,
               variant: "destructive",
             });
           } finally {
@@ -67,22 +87,22 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
           }
         } else {
           toast({
-            title: "Login Failed",
+            title: toastLoginFailedTitle,
             description: result.error.message,
             variant: "destructive",
           });
         }
       } else {
         toast({
-          title: "Welcome back! 👋",
-          description: "You have successfully logged in.",
+          title: toastWelcomeTitle,
+          description: toastWelcomeDesc,
         });
         // Redirection is now handled automatically in AuthContext
         onClose?.();
       }
     } catch (error) {
       toast({
-        title: "Error",
+        title: toastErrorTitle,
         description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
@@ -115,14 +135,18 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
   return (
     <div className="w-full max-w-sm mx-auto">
       <div className="text-center space-y-2 mb-6">
-        <h2 className="text-2xl font-bold text-primary">Welcome Back</h2>
-        <p className="text-muted-foreground text-sm">Sign in to your Taylor Connect Hub account.</p>
+        <h2 className="text-2xl font-bold text-primary">
+          <DynamicText page="userLogin" section="header" contentKey="title" fallback="Welcome Back" />
+        </h2>
+        <p className="text-muted-foreground text-sm">
+          <DynamicText page="userLogin" section="header" contentKey="subtitle" fallback="Sign in to your Taylor Connect Hub account." />
+        </p>
       </div>
       
       <div className="space-y-4">
         <Input
           type="email"
-          placeholder="Email Address"
+          placeholder={emailPlaceholder}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           className="h-12"
@@ -132,7 +156,7 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
         <div className="relative">
           <Input
             type={showPassword ? "text" : "password"}
-            placeholder="Password"
+            placeholder={passwordPlaceholder}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="h-12 pr-12"
@@ -152,7 +176,7 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
           className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
           disabled={isLoading || isResendingCode || !email || !password}
         >
-          {isLoading ? "Signing In..." : isResendingCode ? "Sending Code..." : "Sign In"}
+          {isLoading ? signingInButton : isResendingCode ? sendingCodeButton : signInButton}
         </Button>
         
         <div className="text-center">
@@ -161,7 +185,7 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
             className="text-sm text-secondary hover:text-secondary/80 transition-colors duration-200 font-medium"
             onClick={() => setForgotPasswordModalOpen(true)}
           >
-            Forgot your password?
+            {forgotPasswordLink}
           </button>
         </div>
       </div>

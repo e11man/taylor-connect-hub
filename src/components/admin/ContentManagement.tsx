@@ -9,8 +9,9 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Plus, Pencil, Trash2, Search, Eye, EyeOff, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -33,11 +34,12 @@ export const ContentManagement = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<ContentItem | null>(null);
   const [activeTab, setActiveTab] = useState<string>('all');
-  
+
   // Debug: Log when editingItem changes
   useEffect(() => {
     console.log('editingItem changed:', editingItem);
   }, [editingItem]);
+  
   const [newContent, setNewContent] = useState({
     page: '',
     section: '',
@@ -83,7 +85,6 @@ export const ContentManagement = () => {
         return;
       }
       setContent(data || []);
-      setFilteredContent(data || []);
       // Debug log
       console.log('ContentManagement: Loaded content:', data);
     } catch (err: any) {
@@ -101,16 +102,17 @@ export const ContentManagement = () => {
 
   // Filter content based on search query
   useEffect(() => {
-    if (!searchQuery) {
-      setFilteredContent(content);
-    } else {
-      const filtered = content.filter(item =>
-        item.page.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.section.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.value.toLowerCase().includes(searchQuery.toLowerCase())
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      const filtered = content.filter((item) =>
+        item.page.toLowerCase().includes(q) ||
+        item.section.toLowerCase().includes(q) ||
+        item.key.toLowerCase().includes(q) ||
+        item.value.toLowerCase().includes(q)
       );
       setFilteredContent(filtered);
+    } else {
+      setFilteredContent(content);
     }
   }, [content, searchQuery]);
 
@@ -294,7 +296,7 @@ export const ContentManagement = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="flex gap-2 mb-4">
+        <div className="flex flex-wrap gap-2 mb-4 items-center">
           <Input
             placeholder="Search content..."
             value={searchQuery}
@@ -305,9 +307,7 @@ export const ContentManagement = () => {
             <RefreshCw className={loading ? 'animate-spin mr-2' : 'mr-2'} />
             Reload
           </Button>
-          <Button onClick={() => setIsCreateModalOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" /> Add Content
-          </Button>
+
         </div>
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
@@ -408,12 +408,10 @@ export const ContentManagement = () => {
                                             <span className="text-sm text-muted-foreground">
                                               {item.value === 'true' ? (
                                                 <span className="flex items-center gap-1 text-red-600">
-                                                  <EyeOff className="h-3 w-3" />
                                                   Hidden
                                                 </span>
                                               ) : (
                                                 <span className="flex items-center gap-1 text-green-600">
-                                                  <Eye className="h-3 w-3" />
                                                   Visible
                                                 </span>
                                               )}
@@ -584,12 +582,10 @@ export const ContentManagement = () => {
                                           <span className="text-sm text-muted-foreground">
                                             {item.value === 'true' ? (
                                               <span className="flex items-center gap-1 text-red-600">
-                                                <EyeOff className="h-3 w-3" />
                                                 Hidden
                                               </span>
                                             ) : (
                                               <span className="flex items-center gap-1 text-green-600">
-                                                <Eye className="h-3 w-3" />
                                                 Visible
                                               </span>
                                             )}

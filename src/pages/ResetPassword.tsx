@@ -8,6 +8,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Eye, EyeOff, Lock, CheckCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { DynamicText } from '@/components/content/DynamicText';
+import { useContent } from '@/hooks/useContent';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
@@ -22,6 +24,26 @@ const ResetPassword = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  // Dynamic content
+  const { content: invalidLinkError } = useContent('resetPassword', 'errors', 'invalidLink', 'Invalid or missing reset link. Please request a new password reset.');
+  const { content: passwordMinLengthMsg } = useContent('resetPassword', 'validation', 'passwordMinLength', 'Password must be at least 6 characters long');
+  const { content: fillAllFieldsError } = useContent('resetPassword', 'errors', 'fillAllFields', 'Please fill in all fields');
+  const { content: passwordsDoNotMatch } = useContent('resetPassword', 'errors', 'passwordsDoNotMatch', 'Passwords do not match');
+  const { content: updatePasswordToastTitle } = useContent('resetPassword', 'toast', 'successTitle', 'Password updated successfully!');
+  const { content: updatePasswordToastDesc } = useContent('resetPassword', 'toast', 'successDescription', 'You can now sign in with your new password.');
+  const { content: updatePasswordFailed } = useContent('resetPassword', 'errors', 'updateFailed', 'Failed to update password. Please try again.');
+  const { content: successHeading } = useContent('resetPassword', 'success', 'heading', 'Password Updated!');
+  const { content: successDescription } = useContent('resetPassword', 'success', 'description', 'Your password has been successfully updated. You will be redirected to the login page shortly.');
+  const { content: goHomeButton } = useContent('resetPassword', 'success', 'goHomeButton', 'Go to Home');
+  const { content: pageTitle } = useContent('resetPassword', 'page', 'title', 'Reset Your Password');
+  const { content: pageSubtitle } = useContent('resetPassword', 'page', 'subtitle', 'Enter your new password below');
+  const { content: newPasswordLabel } = useContent('resetPassword', 'form', 'newPasswordLabel', 'New Password');
+  const { content: newPasswordPlaceholder } = useContent('resetPassword', 'form', 'newPasswordPlaceholder', 'Enter your new password');
+  const { content: helperPasswordMin } = useContent('resetPassword', 'form', 'helperPasswordMin', 'Password must be at least 6 characters long');
+  const { content: confirmNewPasswordLabel } = useContent('resetPassword', 'form', 'confirmNewPasswordLabel', 'Confirm New Password');
+  const { content: confirmNewPasswordPlaceholder } = useContent('resetPassword', 'form', 'confirmNewPasswordPlaceholder', 'Confirm your new password');
+  const { content: updatePasswordButton } = useContent('resetPassword', 'buttons', 'updatePassword', 'Update Password');
+  const { content: updatingPasswordButton } = useContent('resetPassword', 'buttons', 'updatingPassword', 'Updating Password...');
 
   useEffect(() => {
     // Check if we have the required tokens from the URL
@@ -29,7 +51,7 @@ const ResetPassword = () => {
     const refreshToken = searchParams.get('refresh_token');
     
     if (!accessToken || !refreshToken) {
-      setError('Invalid or missing reset link. Please request a new password reset.');
+      setError(invalidLinkError);
       return;
     }
 
@@ -42,7 +64,7 @@ const ResetPassword = () => {
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
-      return "Password must be at least 6 characters long";
+      return passwordMinLengthMsg;
     }
     return null;
   };
@@ -51,12 +73,12 @@ const ResetPassword = () => {
     e.preventDefault();
     
     if (!password || !confirmPassword) {
-      setError('Please fill in all fields');
+      setError(fillAllFieldsError);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(passwordsDoNotMatch);
       return;
     }
 
@@ -80,8 +102,8 @@ const ResetPassword = () => {
 
       setSuccess(true);
       toast({
-        title: "Password updated successfully!",
-        description: "You can now sign in with your new password.",
+        title: updatePasswordToastTitle,
+        description: updatePasswordToastDesc,
       });
 
       // Redirect to login after a short delay
@@ -90,7 +112,7 @@ const ResetPassword = () => {
       }, 3000);
 
     } catch (error: any) {
-      setError(error.message || 'Failed to update password. Please try again.');
+      setError(error.message || updatePasswordFailed);
     } finally {
       setLoading(false);
     }
@@ -104,12 +126,14 @@ const ResetPassword = () => {
           <Card className="w-full max-w-md">
             <CardContent className="text-center py-8">
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-primary mb-2">Password Updated!</h2>
+              <h2 className="text-2xl font-bold text-primary mb-2">
+                <DynamicText page="resetPassword" section="success" contentKey="heading" fallback="Password Updated!" />
+              </h2>
               <p className="text-muted-foreground mb-4">
-                Your password has been successfully updated. You will be redirected to the login page shortly.
+                <DynamicText page="resetPassword" section="success" contentKey="description" fallback="Your password has been successfully updated. You will be redirected to the login page shortly." />
               </p>
               <Button onClick={() => navigate('/')} className="w-full">
-                Go to Home
+                <DynamicText page="resetPassword" section="success" contentKey="goHomeButton" fallback="Go to Home" />
               </Button>
             </CardContent>
           </Card>
@@ -128,8 +152,12 @@ const ResetPassword = () => {
             <div className="mx-auto mb-4 w-12 h-12 bg-primary rounded-full flex items-center justify-center">
               <Lock className="w-6 h-6 text-primary-foreground" />
             </div>
-            <CardTitle className="text-2xl font-bold">Reset Your Password</CardTitle>
-            <p className="text-muted-foreground">Enter your new password below</p>
+            <CardTitle className="text-2xl font-bold">
+              <DynamicText page="resetPassword" section="page" contentKey="title" fallback="Reset Your Password" />
+            </CardTitle>
+            <p className="text-muted-foreground">
+              <DynamicText page="resetPassword" section="page" contentKey="subtitle" fallback="Enter your new password below" />
+            </p>
           </CardHeader>
           <CardContent>
             <form onSubmit={handlePasswordReset} className="space-y-4">
@@ -140,14 +168,16 @@ const ResetPassword = () => {
               )}
               
               <div className="space-y-2">
-                <Label htmlFor="password">New Password</Label>
+                <Label htmlFor="password">
+                  <DynamicText page="resetPassword" section="form" contentKey="newPasswordLabel" fallback="New Password" />
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your new password"
+                    placeholder={newPasswordPlaceholder}
                     className="pr-12"
                     required
                   />
@@ -160,19 +190,21 @@ const ResetPassword = () => {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Password must be at least 6 characters long
+                  <DynamicText page="resetPassword" section="form" contentKey="helperPasswordMin" fallback="Password must be at least 6 characters long" />
                 </p>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword">
+                  <DynamicText page="resetPassword" section="form" contentKey="confirmNewPasswordLabel" fallback="Confirm New Password" />
+                </Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="Confirm your new password"
+                    placeholder={confirmNewPasswordPlaceholder}
                     className="pr-12"
                     required
                   />
@@ -191,7 +223,7 @@ const ResetPassword = () => {
                 className="w-full" 
                 disabled={loading || !password || !confirmPassword}
               >
-                {loading ? 'Updating Password...' : 'Update Password'}
+                {loading ? updatingPasswordButton : updatePasswordButton}
               </Button>
             </form>
           </CardContent>

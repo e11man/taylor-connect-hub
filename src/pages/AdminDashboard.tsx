@@ -12,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Check, MessageSquare } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import { DynamicText } from '@/components/content/DynamicText';
 import { ContentManagement } from '@/components/admin/ContentManagement';
 import { EventChatView } from '@/components/admin/EventChatView';
 
@@ -1101,13 +1102,17 @@ export const AdminDashboard = () => {
     <div className="container mx-auto p-6 space-y-6">
               <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-gray-600">Manage users, organizations, events, and content</p>
+            <h1 className="text-3xl font-bold">
+              <DynamicText page="adminDashboard" section="header" contentKey="title" fallback="Admin Dashboard" />
+            </h1>
+            <p className="text-gray-600">
+              <DynamicText page="adminDashboard" section="header" contentKey="subtitle" fallback="Manage users, organizations, events, and content" />
+            </p>
           </div>
           <div className="flex gap-2">
             <Button onClick={loadData} variant="outline" className="flex items-center gap-2">
               <RefreshCw className="w-4 h-4" />
-              Refresh Data
+              <DynamicText page="adminDashboard" section="header" contentKey="refresh" fallback="Refresh Data" />
             </Button>
           </div>
         </div>
@@ -1116,23 +1121,23 @@ export const AdminDashboard = () => {
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="w-4 h-4" />
-            Overview
+            <DynamicText page="adminDashboard" section="tabs" contentKey="overview" fallback="Overview" />
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            Users
+            <DynamicText page="adminDashboard" section="tabs" contentKey="users" fallback="Users" />
           </TabsTrigger>
           <TabsTrigger value="organizations" className="flex items-center gap-2">
             <Building2 className="w-4 h-4" />
-            Organizations
+            <DynamicText page="adminDashboard" section="tabs" contentKey="organizations" fallback="Organizations" />
           </TabsTrigger>
           <TabsTrigger value="events" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            Events
+            <DynamicText page="adminDashboard" section="tabs" contentKey="events" fallback="Events" />
           </TabsTrigger>
           <TabsTrigger value="content" className="flex items-center gap-2">
             <Edit className="w-4 h-4" />
-            Content
+            <DynamicText page="adminDashboard" section="tabs" contentKey="content" fallback="Content" />
           </TabsTrigger>
         </TabsList>
 

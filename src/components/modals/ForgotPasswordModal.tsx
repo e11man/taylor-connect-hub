@@ -7,6 +7,8 @@ import { useToast } from '@/hooks/use-toast';
 import { sendPasswordResetCode } from '@/utils/passwordResetService';
 import { PasswordResetModal } from './PasswordResetModal';
 import { Mail, ArrowLeft } from 'lucide-react';
+import { DynamicText } from '@/components/content/DynamicText';
+import { useContent } from '@/hooks/useContent';
 
 interface ForgotPasswordModalProps {
   isOpen: boolean;
@@ -19,12 +21,30 @@ export const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProp
   const [emailSent, setEmailSent] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
   const { toast } = useToast();
+  // Dynamic content
+  const { content: dialogTitleReset } = useContent('forgotPassword', 'dialog', 'titleReset', 'Reset Password');
+  const { content: dialogTitleCheckEmail } = useContent('forgotPassword', 'dialog', 'titleCheckEmail', 'Check Your Email');
+  const { content: dialogDescInitial } = useContent('forgotPassword', 'dialog', 'descriptionInitial', "Enter your email address and we'll send you a link to reset your password.");
+  const { content: dialogDescSent } = useContent('forgotPassword', 'dialog', 'descriptionSent', "We sent you a password reset link. Check your email and follow the instructions.");
+  const { content: toastErrorTitle } = useContent('forgotPassword', 'toast', 'errorTitle', 'Error');
+  const { content: toastEnterEmail } = useContent('forgotPassword', 'toast', 'enterEmail', 'Please enter your email address');
+  const { content: toastResetEmailSentTitle } = useContent('forgotPassword', 'toast', 'resetEmailSentTitle', 'Reset email sent');
+  const { content: toastResetEmailSentDesc } = useContent('forgotPassword', 'toast', 'resetEmailSentDescription', 'Check your email for password reset instructions');
+  const { content: toastUnexpectedError } = useContent('forgotPassword', 'toast', 'unexpectedError', 'An unexpected error occurred. Please try again.');
+  const { content: emailLabel } = useContent('forgotPassword', 'form', 'emailLabel', 'Email Address');
+  const { content: emailPlaceholder } = useContent('forgotPassword', 'form', 'emailPlaceholder', 'Enter your email address');
+  const { content: sendResetLink } = useContent('forgotPassword', 'buttons', 'sendResetLink', 'Send Reset Link');
+  const { content: sendingReset } = useContent('forgotPassword', 'buttons', 'sending', 'Sending...');
+  const { content: cancelButton } = useContent('forgotPassword', 'buttons', 'cancel', 'Cancel');
+  const { content: continueToReset } = useContent('forgotPassword', 'buttons', 'continueToReset', 'Continue to Reset');
+  const { content: backButton } = useContent('forgotPassword', 'buttons', 'back', 'Back');
+  const { content: resetInstructionsPrefix } = useContent('forgotPassword', 'sent', 'instructionsPrefix', 'Password reset instructions sent to:');
 
   const handlePasswordReset = async () => {
     if (!email) {
       toast({
-        title: "Error",
-        description: "Please enter your email address",
+        title: toastErrorTitle,
+        description: toastEnterEmail,
         variant: "destructive",
       });
       return;
@@ -37,20 +57,20 @@ export const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProp
       if (result.success) {
         setEmailSent(true);
         toast({
-          title: "Reset email sent",
-          description: "Check your email for password reset instructions",
+          title: toastResetEmailSentTitle,
+          description: toastResetEmailSentDesc,
         });
       } else {
         toast({
-          title: "Error",
+          title: toastErrorTitle,
           description: result.message,
           variant: "destructive",
         });
       }
     } catch (error) {
       toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        title: toastErrorTitle,
+        description: toastUnexpectedError,
         variant: "destructive",
       });
     } finally {
@@ -77,23 +97,25 @@ export const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProp
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Mail className="w-5 h-5 text-[#00AFCE]" />
-              {emailSent ? 'Check Your Email' : 'Reset Password'}
+              {emailSent ? dialogTitleCheckEmail : dialogTitleReset}
             </DialogTitle>
             <DialogDescription>
               {emailSent
-                ? 'We sent you a password reset link. Check your email and follow the instructions.'
-                : 'Enter your email address and we\'ll send you a link to reset your password.'}
+                ? dialogDescSent
+                : dialogDescInitial}
             </DialogDescription>
           </DialogHeader>
 
           {!emailSent ? (
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="reset-email">Email Address</Label>
+                <Label htmlFor="reset-email">
+                  <DynamicText page="forgotPassword" section="form" contentKey="emailLabel" fallback="Email Address" />
+                </Label>
                 <Input
                   id="reset-email"
                   type="email"
-                  placeholder="Enter your email address"
+                  placeholder={emailPlaceholder}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-12"
@@ -106,14 +128,14 @@ export const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProp
                   disabled={isLoading || !email}
                   className="flex-1 h-12"
                 >
-                  {isLoading ? 'Sending...' : 'Send Reset Link'}
+                  {isLoading ? sendingReset : sendResetLink}
                 </Button>
                 <Button
                   variant="outline"
                   onClick={handleClose}
                   className="h-12"
                 >
-                  Cancel
+                  {cancelButton}
                 </Button>
               </div>
             </div>
@@ -122,7 +144,7 @@ export const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProp
               <div className="text-center p-6 bg-gray-50 rounded-lg">
                 <Mail className="w-12 h-12 text-[#00AFCE] mx-auto mb-3" />
                 <p className="text-sm text-muted-foreground">
-                  Password reset instructions sent to:
+                  {resetInstructionsPrefix}
                 </p>
                 <p className="font-medium break-all">{email}</p>
               </div>
@@ -132,7 +154,7 @@ export const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProp
                   onClick={handleContinueToReset}
                   className="flex-1 h-12"
                 >
-                  Continue to Reset
+                  {continueToReset}
                 </Button>
                 <Button
                   variant="outline"
@@ -140,7 +162,7 @@ export const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProp
                   className="h-12"
                 >
                   <ArrowLeft className="w-4 h-4" />
-                  Back
+                  {backButton}
                 </Button>
               </div>
             </div>
