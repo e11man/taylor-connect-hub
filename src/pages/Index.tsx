@@ -7,9 +7,12 @@ import OpportunitiesSection from "@/components/sections/OpportunitiesSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
 import ContactSection from "@/components/sections/ContactSection";
 import { Skeleton } from "@/components/ui/skeleton";
+import React, { useState } from "react";
+import UserAuthModal from "@/components/modals/UserAuthModal";
 
 const Index = () => {
   const { user, loading } = useAuth();
+  const [authModalOpen, setAuthModalOpen] = useState(false);
 
   if (loading) {
     return (
@@ -30,11 +33,16 @@ const Index = () => {
         <HeroSection />
         <MissionSection />
         <OpportunitiesSection />
-        <TestimonialsSection />
+        <TestimonialsSection setAuthModalOpen={setAuthModalOpen} />
         <ContactSection />
       </main>
       
       <Footer />
+      <UserAuthModal
+        isOpen={authModalOpen}
+        onClose={() => setAuthModalOpen(false)}
+        defaultMode="signup"
+      />
     </div>
   );
 };

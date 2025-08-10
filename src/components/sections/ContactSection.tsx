@@ -114,9 +114,9 @@ const ContactSection = () => {
             </AnimatedText>
             
             <AnimatedText variant="fade" delay={0.3}>
-              <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+              <div className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
                 <DynamicText page="contact" section="main" contentKey="description" fallback="Have questions or want to learn more about our volunteer opportunities? Send us a message and we'll get back to you soon." />
-              </p>
+              </div>
             </AnimatedText>
           </div>
         </AnimatedSection>
@@ -179,8 +179,8 @@ const ContactSection = () => {
                         >
                           {info.title}
                         </motion.h4>
-                        <p className="text-lg font-medium text-foreground mb-1">{info.content}</p>
-                        <p className="text-sm text-muted-foreground font-montserrat font-semibold">{info.description}</p>
+                        <span className="text-lg font-medium text-foreground mb-1">{info.content}</span>
+                        <span className="text-sm text-muted-foreground font-montserrat font-semibold">{info.description}</span>
                       </div>
                     </div>
                   </motion.div>

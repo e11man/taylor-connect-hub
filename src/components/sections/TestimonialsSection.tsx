@@ -10,7 +10,11 @@ import { motion } from "framer-motion";
 
 import { useContentSection } from "@/hooks/useContent";
 
-const TestimonialsSection = () => {
+interface TestimonialsSectionProps {
+  setAuthModalOpen: (isOpen: boolean) => void;
+}
+
+const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ setAuthModalOpen }) => {
   const navigate = useNavigate();
   const { content: testimonialsContent } = useContentSection('homepage', 'testimonials');
   const { content: testimonial1Content } = useContentSection('homepage', 'testimonials');
@@ -131,7 +135,7 @@ const TestimonialsSection = () => {
                       }}
                       viewport={{ once: false }}
                     >
-                      "{testimonial.content}"
+                      \"{testimonial.content}\"
                     </motion.blockquote>
 
                     {/* Author */}
@@ -163,7 +167,7 @@ const TestimonialsSection = () => {
                       <div>
                         <motion.div 
                           className="font-montserrat font-bold text-primary text-sm md:text-base"
-                          whileHover={{ 
+                          whileHover={{
                             color: "#00AFCE",
                             transition: { duration: 0.2 }
                           }}
@@ -235,12 +239,7 @@ const TestimonialsSection = () => {
                 <PrimaryButton 
                   size="lg" 
                   className="w-full min-h-[48px] text-base md:text-lg font-semibold"
-                  onClick={() => {
-                    const contactSection = document.getElementById('contact');
-                    if (contactSection) {
-                      contactSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
+                  onClick={() => setAuthModalOpen(true)}
                 >
                   Start Volunteering
                 </PrimaryButton>
@@ -248,7 +247,7 @@ const TestimonialsSection = () => {
             </motion.div>
           </motion.div>
         </AnimatedSection>
-      </div>
+        </div>
     </section>
   );
 };
