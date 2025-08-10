@@ -289,16 +289,14 @@ const UserDashboard = () => {
           <div className="space-y-6">
             <ProfileSettings />
             
-            {/* Blurred Notifications Section */}
+            {/* Blurred Notifications Section (on-brand, no emojis) */}
             <div className="relative">
               <div className="blur-sm pointer-events-none">
                 <div className="bg-white rounded-xl sm:rounded-2xl p-6 border-2 border-gray-200">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 bg-[#00AFCE] rounded-full flex items-center justify-center">
-                      <span className="text-white text-lg">🔔</span>
-                    </div>
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#00AFCE]"></div>
                     <div>
-                      <h3 className="text-lg font-semibold text-primary">Advanced Notifications</h3>
+                      <h3 className="text-lg font-montserrat font-bold text-primary">Advanced Notifications</h3>
                       <p className="text-sm text-muted-foreground">Coming soon features</p>
                     </div>
                   </div>
@@ -311,7 +309,7 @@ const UserDashboard = () => {
               </div>
               <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
                 <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
-                  <div className="w-16 h-16 mx-auto mb-4 text-[#00AFCE] text-4xl">🔔</div>
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#00AFCE]"></div>
                   <h3 className="text-2xl font-montserrat font-bold text-primary mb-2">
                     Advanced Notifications Coming Soon
                   </h3>

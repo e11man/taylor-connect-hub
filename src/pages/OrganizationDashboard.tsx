@@ -23,6 +23,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import SafetyGuidelinesModal from '@/components/modals/SafetyGuidelinesModal';
 import OrganizationProfileModal from '@/components/modals/OrganizationProfileModal';
 import { filterUpcomingEvents, filterActiveEvents } from '@/utils/eventFilters';
+import { SignupSuccess } from '@/components/ui/SignupSuccess';
 
 interface Event {
   id: string;
@@ -64,6 +65,7 @@ const OrganizationDashboard = () => {
   const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [createSuccessVisible, setCreateSuccessVisible] = useState(false);
   
   const [newEvent, setNewEvent] = useState({
     title: '',
@@ -425,6 +427,8 @@ const OrganizationDashboard = () => {
         title: "Success!",
         description: "Event created successfully.",
       });
+      setCreateSuccessVisible(true);
+      setTimeout(() => setCreateSuccessVisible(false), 2200);
       
       // Trigger refresh in other components
       refreshEvents();
@@ -1239,6 +1243,11 @@ const OrganizationDashboard = () => {
         onUpdate={(updatedOrg) => {
           setOrganization(updatedOrg);
         }}
+      />
+      <SignupSuccess 
+        visible={createSuccessVisible}
+        title="Opportunity Created"
+        description="Your opportunity is now visible to volunteers."
       />
       
       <Footer />

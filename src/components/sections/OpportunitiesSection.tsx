@@ -12,6 +12,7 @@ import GroupSignupModal from "@/components/modals/GroupSignupModal";
 import UserAuthModal from "@/components/modals/UserAuthModal";
 import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useSearch } from "@/contexts/SearchContext";
+import { SignupSuccess } from "@/components/ui/SignupSuccess";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability, filterNextOccurrencePerSeries } from '@/utils/eventFilters';
 
@@ -50,6 +51,7 @@ const OpportunitiesSection = () => {
   const [pendingEventId, setPendingEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
+  const [signupSuccessVisible, setSignupSuccessVisible] = useState(false);
   const [showFullEvents, setShowFullEvents] = useState(false);
   const [showAllOccurrences, setShowAllOccurrences] = useState(false);
   const { user, refreshUserEvents, userEventsRefreshTrigger, eventsRefreshTrigger } = useAuth();
@@ -231,6 +233,8 @@ const OpportunitiesSection = () => {
           title: "Success!",
           description: "You have successfully signed up for this event.",
         });
+        setSignupSuccessVisible(true);
+        setTimeout(() => setSignupSuccessVisible(false), 2200);
         fetchUserEvents();
         fetchEventSignupCounts();
         // Trigger refresh in other components (like UserDashboard)
@@ -528,6 +532,7 @@ const OpportunitiesSection = () => {
           onSignupSuccess={handleGroupSignupSuccess}
         />
       )}
+      <SignupSuccess visible={signupSuccessVisible} />
       
       {/* User Auth Modal */}
       <UserAuthModal

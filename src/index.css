@@ -104,6 +104,24 @@
     animation: slideInLeft 0.6s ease-out forwards;
   }
 
+  /* Success pop animation for confirmations */
+  .animate-success-pop {
+    animation: successPop 1000ms cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+  }
+
+  .animate-ripple {
+    position: relative;
+  }
+  .animate-ripple::after {
+    content: "";
+    position: absolute;
+    inset: -8px;
+    border-radius: 9999px;
+    border: 2px solid hsl(var(--secondary));
+    opacity: 0;
+    animation: ripple 1600ms ease-out 120ms forwards;
+  }
+
   @keyframes fadeIn {
     from { opacity: 0; }
     to { opacity: 1; }
@@ -129,6 +147,17 @@
       opacity: 1; 
       transform: translateX(0); 
     }
+  }
+
+  @keyframes successPop {
+    0% { transform: scale(0.85); opacity: 0; }
+    60% { transform: scale(1.06); opacity: 1; }
+    100% { transform: scale(1.0); opacity: 1; }
+  }
+
+  @keyframes ripple {
+    0% { opacity: 0.35; transform: scale(0.95); }
+    100% { opacity: 0; transform: scale(1.25); }
   }
 
   /* Utility classes */

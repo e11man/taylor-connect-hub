@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability, filterNextOccurrencePerSeries } from '@/utils/eventFilters';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { SignupSuccess } from "@/components/ui/SignupSuccess";
 
 interface Event {
   id: string;
@@ -50,6 +51,7 @@ const DashboardOpportunities = () => {
   const [pendingEventId, setPendingEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
+  const [signupSuccessVisible, setSignupSuccessVisible] = useState(false);
   const { user, refreshUserEvents, userEventsRefreshTrigger, eventsRefreshTrigger } = useAuth();
   const { userRole, loading: userRoleLoading, isPA } = useUserRole();
   const { toast } = useToast();
@@ -300,6 +302,8 @@ const DashboardOpportunities = () => {
           title: "Success!",
           description: "You have successfully signed up for this event.",
         });
+        setSignupSuccessVisible(true);
+        setTimeout(() => setSignupSuccessVisible(false), 2200);
         fetchUserEvents();
         fetchEventSignupCounts();
         refreshUserEvents();
@@ -663,6 +667,7 @@ const DashboardOpportunities = () => {
           organizationId={selectedEvent.organization_id}
         />
       )}
+      <SignupSuccess visible={signupSuccessVisible} />
     </div>
   );
 };
