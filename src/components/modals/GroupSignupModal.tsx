@@ -25,6 +25,8 @@ interface UserProfile {
   email: string;
   dorm: string;
   wing: string;
+  role?: 'admin' | 'pa' | 'user';
+  user_type?: string | null;
   commitments: number;
 }
 
@@ -73,7 +75,6 @@ const GroupSignupModal = ({
       }
 
       // Get all active profiles first, then filter client-side
-      // This avoids the RLS issue with .neq() queries
       const { data: allProfilesData, error } = await supabase
         .from('profiles')
         .select(`
@@ -81,14 +82,19 @@ const GroupSignupModal = ({
           user_id,
           email,
           dorm,
-          wing
+          wing,
+          role,
+          user_type
         `)
         .eq('status', 'active');
 
       if (error) throw error;
 
-      // Client-side filtering to exclude current user and apply floor filtering
-      let profilesData = (allProfilesData || []).filter(profile => profile.id !== user.id);
+      // Client-side filtering to exclude current user and ensure only regular users (role=user)
+      // Include all user_types except 'organization' to be robust
+      let profilesData = (allProfilesData || [])
+        .filter(profile => profile.id !== user.id)
+        .filter(profile => (profile.role === 'user') && (profile.user_type !== 'organization'));
 
       // Filter by same floor if enabled
       if (showOnlyMyFloor && currentUserProfile && currentUserProfile.dorm && currentUserProfile.wing) {
@@ -194,27 +200,61 @@ const GroupSignupModal = ({
         userIds.push(user.id);
       }
 
-      // Use the group signup API
-      const apiUrl = process.env.NODE_ENV === 'production' 
-        ? '/api/group-signup' 
-        : 'http://localhost:3001/api/group-signup';
-      
-      const response = await fetch(apiUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          user_ids: userIds,
-          event_id: eventId,
-          signed_up_by: user.id
-        }),
-      });
+      // Try group signup API first, fallback to direct Supabase if not available
+      let signupSuccessful = false;
+      let errorMessage = "";
 
-      const result = await response.json();
+      try {
+        const apiUrl = process.env.NODE_ENV === 'production' 
+          ? '/api/group-signup' 
+          : 'http://localhost:3001/api/group-signup';
+        
+        const response = await fetch(apiUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            user_ids: userIds,
+            event_id: eventId,
+            signed_up_by: user.id
+          }),
+        });
 
-      if (!response.ok || !result.success) {
-        throw new Error(result.error || 'Failed to sign up users');
+        const result = await response.json();
+
+        if (response.ok && result.success) {
+          signupSuccessful = true;
+        } else {
+          errorMessage = result.error || 'API signup failed';
+        }
+      } catch (apiError) {
+        console.log("API signup failed, trying direct Supabase call:", apiError);
+        
+        // Fallback to direct Supabase call if API is not available
+        try {
+          const signupData = userIds.map(userId => ({
+            user_id: userId,
+            event_id: eventId,
+            signed_up_by: user.id
+          }));
+
+          const { error: insertError } = await supabase
+            .from('user_events')
+            .insert(signupData);
+
+          if (insertError) {
+            errorMessage = insertError.message;
+          } else {
+            signupSuccessful = true;
+          }
+        } catch (supabaseError) {
+          errorMessage = supabaseError.message || 'Direct signup failed';
+        }
+      }
+
+      if (!signupSuccessful) {
+        throw new Error(errorMessage || 'Failed to sign up users');
       }
 
       // Send confirmation emails (optional - won't break if it fails)
