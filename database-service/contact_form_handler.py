@@ -17,56 +17,71 @@ load_dotenv()
 
 class ContactFormHandler:
     def __init__(self, production_mode=False):
-        self.resend_api_key = os.getenv('RESEND_API_KEY', 're_1234567890abcdef')  # Replace with your actual key
-        
+        # Prefer server-side key; fall back to VITE_ if present
+        self.resend_api_key = os.getenv('RESEND_API_KEY') or os.getenv('VITE_RESEND_API_KEY', 're_1234567890abcdef')
+
+        # Determine default recipients/senders with env overrides
+        default_from_prod = "Community Connect <onboarding@resend.dev>"
+        default_from_dev = "Community Connect <onboarding@resend.dev>"
+        default_to_prod = os.getenv('CONTACT_TO', 'connect@taylor.edu')
+        default_to_dev = os.getenv('CONTACT_TO_DEV', 'joshalanellman@gmail.com')
+
         if production_mode:
-            # For production - requires verified domain
-            self.from_email = "noreply@ellmangroup.org"  # Update with your verified domain
-            self.to_email = "josh_ellman@icloud.com"
+            # Use env override if provided; otherwise safe verified Resend domain
+            self.from_email = os.getenv('CONTACT_FROM', default_from_prod)
+            self.to_email = default_to_prod
         else:
-            # For testing - uses Resend's default sender
-            self.from_email = "noreply@ellmangroup.org"
-            self.to_email = "joshalanellman@gmail.com"  # Use your verified email for testing
-        
+            self.from_email = os.getenv('CONTACT_FROM_DEV', default_from_dev)
+            self.to_email = default_to_dev
+
         self.headers = {
             'Authorization': f'Bearer {self.resend_api_key}',
             'Content-Type': 'application/json'
         }
-        
+
         print("✅ Contact Form Handler initialized")
         print(f"🔑 Using API key: {self.resend_api_key[:10]}...")
         print(f"📧 From: {self.from_email}")
         print(f"📧 To: {self.to_email}")
-    
+
+    def _normalize_from(self, from_value: str) -> str:
+        """Ensure the 'from' value matches Resend's expected pattern 'Name <email@domain>'"""
+        if '<' in from_value and '>' in from_value:
+            return from_value
+        # If only an email was provided, wrap with a friendly sender name
+        return f"Community Connect <{from_value}>"
+
     def send_contact_email(self, name: str, email: str, message: str) -> bool:
         """Send a formatted contact form email"""
         try:
             # Create the email HTML content
             html_content = self._create_email_html(name, email, message)
-            
+
             # Prepare the email data
             email_data = {
-                "from": self.from_email,
+                "from": self._normalize_from(self.from_email),
                 "to": [self.to_email],
                 "subject": f"New Contact Form Submission - {name}",
-                "html": html_content
+                "html": html_content,
+                # Set reply-to so staff can reply directly to the sender
+                "reply_to": f"{name} <{email}>"
             }
-            
+
             # Send the email via Resend API
             response = requests.post(
                 "https://api.resend.com/emails",
                 headers=self.headers,
                 json=email_data
             )
-            
+
             response.raise_for_status()
             result = response.json()
-            
+
             print(f"✅ Contact form email sent successfully!")
             print(f"   From: {name} ({email})")
             print(f"   Message ID: {result.get('id', 'N/A')}")
             return True
-            
+
         except requests.exceptions.HTTPError as e:
             print(f"❌ HTTP Error sending contact email: {e}")
             if e.response is not None:
@@ -76,7 +91,7 @@ class ContactFormHandler:
         except Exception as e:
             print(f"❌ Error sending contact email: {e}")
             return False
-    
+
     def _create_email_html(self, name: str, email: str, message: str) -> str:
         """Create a nicely formatted HTML email with the site's theme"""
         

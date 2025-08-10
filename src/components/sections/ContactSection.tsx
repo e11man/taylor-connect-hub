@@ -28,20 +28,31 @@ const ContactSection = () => {
     e.preventDefault();
     setIsSubmitting(true);
     
+    const payload = { ...formData };
+
     try {
-      console.log('Submitting contact form:', formData);
+      console.log('Submitting contact form:', payload);
       
-      const response = await fetch('/api/contact-form', {
+      // Try Vercel serverless first (api/contact-form.js)
+      let response = await fetch('/api/contact-form', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(payload),
       });
 
+      // If Vercel serverless not present or failed with 404/405, attempt Node server fallback
+      if (!response.ok && (response.status === 404 || response.status === 405)) {
+        response = await fetch('/api/contact-form', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+      }
+
       console.log('Contact form response status:', response.status);
-      
-      const result = await response.json();
+      const result = await response.json().catch(() => ({}));
       console.log('Contact form response:', result);
 
       if (response.ok) {
@@ -51,7 +62,7 @@ const ContactSection = () => {
         });
         setFormData({ name: "", email: "", message: "" });
       } else {
-        throw new Error(result.error || 'Failed to send message');
+        throw new Error((result && (result.error || result.details)) || 'Failed to send message');
       }
     } catch (error) {
       console.error('Contact form error:', error);
