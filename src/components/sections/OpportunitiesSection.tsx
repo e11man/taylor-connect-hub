@@ -13,7 +13,7 @@ import UserAuthModal from "@/components/modals/UserAuthModal";
 import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useSearch } from "@/contexts/SearchContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability } from '@/utils/eventFilters';
+import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability, filterNextOccurrencePerSeries } from '@/utils/eventFilters';
 
 interface Event {
   id: string;
@@ -51,6 +51,7 @@ const OpportunitiesSection = () => {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
   const [showFullEvents, setShowFullEvents] = useState(false);
+  const [showAllOccurrences, setShowAllOccurrences] = useState(false);
   const { user, refreshUserEvents, userEventsRefreshTrigger, eventsRefreshTrigger } = useAuth();
   const { userRole, loading: userRoleLoading, isPA } = useUserRole();
   const { toast } = useToast();
@@ -78,8 +79,12 @@ const OpportunitiesSection = () => {
     return filterEventsByAvailability(processedEvents, showFullEvents);
   }, [processedEvents, showFullEvents]);
 
+  const filteredByOccurrences = useMemo(() => {
+    return filterNextOccurrencePerSeries(filteredByAvailability, !showAllOccurrences);
+  }, [filteredByAvailability, showAllOccurrences]);
+
   // Use filtered events from search context when available, otherwise show filtered events
-  const displayEvents = filteredEvents.length > 0 ? filteredEvents : filteredByAvailability;
+  const displayEvents = filteredEvents.length > 0 ? filteredEvents : filteredByOccurrences;
 
   useEffect(() => {
     fetchEvents();
@@ -313,7 +318,7 @@ const OpportunitiesSection = () => {
         {/* Filter Controls */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-2xl md:text-3xl font-bold text-primary">Volunteer Opportunities</h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4">
             <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
               <input
                 type="checkbox"
@@ -322,6 +327,15 @@ const OpportunitiesSection = () => {
                 className="w-4 h-4 text-[#00AFCE] bg-gray-100 border-gray-300 rounded focus:ring-[#00AFCE] focus:ring-2"
               />
               <span>Show full events</span>
+            </label>
+            <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showAllOccurrences}
+                onChange={(e) => setShowAllOccurrences(e.target.checked)}
+                className="w-4 h-4 text-[#00AFCE] bg-gray-100 border-gray-300 rounded focus:ring-[#00AFCE] focus:ring-2"
+              />
+              <span>Show all occurrences</span>
             </label>
           </div>
         </div>

@@ -12,7 +12,7 @@ import GroupSignupModal from "@/components/modals/GroupSignupModal";
 import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability } from '@/utils/eventFilters';
+import { filterUpcomingEvents, filterActiveEvents, filterEventsByAvailability, calculateEventAvailability, filterNextOccurrencePerSeries } from '@/utils/eventFilters';
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
@@ -60,6 +60,7 @@ const DashboardOpportunities = () => {
   const [locationFilter, setLocationFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [showFullEvents, setShowFullEvents] = useState(false);
+  const [showAllOccurrences, setShowAllOccurrences] = useState(false);
 
   // Process events to add availability information
   const processedEvents = useMemo(() => {
@@ -89,7 +90,7 @@ const DashboardOpportunities = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [events, searchTerm, dateFilter, locationFilter, statusFilter, userEvents, showFullEvents]);
+  }, [events, searchTerm, dateFilter, locationFilter, statusFilter, userEvents, showFullEvents, showAllOccurrences]);
 
   const fetchEvents = async () => {
     try {
@@ -215,6 +216,9 @@ const DashboardOpportunities = () => {
 
     // Full events filter
     filtered = filterEventsByAvailability(filtered, showFullEvents);
+
+    // Occurrence filter: by default show only next occurrence per series
+    filtered = filterNextOccurrencePerSeries(filtered, !showAllOccurrences);
 
     setFilteredEvents(filtered);
   };
@@ -445,6 +449,21 @@ const DashboardOpportunities = () => {
                 className="w-4 h-4 text-[#00AFCE] bg-gray-100 border-gray-300 rounded focus:ring-[#00AFCE] focus:ring-2"
               />
               <span>Show full events</span>
+            </label>
+          </div>
+        </div>
+
+        {/* Filter Row 3 - Occurrence toggle */}
+        <div className="grid grid-cols-1">
+          <div className="flex items-center justify-start h-12 px-3 bg-white rounded-md border border-input">
+            <label className="flex items-center gap-2 text-sm cursor-pointer">
+              <input
+                type="checkbox"
+                checked={showAllOccurrences}
+                onChange={(e) => setShowAllOccurrences(e.target.checked)}
+                className="w-4 h-4 text-[#00AFCE] bg-gray-100 border-gray-300 rounded focus:ring-[#00AFCE] focus:ring-2"
+              />
+              <span>Show all occurrences</span>
             </label>
           </div>
         </div>

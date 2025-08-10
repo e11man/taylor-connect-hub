@@ -15,6 +15,9 @@ export interface Event {
   image_url: string;
   created_at: string;
   updated_at: string;
+  // Recurrence linkage
+  series_id?: string | null;
+  occurrence_index?: number | null;
   // New properties for availability
   currentParticipants?: number;
   availableSpots?: number;
@@ -98,6 +101,46 @@ export const filterEventsByAvailability = (events: Event[], showFullEvents: bool
     return events;
   }
   return events.filter(event => !isEventFull(event));
+};
+
+/**
+ * Reduce recurring series to only the next upcoming occurrence per series.
+ * - When enabled is false, returns input unchanged.
+ * - One-time events (no series_id) are preserved as-is.
+ */
+export const filterNextOccurrencePerSeries = (events: Event[], enabled: boolean = true): Event[] => {
+  if (!enabled) return events;
+
+  const now = new Date();
+  const bySeries = new Map<string, Event>();
+  const result: Event[] = [];
+
+  for (const ev of events) {
+    if (!ev.series_id) {
+      // One-time event: keep
+      result.push(ev);
+      continue;
+    }
+    const key = ev.series_id;
+    const current = bySeries.get(key);
+    const evDate = new Date(ev.date);
+    if (!current) {
+      bySeries.set(key, ev);
+    } else {
+      const currDate = new Date(current.date);
+      if (evDate < currDate) {
+        bySeries.set(key, ev);
+      }
+    }
+  }
+
+  // Append the chosen next occurrences for each series
+  for (const [, ev] of bySeries) {
+    result.push(ev);
+  }
+
+  // Sort by date ascending for stable display
+  return result.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 };
 
 /**
