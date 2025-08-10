@@ -104,6 +104,8 @@ export type Database = {
       events: {
         Row: {
           arrival_time: string | null
+          contact_person: string | null
+          contact_person_phone: string | null
           created_at: string
           date: string
           description: string | null
@@ -112,12 +114,16 @@ export type Database = {
           image_url: string | null
           location: string | null
           max_participants: number | null
+          meeting_point: string | null
           organization_id: string | null
+          special_instructions: string | null
           title: string
           updated_at: string
         }
         Insert: {
           arrival_time?: string | null
+          contact_person?: string | null
+          contact_person_phone?: string | null
           created_at?: string
           date: string
           description?: string | null
@@ -126,12 +132,16 @@ export type Database = {
           image_url?: string | null
           location?: string | null
           max_participants?: number | null
+          meeting_point?: string | null
           organization_id?: string | null
+          special_instructions?: string | null
           title: string
           updated_at?: string
         }
         Update: {
           arrival_time?: string | null
+          contact_person?: string | null
+          contact_person_phone?: string | null
           created_at?: string
           date?: string
           description?: string | null
@@ -140,7 +150,9 @@ export type Database = {
           image_url?: string | null
           location?: string | null
           max_participants?: number | null
+          meeting_point?: string | null
           organization_id?: string | null
+          special_instructions?: string | null
           title?: string
           updated_at?: string
         }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, MapPin, Users, MessageCircle, Clock, Settings, X } from "lucide-react";
+import { Calendar, MapPin, Users, MessageCircle, Clock, Settings, X, Info } from "lucide-react";
 import { formatEventDate, formatEventTime, formatEventTimeRange } from "@/utils/formatEvent";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,10 @@ interface UserEvent {
     max_participants: number;
     arrival_time: string;
     estimated_end_time: string;
+    meeting_point?: string | null;
+    contact_person?: string | null;
+    contact_person_phone?: string | null;
+    special_instructions?: string | null;
   };
 }
 
@@ -70,7 +74,11 @@ const UserDashboard = () => {
             location,
             max_participants,
             arrival_time,
-            estimated_end_time
+            estimated_end_time,
+            meeting_point,
+            contact_person,
+            contact_person_phone,
+            special_instructions
           )
         `)
         .eq('user_id', user.id);
@@ -261,6 +269,34 @@ const UserDashboard = () => {
                       <span className="font-medium text-primary">Location:</span>
                       <AddressLink address={userEvent.events.location} className="text-muted-foreground break-words" />
                     </div>
+
+                    {/* Optional Fields - only show if they exist */}
+                    {userEvent.events.meeting_point && (
+                      <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                        <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0" />
+                        <span className="font-medium text-primary">Meeting Point:</span>
+                        <span className="text-muted-foreground">{userEvent.events.meeting_point}</span>
+                      </div>
+                    )}
+
+                    {userEvent.events.contact_person && (
+                      <div className="flex items-center gap-2 sm:gap-3 text-xs sm:text-sm">
+                        <Users className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0" />
+                        <span className="font-medium text-primary">Contact:</span>
+                        <span className="text-muted-foreground">{userEvent.events.contact_person}</span>
+                        {userEvent.events.contact_person_phone && (
+                          <span className="text-muted-foreground"> • {userEvent.events.contact_person_phone}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {userEvent.events.special_instructions && (
+                      <div className="flex items-start gap-2 sm:gap-3 text-xs sm:text-sm">
+                        <Info className="w-3 h-3 sm:w-4 sm:h-4 text-[#00AFCE] flex-shrink-0 mt-0.5" />
+                        <span className="font-medium text-primary">Instructions:</span>
+                        <span className="text-muted-foreground">{userEvent.events.special_instructions}</span>
+                      </div>
+                    )}
                   </div>
                   
                   <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100">

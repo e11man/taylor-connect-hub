@@ -34,6 +34,10 @@ interface Event {
   estimated_end_time: string | null;
   location: string;
   max_participants: number;
+  meeting_point?: string | null;
+  contact_person?: string | null;
+  contact_person_phone?: string | null;
+  special_instructions?: string | null;
   created_at: string;
   organization_id: string;
 }
@@ -74,7 +78,11 @@ const OrganizationDashboard = () => {
     arrival_time: '',
     estimated_end_time: '',
     location: '',
-    max_participants: '6'
+    max_participants: '6',
+    meeting_point: '',
+    contact_person: '',
+    contact_person_phone: '',
+    special_instructions: ''
   });
 
   // Function to set default values for new events
@@ -90,7 +98,11 @@ const OrganizationDashboard = () => {
       arrival_time: '09:00', // 9:00 AM
       estimated_end_time: '10:00', // 10:00 AM
       location: '',
-      max_participants: '6'
+      max_participants: '6',
+      meeting_point: '',
+      contact_person: '',
+      contact_person_phone: '',
+      special_instructions: ''
     });
   };
 
@@ -402,6 +414,10 @@ const OrganizationDashboard = () => {
             estimated_end_time: endTime,
             location: selectedAddress?.formatted || newEvent.location || null,
             max_participants: parseInt(newEvent.max_participants) || null,
+            meeting_point: newEvent.meeting_point || null,
+            contact_person: newEvent.contact_person || null,
+            contact_person_phone: newEvent.contact_person_phone || null,
+            special_instructions: newEvent.special_instructions || null,
             organization_id: organization.id
           }])
           .select()
@@ -459,6 +475,10 @@ const OrganizationDashboard = () => {
           estimated_end_time: newEvent.estimated_end_time || null,
           location: selectedAddress?.formatted || newEvent.location || null,
           max_participants: parseInt(newEvent.max_participants) || null,
+          meeting_point: newEvent.meeting_point || null,
+          contact_person: newEvent.contact_person || null,
+          contact_person_phone: newEvent.contact_person_phone || null,
+          special_instructions: newEvent.special_instructions || null,
         })
         .eq('id', editingEvent.id)
         .select()
@@ -469,7 +489,7 @@ const OrganizationDashboard = () => {
       setEvents(events.map(event => event.id === editingEvent.id ? data : event));
       setIsEditModalOpen(false);
       setEditingEvent(null);
-      setNewEvent({ title: '', description: '', date: '', arrival_time: '', estimated_end_time: '', location: '', max_participants: '' });
+              setNewEvent({ title: '', description: '', date: '', arrival_time: '', estimated_end_time: '', location: '', max_participants: '', meeting_point: '', contact_person: '', contact_person_phone: '', special_instructions: '' });
       setSelectedAddress(null); // Clear selected address after update
       
       toast({
@@ -533,7 +553,11 @@ const OrganizationDashboard = () => {
       arrival_time: event.arrival_time || '',
       estimated_end_time: event.estimated_end_time || '',
       location: event.location || '',
-      max_participants: event.max_participants?.toString() || ''
+      max_participants: event.max_participants?.toString() || '',
+      meeting_point: event.meeting_point || '',
+      contact_person: event.contact_person || '',
+      contact_person_phone: event.contact_person_phone || '',
+      special_instructions: event.special_instructions || ''
     });
     setSelectedAddress({ formatted: event.location }); // Pre-fill with current address
     setIsEditModalOpen(true);
@@ -640,7 +664,7 @@ const OrganizationDashboard = () => {
               if (!open) {
                 setHasAttemptedSubmit(false);
                 setCurrentStep(1);
-                setNewEvent({ title: '', description: '', date: '', arrival_time: '', estimated_end_time: '', location: '', max_participants: '6' });
+                setNewEvent({ title: '', description: '', date: '', arrival_time: '', estimated_end_time: '', location: '', max_participants: '6', meeting_point: '', contact_person: '', contact_person_phone: '', special_instructions: '' });
                 setSelectedAddress(null);
                 setRecurrenceOpen(false);
                 setRecurrencePattern('one_time');
@@ -813,6 +837,66 @@ const OrganizationDashboard = () => {
                     {hasAttemptedSubmit && parseInt(newEvent.max_participants) < 6 && <p className="text-xs text-red-600 mt-1">Minimum 6 volunteers required</p>}
                   </div>
                   )}
+                  
+                  {/* Optional Event Fields */}
+                  {(!isMobile || currentStep === 2) && (
+                  <div className="space-y-4 border border-border-color rounded-lg p-4">
+                    <h3 className="font-semibold text-sm text-foreground">Optional Details</h3>
+                    
+                    {/* Meeting Point */}
+                    <div>
+                      <Label htmlFor="meeting_point">Meeting Point</Label>
+                      <Input
+                        id="meeting_point"
+                        type="text"
+                        value={newEvent.meeting_point}
+                        onChange={(e) => setNewEvent({ ...newEvent, meeting_point: e.target.value })}
+                        placeholder="e.g., Door 6, Main Entrance"
+                        className="h-11"
+                      />
+                    </div>
+
+                    {/* Contact Person */}
+                    <div>
+                      <Label htmlFor="contact_person">Contact Person</Label>
+                      <Input
+                        id="contact_person"
+                        type="text"
+                        value={newEvent.contact_person}
+                        onChange={(e) => setNewEvent({ ...newEvent, contact_person: e.target.value })}
+                        placeholder="e.g., John Smith"
+                        className="h-11"
+                      />
+                    </div>
+
+                    {/* Contact Person Phone */}
+                    <div>
+                      <Label htmlFor="contact_person_phone">Contact Person Phone</Label>
+                      <Input
+                        id="contact_person_phone"
+                        type="tel"
+                        value={newEvent.contact_person_phone}
+                        onChange={(e) => setNewEvent({ ...newEvent, contact_person_phone: e.target.value })}
+                        placeholder="e.g., (555) 123-4567"
+                        className="h-11"
+                      />
+                    </div>
+
+                    {/* Special Instructions */}
+                    <div>
+                      <Label htmlFor="special_instructions">Special Instructions</Label>
+                      <Textarea
+                        id="special_instructions"
+                        value={newEvent.special_instructions}
+                        onChange={(e) => setNewEvent({ ...newEvent, special_instructions: e.target.value })}
+                        placeholder="e.g., Bring water bottle, wear comfortable shoes"
+                        rows={3}
+                        className="resize-none"
+                      />
+                    </div>
+                  </div>
+                  )}
+                  
                   {/* Recurrence Section (Step 3 on mobile; optional) */}
                   <div className={`border border-border-color rounded-lg ${isMobile && currentStep !== 3 ? 'hidden' : ''}`}>
                     <button type="button" className="w-full text-left px-4 py-3 flex items-center justify-between" onClick={() => setRecurrenceOpen(!recurrenceOpen)}>
@@ -1194,6 +1278,61 @@ const OrganizationDashboard = () => {
                     placeholder="Maximum number of volunteers"
                   />
                 </div>
+                
+                {/* Optional Event Fields for Edit Modal */}
+                <div className="space-y-4 border border-border-color rounded-lg p-4">
+                  <h3 className="font-semibold text-sm text-foreground">Optional Details</h3>
+                  
+                  {/* Meeting Point */}
+                  <div>
+                    <Label htmlFor="edit-meeting_point">Meeting Point</Label>
+                    <Input
+                      id="edit-meeting_point"
+                      type="text"
+                      value={newEvent.meeting_point}
+                      onChange={(e) => setNewEvent({ ...newEvent, meeting_point: e.target.value })}
+                      placeholder="e.g., Door 6, Main Entrance"
+                    />
+                  </div>
+
+                  {/* Contact Person */}
+                  <div>
+                    <Label htmlFor="edit-contact_person">Contact Person</Label>
+                    <Input
+                      id="edit-contact_person"
+                      type="text"
+                      value={newEvent.contact_person}
+                      onChange={(e) => setNewEvent({ ...newEvent, contact_person: e.target.value })}
+                      placeholder="e.g., John Smith"
+                    />
+                  </div>
+
+                  {/* Contact Person Phone */}
+                  <div>
+                    <Label htmlFor="edit-contact_person_phone">Contact Person Phone</Label>
+                    <Input
+                      id="edit-contact_person_phone"
+                      type="tel"
+                      value={newEvent.contact_person_phone}
+                      onChange={(e) => setNewEvent({ ...newEvent, contact_person_phone: e.target.value })}
+                      placeholder="e.g., (555) 123-4567"
+                    />
+                  </div>
+
+                  {/* Special Instructions */}
+                  <div>
+                    <Label htmlFor="edit-special_instructions">Special Instructions</Label>
+                    <Textarea
+                      id="edit-special_instructions"
+                      value={newEvent.special_instructions}
+                      onChange={(e) => setNewEvent({ ...newEvent, special_instructions: e.target.value })}
+                      placeholder="e.g., Bring water bottle, wear comfortable shoes"
+                      rows={3}
+                      className="resize-none"
+                    />
+                  </div>
+                </div>
+                
                 <div className="flex gap-2 pt-4">
                   <PrimaryButton 
                     onClick={handleEditEvent}

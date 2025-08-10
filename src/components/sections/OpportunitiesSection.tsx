@@ -28,6 +28,10 @@ interface Event {
   max_participants: number;
   image_url: string;
   organization_id: string;
+  meeting_point?: string | null;
+  contact_person?: string | null;
+  contact_person_phone?: string | null;
+  special_instructions?: string | null;
   currentParticipants?: number;
   availableSpots?: number;
   isFull?: boolean;
@@ -408,6 +412,10 @@ const OpportunitiesSection = () => {
                       {event.currentParticipants || 0} / {event.max_participants} participants
                     </span>
                   </div>
+
+
+
+
                 </div>
 
                 {/* Action Buttons */}

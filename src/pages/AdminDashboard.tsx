@@ -47,6 +47,10 @@ interface Event {
   description?: string;
   location?: string;
   max_participants?: number;
+  meeting_point?: string | null;
+  contact_person?: string | null;
+  contact_person_phone?: string | null;
+  special_instructions?: string | null;
   created_at: string;
 }
 
@@ -417,7 +421,11 @@ export const AdminDashboard = () => {
     description: '',
     date: '',
     location: '',
-    max_participants: 0
+    max_participants: 0,
+    meeting_point: '',
+    contact_person: '',
+    contact_person_phone: '',
+    special_instructions: ''
   });
 
   // Delete user function
@@ -980,7 +988,11 @@ export const AdminDashboard = () => {
       description: event.description || '',
       date: event.date,
       location: event.location || '',
-      max_participants: event.max_participants || 0
+      max_participants: event.max_participants || 0,
+      meeting_point: event.meeting_point || '',
+      contact_person: event.contact_person || '',
+      contact_person_phone: event.contact_person_phone || '',
+      special_instructions: event.special_instructions || ''
     });
     setEditEventModal(true);
   };
@@ -1074,7 +1086,11 @@ export const AdminDashboard = () => {
           description: editEventForm.description,
           date: editEventForm.date,
           location: editEventForm.location,
-          max_participants: editEventForm.max_participants
+          max_participants: editEventForm.max_participants,
+          meeting_point: editEventForm.meeting_point || null,
+          contact_person: editEventForm.contact_person || null,
+          contact_person_phone: editEventForm.contact_person_phone || null,
+          special_instructions: editEventForm.special_instructions || null
         })
         .eq('id', selectedEvent.id);
 
@@ -1945,6 +1961,58 @@ export const AdminDashboard = () => {
                 onChange={(e) => setEditEventForm({ ...editEventForm, max_participants: parseInt(e.target.value) || 0 })}
               />
             </div>
+            
+            {/* Optional Event Fields */}
+            <div className="space-y-4 border border-border rounded-lg p-4">
+              <h3 className="font-semibold text-sm">Optional Details</h3>
+              
+              {/* Meeting Point */}
+              <div>
+                <Label htmlFor="event-meeting-point">Meeting Point</Label>
+                <Input
+                  id="event-meeting-point"
+                  value={editEventForm.meeting_point}
+                  onChange={(e) => setEditEventForm({ ...editEventForm, meeting_point: e.target.value })}
+                  placeholder="e.g., Door 6, Main Entrance"
+                />
+              </div>
+
+              {/* Contact Person */}
+              <div>
+                <Label htmlFor="event-contact-person">Contact Person</Label>
+                <Input
+                  id="event-contact-person"
+                  value={editEventForm.contact_person}
+                  onChange={(e) => setEditEventForm({ ...editEventForm, contact_person: e.target.value })}
+                  placeholder="e.g., John Smith"
+                />
+              </div>
+
+              {/* Contact Person Phone */}
+              <div>
+                <Label htmlFor="event-contact-phone">Contact Person Phone</Label>
+                <Input
+                  id="event-contact-phone"
+                  type="tel"
+                  value={editEventForm.contact_person_phone}
+                  onChange={(e) => setEditEventForm({ ...editEventForm, contact_person_phone: e.target.value })}
+                  placeholder="e.g., (555) 123-4567"
+                />
+              </div>
+
+              {/* Special Instructions */}
+              <div>
+                <Label htmlFor="event-special-instructions">Special Instructions</Label>
+                <Textarea
+                  id="event-special-instructions"
+                  value={editEventForm.special_instructions}
+                  onChange={(e) => setEditEventForm({ ...editEventForm, special_instructions: e.target.value })}
+                  placeholder="e.g., Bring water bottle, wear comfortable shoes"
+                  rows={3}
+                />
+              </div>
+            </div>
+            
             <div className="flex gap-2">
               <Button onClick={saveEvent} className="flex-1">Save</Button>
               <Button variant="outline" onClick={() => setEditEventModal(false)} className="flex-1">Cancel</Button>
