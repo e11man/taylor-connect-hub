@@ -33,10 +33,10 @@
   ],
   "functions": {
     "api/**/*.js": {
-      "runtime": "nodejs20.x"
+      "runtime": "nodejs@20"
     },
     "api/**/*.py": {
-      "runtime": "python3.11"
+      "runtime": "python@3.11"
     }
   }
 }
