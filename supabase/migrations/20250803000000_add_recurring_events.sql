@@ -48,7 +48,6 @@ end $$;
 create index if not exists idx_events_series_id on public.events(series_id, occurrence_index);
 create index if not exists idx_events_org_start on public.events(organization_id, date);
 
-
 -- Enable RLS and policies for event_series
 alter table public.event_series enable row level security;
 
@@ -58,6 +57,40 @@ do $$ begin
   ) then
     create policy "Organizations can manage their own series"
     on public.event_series
+    for all
+    using (
+      organization_id in (
+        select id from public.organizations where user_id = auth.uid()
+      )
+    )
+    with check (
+      organization_id in (
+        select id from public.organizations where user_id = auth.uid()
+      )
+    );
+  end if;
+end $$;
+
+-- Update RLS policies for events table to handle series_id
+do $$ begin
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'events' and policyname = 'Users can view events from their organizations including series'
+  ) then
+    create policy "Users can view events from their organizations including series"
+    on public.events
+    for select
+    using (
+      organization_id in (
+        select id from public.organizations where user_id = auth.uid()
+      )
+    );
+  end if;
+  
+  if not exists (
+    select 1 from pg_policies where schemaname = 'public' and tablename = 'events' and policyname = 'Organizations can manage their events including series'
+  ) then
+    create policy "Organizations can manage their events including series"
+    on public.events
     for all
     using (
       organization_id in (
@@ -285,9 +318,249 @@ begin
 end;
 $$;
 
--- Allow authenticated users to execute the RPC
+-- Function to update an existing event series and regenerate occurrences
+create or replace function public.update_event_series(
+  p_series_id uuid,
+  p_title text default null,
+  p_description text default null,
+  p_timezone text default null,
+  p_pattern text default null,
+  p_interval int default null,
+  p_weekdays smallint[] default null,
+  p_monthday smallint default null,
+  p_weeknumber smallint default null,
+  p_weekday smallint default null,
+  p_start_date date default null,
+  p_end_by_date date default null,
+  p_count_limit int default null,
+  p_start_time time default null,
+  p_end_time time default null,
+  p_location text default null,
+  p_max_participants int default null,
+  p_rrule text default null,
+  p_rdates timestamptz[] default null,
+  p_exdates timestamptz[] default null
+)
+returns table(series_id uuid, occurrences_updated int)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_old_series record;
+  v_occurrences_updated int := 0;
+begin
+  -- Get current series data
+  select * into v_old_series from public.event_series where id = p_series_id;
+  if not found then
+    raise exception 'Event series not found';
+  end if;
+
+  -- Update series with provided values (keep old values if not provided)
+  update public.event_series set
+    title = coalesce(p_title, title),
+    description = coalesce(p_description, description),
+    timezone = coalesce(p_timezone, timezone),
+    pattern = coalesce(p_pattern, pattern),
+    interval = coalesce(p_interval, interval),
+    weekdays = coalesce(p_weekdays, weekdays),
+    monthday = coalesce(p_monthday, monthday),
+    weeknumber = coalesce(p_weeknumber, weeknumber),
+    weekday = coalesce(p_weekday, weekday),
+    start_date = coalesce(p_start_date, start_date),
+    end_by_date = coalesce(p_end_by_date, end_by_date),
+    count_limit = coalesce(p_count_limit, count_limit),
+    start_time = coalesce(p_start_time, start_time),
+    end_time = coalesce(p_end_time, end_time),
+    location = coalesce(p_location, location),
+    max_participants = coalesce(p_max_participants, max_participants),
+    rrule = coalesce(p_rrule, rrule),
+    rdates = coalesce(p_rdates, rdates),
+    exdates = coalesce(p_exdates, exdates)
+  where id = p_series_id;
+
+  -- Delete existing occurrences
+  delete from public.events where series_id = p_series_id;
+  get diagnostics v_occurrences_updated = row_count;
+
+  -- Regenerate occurrences using the create function
+  perform public.create_event_series_and_occurrences(
+    v_old_series.organization_id,
+    coalesce(p_title, v_old_series.title),
+    coalesce(p_description, v_old_series.description),
+    coalesce(p_timezone, v_old_series.timezone),
+    coalesce(p_pattern, v_old_series.pattern),
+    coalesce(p_interval, v_old_series.interval),
+    coalesce(p_weekdays, v_old_series.weekdays),
+    coalesce(p_monthday, v_old_series.monthday),
+    coalesce(p_weeknumber, v_old_series.weeknumber),
+    coalesce(p_weekday, v_old_series.weekday),
+    coalesce(p_start_date, v_old_series.start_date),
+    coalesce(p_end_by_date, v_old_series.end_by_date),
+    coalesce(p_count_limit, v_old_series.count_limit),
+    coalesce(p_start_time, v_old_series.start_time),
+    coalesce(p_end_time, v_old_series.end_time),
+    coalesce(p_location, v_old_series.location),
+    coalesce(p_max_participants, v_old_series.max_participants),
+    coalesce(p_rrule, v_old_series.rrule),
+    coalesce(p_rdates, v_old_series.rdates),
+    coalesce(p_exdates, v_old_series.exdates)
+  );
+
+  return query select p_series_id, v_occurrences_updated;
+end;
+$$;
+
+-- Function to delete an event series and all its occurrences
+create or replace function public.delete_event_series(p_series_id uuid)
+returns table(series_id uuid, occurrences_deleted int)
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_occurrences_deleted int := 0;
+begin
+  -- Delete all occurrences first (cascade should handle this, but explicit for clarity)
+  delete from public.events where series_id = p_series_id;
+  get diagnostics v_occurrences_deleted = row_count;
+  
+  -- Delete the series
+  delete from public.event_series where id = p_series_id;
+  
+  return query select p_series_id, v_occurrences_deleted;
+end;
+$$;
+
+-- Function to get next occurrences for a series
+create or replace function public.get_next_series_occurrences(
+  p_series_id uuid,
+  p_limit int default 10
+)
+returns table(
+  occurrence_id uuid,
+  title text,
+  description text,
+  date timestamptz,
+  location text,
+  max_participants int,
+  occurrence_index int
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  return query
+  select 
+    e.id as occurrence_id,
+    e.title,
+    e.description,
+    e.date,
+    e.location,
+    e.max_participants,
+    e.occurrence_index
+  from public.events e
+  where e.series_id = p_series_id
+    and e.date >= now()
+  order by e.date
+  limit p_limit;
+end;
+$$;
+
+-- Function to get series information with occurrence count
+create or replace function public.get_event_series_info(p_series_id uuid)
+returns table(
+  series_id uuid,
+  title text,
+  description text,
+  pattern text,
+  interval int,
+  start_date date,
+  end_by_date date,
+  total_occurrences bigint,
+  future_occurrences bigint,
+  past_occurrences bigint
+)
+language plpgsql
+stable
+security definer
+set search_path = public
+as $$
+begin
+  return query
+  select 
+    es.id as series_id,
+    es.title,
+    es.description,
+    es.pattern,
+    es.interval,
+    es.start_date,
+    es.end_by_date,
+    count(e.id) as total_occurrences,
+    count(e.id) filter (where e.date >= now()) as future_occurrences,
+    count(e.id) filter (where e.date < now()) as past_occurrences
+  from public.event_series es
+  left join public.events e on e.series_id = es.id
+  where es.id = p_series_id
+  group by es.id, es.title, es.description, es.pattern, es.interval, es.start_date, es.end_by_date;
+end;
+$$;
+
+-- Allow authenticated users to execute the RPCs
 do $$ begin
   grant execute on function public.create_event_series_and_occurrences(
     uuid, text, text, text, text, int, smallint[], smallint, smallint, smallint, date, date, int, time, time, text, int, text, timestamptz[], timestamptz[]
   ) to authenticated;
+  
+  grant execute on function public.update_event_series(
+    uuid, text, text, text, text, int, smallint[], smallint, smallint, smallint, date, date, int, time, time, text, int, text, timestamptz[], timestamptz[]
+  ) to authenticated;
+  
+  grant execute on function public.delete_event_series(uuid) to authenticated;
+  
+  grant execute on function public.get_next_series_occurrences(uuid, int) to authenticated;
+  
+  grant execute on function public.get_event_series_info(uuid) to authenticated;
+  
+  grant execute on function public.nth_weekday_of_month(int, int, int, int) to authenticated;
 exception when others then null; end $$;
+
+-- Add helpful comments
+comment on function public.create_event_series_and_occurrences is 'Creates a new event series and generates all occurrences based on the recurrence pattern.';
+comment on function public.update_event_series is 'Updates an existing event series and regenerates all occurrences.';
+comment on function public.delete_event_series is 'Deletes an event series and all its occurrences.';
+comment on function public.get_next_series_occurrences is 'Returns the next N occurrences for a given series.';
+comment on function public.get_event_series_info is 'Returns summary information about a series including occurrence counts.';
+comment on function public.nth_weekday_of_month is 'Helper function to calculate the nth weekday of a month.';
+
+-- Create a view for easy series management
+create or replace view public.event_series_overview as
+select 
+  es.id,
+  es.title,
+  es.description,
+  es.pattern,
+  es.interval,
+  es.start_date,
+  es.end_by_date,
+  es.count_limit,
+  es.start_time,
+  es.end_time,
+  es.location,
+  es.max_participants,
+  es.created_at,
+  o.name as organization_name,
+  count(e.id) as total_occurrences,
+  count(e.id) filter (where e.date >= now()) as future_occurrences,
+  count(e.id) filter (where e.date < now()) as past_occurrences
+from public.event_series es
+join public.organizations o on o.id = es.organization_id
+left join public.events e on e.series_id = es.id
+group by es.id, es.title, es.description, es.pattern, es.interval, es.start_date, es.end_by_date, es.count_limit, es.start_time, es.end_time, es.location, es.max_participants, es.created_at, o.name;
+
+-- Grant access to the view
+grant select on public.event_series_overview to authenticated;
+
+comment on view public.event_series_overview is 'Overview of all event series with occurrence counts and organization information.';
