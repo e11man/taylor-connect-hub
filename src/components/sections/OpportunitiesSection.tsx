@@ -413,23 +413,38 @@ const OpportunitiesSection = () => {
                     // For PA users
                     if (isPAUser) {
                       return (
-                        <div className="flex flex-col gap-2">
+                        <div className="flex flex-col gap-2 md:flex-col">
                           {userSignedUp ? (
                             <>
-                              <div className="w-full bg-green-100 text-green-800 text-center py-3 rounded-xl font-semibold min-h-[44px] flex items-center justify-center">
-                                Signed Up ✓
-                              </div>
+                              {/* Add Group first for PA */}
                               <button
                                 onClick={() => handleGroupSignup(event)}
-                                className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[44px] touch-manipulation"
+                                disabled={!!event.isFull}
+                                aria-disabled={!!event.isFull}
+                                title={event.isFull ? 'Event is full' : 'Add a group to this event'}
+                                className="w-full bg-[#00AFCE] hover:bg-[#00AFCE]/90 disabled:opacity-60 disabled:cursor-not-allowed text-white py-3 px-4 rounded-xl font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg min-h-[44px] touch-manipulation"
                                 data-testid="add-group-button"
                               >
                                 <Users className="w-4 h-4" />
                                 Add Group
                               </button>
+                              <div className="w-full bg-green-100 text-green-800 text-center py-3 px-4 rounded-xl font-semibold min-h-[44px] flex items-center justify-center">
+                                Signed Up ✓
+                              </div>
                             </>
                           ) : (
                             <>
+                              {/* Add Group first for PA */}
+                              <SecondaryButton
+                                onClick={() => handleGroupSignup(event)}
+                                disabled={!!event.isFull}
+                                aria-disabled={!!event.isFull}
+                                className="w-full min-h-[44px] touch-manipulation disabled:opacity-60 disabled:cursor-not-allowed"
+                                data-testid="add-group-button"
+                              >
+                                <Users className="w-4 h-4" />
+                                Add Group
+                              </SecondaryButton>
                               <PrimaryButton 
                                 onClick={() => handleSignUp(event.id)}
                                 className="w-full min-h-[44px] touch-manipulation"
@@ -437,14 +452,6 @@ const OpportunitiesSection = () => {
                               >
                                 Sign Up
                               </PrimaryButton>
-                              <SecondaryButton
-                                onClick={() => handleGroupSignup(event)}
-                                className="w-full min-h-[44px] touch-manipulation"
-                                data-testid="add-group-button"
-                              >
-                                <Users className="w-4 h-4" />
-                                Add Group
-                              </SecondaryButton>
                             </>
                           )}
                         </div>

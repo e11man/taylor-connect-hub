@@ -561,28 +561,48 @@ const DashboardOpportunities = () => {
                 </div>
 
                 {/* Action Buttons */}
-                <div className="flex flex-col sm:flex-row gap-2">
-                  {isUserSignedUp ? (
-                    <SecondaryButton className="w-full bg-green-100 text-green-800 border-green-200 hover:bg-green-200 h-10 sm:h-auto">
-                      Signed Up ✓
-                    </SecondaryButton>
+                <div className="flex flex-col gap-2 md:flex-col">
+                  {isPA ? (
+                    // PA: Add Group first, then primary CTA; stacked at all breakpoints
+                    <>
+                      <SecondaryButton
+                        onClick={() => handleGroupSignup(event)}
+                        disabled={event.isFull}
+                        className="w-full h-10 disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        Add Group
+                      </SecondaryButton>
+                      {isUserSignedUp ? (
+                        <SecondaryButton className="w-full bg-green-100 text-green-800 border-green-200 hover:bg-green-200 h-10">
+                          Signed Up ✓
+                        </SecondaryButton>
+                      ) : (
+                        <PrimaryButton
+                          onClick={() => handleSignUp(event.id)}
+                          disabled={event.isFull}
+                          className="w-full h-10"
+                        >
+                          {event.isFull ? 'Full' : 'Sign Up'}
+                        </PrimaryButton>
+                      )}
+                    </>
                   ) : (
-                    <PrimaryButton
-                      onClick={() => handleSignUp(event.id)}
-                      disabled={event.isFull}
-                      className="w-full h-10 sm:h-auto"
-                    >
-                      {event.isFull ? 'Full' : 'Sign Up'}
-                    </PrimaryButton>
-                  )}
-                  
-                  {isPA && (
-                    <SecondaryButton
-                      onClick={() => handleGroupSignup(event)}
-                      className="w-full sm:w-auto h-10 sm:h-auto"
-                    >
-                      Add Group
-                    </SecondaryButton>
+                    // Non-PA: preserve existing behavior
+                    <>
+                      {isUserSignedUp ? (
+                        <SecondaryButton className="w-full sm:w-auto bg-green-100 text-green-800 border-green-200 hover:bg-green-200 h-10 sm:h-auto">
+                          Signed Up ✓
+                        </SecondaryButton>
+                      ) : (
+                        <PrimaryButton
+                          onClick={() => handleSignUp(event.id)}
+                          disabled={event.isFull}
+                          className="w-full sm:w-auto h-10 sm:h-auto"
+                        >
+                          {event.isFull ? 'Full' : 'Sign Up'}
+                        </PrimaryButton>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
