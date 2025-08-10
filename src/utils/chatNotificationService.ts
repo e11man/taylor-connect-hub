@@ -42,9 +42,6 @@ export const sendChatMessage = async (
       return { success: false, error: insertError.message };
     }
 
-    // Trigger notification processing
-    await triggerChatNotifications();
-
     return { success: true, messageId: chatMessage.id };
   } catch (error) {
     console.error('Error sending chat message:', error);
@@ -52,25 +49,9 @@ export const sendChatMessage = async (
   }
 };
 
-export const triggerChatNotifications = async (): Promise<void> => {
-  try {
-    // Call the backend API to process chat notifications
-    const response = await fetch('/api/process-chat-notifications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      console.error('Failed to trigger chat notifications');
-    } else {
-      console.log('Chat notifications triggered successfully');
-    }
-  } catch (error) {
-    console.error('Error triggering chat notifications:', error);
-  }
-};
+// Notification processing is now handled automatically via Supabase Edge Functions
+// Database triggers create notifications when chat messages are posted
+// A cron function processes notifications every 5 minutes
 
 export const getUserNotificationPreferences = async (userId: string): Promise<NotificationPreferences | null> => {
   try {
@@ -197,25 +178,5 @@ export const markNotificationsAsRead = async (userId: string, eventId?: string):
   }
 };
 
-// Function to manually trigger notification processing (for testing)
-export const processChatNotifications = async (): Promise<{ success: boolean; processed?: number; error?: string }> => {
-  try {
-    const response = await fetch('/api/process-chat-notifications', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    const result = await response.json();
-
-    if (!response.ok) {
-      return { success: false, error: result.error || 'Failed to process notifications' };
-    }
-
-    return { success: true, processed: result.processed || 0 };
-  } catch (error) {
-    console.error('Error processing chat notifications:', error);
-    return { success: false, error: 'Failed to process notifications' };
-  }
-}; 
+// Manual notification triggering is no longer needed
+// The system uses automatic processing via Supabase Edge Functions

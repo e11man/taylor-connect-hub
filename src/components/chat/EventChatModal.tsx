@@ -78,8 +78,8 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
     try {
       await sendChatMessageHook(
         newMessage.trim(),
+        user?.id || '',
         !isHost, // Only hosts are not anonymous
-        user?.id,
         isHost && userOrganization ? userOrganization.id : undefined
       );
 
