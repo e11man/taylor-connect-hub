@@ -118,9 +118,14 @@ const OpportunitiesSection = () => {
       if (error) {
         console.error('Error fetching events:', error);
       } else {
+        // Filter out canceled events when schema includes status
+        let list = data || [];
+        if (list.length > 0 && Object.prototype.hasOwnProperty.call(list[0], 'status')) {
+          list = list.filter((e: any) => (e.status || '').toLowerCase() !== 'cancelled' && (e.status || '').toLowerCase() !== 'canceled');
+        }
         // For public opportunities, show all events (not filtered by 12-hour rule)
         // Only filter out expired events
-        const filteredData = filterActiveEvents(data || []);
+        const filteredData = filterActiveEvents(list || []);
         setEvents(filteredData);
       }
     } catch (error) {

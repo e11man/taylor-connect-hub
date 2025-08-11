@@ -30,6 +30,7 @@ interface UserEvent {
     contact_person?: string | null;
     contact_person_phone?: string | null;
     special_instructions?: string | null;
+    status?: string | null; // Added status field
   };
 }
 
@@ -66,27 +67,40 @@ const UserDashboard = () => {
           id,
           event_id,
           signed_up_at,
-          events (
-            id,
-            title,
-            description,
-            date,
-            location,
-            max_participants,
-            arrival_time,
-            estimated_end_time,
-            meeting_point,
-            contact_person,
-            contact_person_phone,
-            special_instructions
-          )
+          events (*)
         `)
         .eq('user_id', user.id);
 
       if (eventsError) {
         console.error('Error fetching user events:', eventsError);
       } else {
-        setUserEvents(eventsData || []);
+        let list = eventsData || [];
+        // Filter: hide canceled/cancelled events when status is available on nested events
+        if (list.length > 0 && list[0]?.events && Object.prototype.hasOwnProperty.call(list[0].events, 'status')) {
+          list = list.filter((ue: any) => {
+            const st = (ue.events.status || '').toLowerCase();
+            return st !== 'cancelled' && st !== 'canceled';
+          });
+        }
+        // Filter: hide expired events
+        const now = Date.now();
+        const oneHourMs = 60 * 60 * 1000;
+        list = list.filter((ue: any) => {
+          const ev = ue.events;
+          try {
+            if (ev?.estimated_end_time) {
+              const endTs = new Date(ev.estimated_end_time).getTime();
+              return now <= (endTs + oneHourMs);
+            }
+            if (ev?.date) {
+              const startTs = new Date(ev.date).getTime();
+              const fallbackEnd = startTs + (2 * 60 * 60 * 1000);
+              return now <= (fallbackEnd + oneHourMs);
+            }
+          } catch {}
+          return true;
+        });
+        setUserEvents(list);
       }
 
       // Fetch user profile
