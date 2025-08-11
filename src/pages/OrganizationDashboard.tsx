@@ -1206,14 +1206,14 @@ const OrganizationDashboard = () => {
 
           {/* Edit Modal */}
           <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md max-h-[90vh]">
               <DialogHeader>
                 <DialogTitle>Edit Opportunity</DialogTitle>
                 <DialogDescription>
                   Update the details for this opportunity.
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4">
+              <div className="space-y-4 pb-24 overflow-y-auto max-h-[calc(90vh-120px)]">
                 <div>
                   <Label htmlFor="edit-title">Title*</Label>
                   <Input
