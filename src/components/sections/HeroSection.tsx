@@ -10,6 +10,12 @@ import CountUpNumber from "@/components/ui/CountUpNumber";
 import { useContentSection } from "@/hooks/useContent";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const parseNumber = (val: string | number | undefined): number => {
+  const s = (val ?? '0').toString();
+  const n = parseInt(s.replace(/[^0-9.-]/g, ''), 10);
+  return Number.isFinite(n) ? n : 0;
+};
+
 const HeroSection = () => {
   const navigate = useNavigate();
   const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
@@ -27,17 +33,17 @@ const HeroSection = () => {
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: impactContent.active_volunteers || "0"
+      value: parseNumber(impactContent.active_volunteers)
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: impactContent.hours_contributed || "0"
+      value: parseNumber(impactContent.hours_contributed)
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: impactContent.partner_organizations || "0"
+      value: parseNumber(impactContent.partner_organizations)
     }
   ];
 

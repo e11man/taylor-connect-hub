@@ -5,6 +5,12 @@ import { motion } from "framer-motion";
 import CountUpNumber from "@/components/ui/CountUpNumber";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const parseNumber = (val: string | number | undefined): number => {
+  const s = (val ?? '0').toString();
+  const n = parseInt(s.replace(/[^0-9.-]/g, ''), 10);
+  return Number.isFinite(n) ? n : 0;
+};
+
 const ImpactSection = () => {
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
   const { content: aboutImpactContent } = useContentSection('about', 'impact');
@@ -13,19 +19,19 @@ const ImpactSection = () => {
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: impactContent.active_volunteers || "0",
+      value: parseNumber(impactContent.active_volunteers),
       description: aboutImpactContent.volunteers_description || "Passionate individuals serving Upland"
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: impactContent.hours_contributed || "0",
+      value: parseNumber(impactContent.hours_contributed),
       description: aboutImpactContent.hours_description || "Collective time dedicated to service"
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: impactContent.partner_organizations || "0",
+      value: parseNumber(impactContent.partner_organizations),
       description: aboutImpactContent.organizations_description || "Local organizations making a difference"
     }
   ];
