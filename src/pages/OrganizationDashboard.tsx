@@ -468,14 +468,21 @@ const OrganizationDashboard = () => {
     if (!editingEvent) return;
 
     try {
+      // Combine date and time fields to create proper timestamps
+      const baseDate = new Date(newEvent.date);
+      const arrivalDateTime = newEvent.arrival_time ? 
+        new Date(`${newEvent.date}T${newEvent.arrival_time}`) : null;
+      const endDateTime = newEvent.estimated_end_time ? 
+        new Date(`${newEvent.date}T${newEvent.estimated_end_time}`) : null;
+
       const { data, error } = await supabase
         .from('events')
         .update({
           title: newEvent.title,
           description: newEvent.description,
-          date: newEvent.date,
-          arrival_time: newEvent.arrival_time || null,
-          estimated_end_time: newEvent.estimated_end_time || null,
+          date: baseDate.toISOString(),
+          arrival_time: arrivalDateTime?.toISOString() || null,
+          estimated_end_time: endDateTime?.toISOString() || null,
           location: selectedAddress?.formatted || newEvent.location || null,
           max_participants: parseInt(newEvent.max_participants) || null,
           meeting_point: newEvent.meeting_point || null,
@@ -549,12 +556,18 @@ const OrganizationDashboard = () => {
 
   const openEditModal = (event: Event) => {
     setEditingEvent(event);
+    
+    // Convert stored timestamps to proper format for form inputs
+    const eventDate = new Date(event.date);
+    const arrivalTime = event.arrival_time ? new Date(event.arrival_time) : null;
+    const endTime = event.estimated_end_time ? new Date(event.estimated_end_time) : null;
+    
     setNewEvent({
       title: event.title,
       description: event.description || '',
-      date: event.date.split('T')[0], // Convert to YYYY-MM-DD format
-      arrival_time: event.arrival_time || '',
-      estimated_end_time: event.estimated_end_time || '',
+      date: eventDate.toISOString().split('T')[0], // YYYY-MM-DD format for date input
+      arrival_time: arrivalTime ? arrivalTime.toTimeString().slice(0, 5) : '', // HH:MM format for time input
+      estimated_end_time: endTime ? endTime.toTimeString().slice(0, 5) : '', // HH:MM format for time input
       location: event.location || '',
       max_participants: event.max_participants?.toString() || '',
       meeting_point: event.meeting_point || '',
@@ -1214,72 +1227,116 @@ const OrganizationDashboard = () => {
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 pb-24 overflow-y-auto max-h-[calc(90vh-120px)]">
+                {/* Current values are prefilled directly in the form */}
+                
                 <div>
-                  <Label htmlFor="edit-title">Title*</Label>
-                  <Input
-                    id="edit-title"
-                    value={newEvent.title}
-                    onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
-                    placeholder="Opportunity Title"
-                  />
+                  <Label className="text-sm font-medium">Basic Information</Label>
+                  <div className="space-y-4 mt-2">
+                    <div>
+                      <Label htmlFor="edit-title">Title*</Label>
+                      <Input
+                        id="edit-title"
+                        value={newEvent.title}
+                        onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                        placeholder="Opportunity Title"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-description">Description*</Label>
+                      <Textarea
+                        id="edit-description"
+                        value={newEvent.description}
+                        onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                        placeholder="Describe the opportunity"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="edit-description">Description*</Label>
-                  <Textarea
-                    id="edit-description"
-                    value={newEvent.description}
-                    onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
-                    placeholder="Describe the opportunity"
-                    rows={3}
-                  />
+                  <Label className="text-sm font-medium">Date & Time</Label>
+                  <div className="space-y-4 mt-2">
+                    <div>
+                      <Label htmlFor="edit-date">Date*</Label>
+                      <Input
+                        id="edit-date"
+                        type="date"
+                        value={newEvent.date}
+                        onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
+                        min={new Date().toISOString().split('T')[0]}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">The date when this opportunity takes place</p>
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="edit-date">Date*</Label>
-                  <Input
-                    id="edit-date"
-                    type="datetime-local"
-                    value={newEvent.date}
-                    onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
-                  />
+                  <Label className="text-sm font-medium">Time Details</Label>
+                  <div className="bg-light-gray border border-border-color rounded-lg p-3 mb-3">
+                    <p className="text-xs text-muted-foreground">
+                      📋 Both arrival time and end time must be set together, or leave both empty.
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                      <Label htmlFor="edit-arrival_time" className="text-xs">Arrival Time</Label>
+                      <Input
+                        id="edit-arrival_time"
+                        type="time"
+                        value={newEvent.arrival_time}
+                        onChange={(e) => setNewEvent({...newEvent, arrival_time: e.target.value})}
+                        placeholder="09:00"
+                        min={newEvent.date === new Date().toISOString().split('T')[0] ? getCurrentTime() : undefined}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">When volunteers should arrive</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-estimated_end_time" className="text-xs">End Time</Label>
+                      <Input
+                        id="edit-estimated_end_time"
+                        type="time"
+                        value={newEvent.estimated_end_time}
+                        onChange={(e) => setNewEvent({...newEvent, estimated_end_time: e.target.value})}
+                        placeholder="17:00"
+                        min={newEvent.arrival_time || undefined}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">When the opportunity ends</p>
+                      {newEvent.arrival_time && newEvent.estimated_end_time && newEvent.arrival_time >= newEvent.estimated_end_time && (
+                        <p className="text-xs text-red-600 mt-1">⚠️ End time must be after arrival time</p>
+                      )}
+                      {((newEvent.arrival_time && !newEvent.estimated_end_time) || (!newEvent.arrival_time && newEvent.estimated_end_time)) && (
+                        <p className="text-xs text-red-600 mt-1">⚠️ Both arrival time and end time must be set together</p>
+                      )}
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <Label htmlFor="edit-arrival_time">Arrival Time</Label>
-                  <Input
-                    id="edit-arrival_time"
-                    type="datetime-local"
-                    value={newEvent.arrival_time}
-                    onChange={(e) => setNewEvent({...newEvent, arrival_time: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-estimated_end_time">Estimated End Time</Label>
-                  <Input
-                    id="edit-estimated_end_time"
-                    type="datetime-local"
-                    value={newEvent.estimated_end_time}
-                    onChange={(e) => setNewEvent({...newEvent, estimated_end_time: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-location">Location</Label>
-                  <AddressAutocomplete
-                    onSelect={(addr) => {
-                      setSelectedAddress(addr);
-                      setNewEvent({ ...newEvent, location: addr ? addr.formatted : '' });
-                    }}
-                    placeholder="Search for an address"
-                    initialValue={selectedAddress}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="edit-max_participants">Max Volunteers</Label>
-                  <Input
-                    id="edit-max_participants"
-                    type="number"
-                    value={newEvent.max_participants}
-                    onChange={(e) => setNewEvent({...newEvent, max_participants: e.target.value})}
-                    placeholder="Maximum number of volunteers"
-                  />
+                  <Label className="text-sm font-medium">Location & Capacity</Label>
+                  <div className="space-y-4 mt-2">
+                    <div>
+                      <Label htmlFor="edit-location">Location</Label>
+                      <AddressAutocomplete
+                        onSelect={(addr) => {
+                          setSelectedAddress(addr);
+                          setNewEvent({ ...newEvent, location: addr ? addr.formatted : '' });
+                        }}
+                        placeholder="Search for an address"
+                        initialValue={selectedAddress}
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Search and select a location from the dropdown</p>
+                    </div>
+                    <div>
+                      <Label htmlFor="edit-max_participants">Max Volunteers</Label>
+                      <Input
+                        id="edit-max_participants"
+                        type="number"
+                        value={newEvent.max_participants}
+                        onChange={(e) => setNewEvent({...newEvent, max_participants: e.target.value})}
+                        placeholder="Maximum number of volunteers"
+                        min="6"
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">Minimum 6 volunteers required</p>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Optional Event Fields for Edit Modal */}
@@ -1339,7 +1396,15 @@ const OrganizationDashboard = () => {
                 <div className="flex gap-2 pt-4">
                   <PrimaryButton 
                     onClick={handleEditEvent}
-                    disabled={!newEvent.title || !newEvent.description || !newEvent.date || !selectedAddress}
+                    disabled={
+                      !newEvent.title || 
+                      !newEvent.description || 
+                      !newEvent.date || 
+                      !selectedAddress ||
+                      (newEvent.arrival_time && newEvent.estimated_end_time && newEvent.arrival_time >= newEvent.estimated_end_time) ||
+                      (newEvent.arrival_time && !newEvent.estimated_end_time) ||
+                      (!newEvent.arrival_time && newEvent.estimated_end_time)
+                    }
                     className="flex-1"
                   >
                     Update Opportunity
