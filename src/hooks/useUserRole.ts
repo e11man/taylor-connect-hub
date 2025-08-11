@@ -25,27 +25,11 @@ export const useUserRole = () => {
     try {
       console.log('🔍 Fetching user role for user:', user.id);
       
-      // Try user_roles table first
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
-      if (roleError) {
-        console.error('❌ Error fetching from user_roles:', roleError);
-      } else if (roleData) {
-        console.log('✅ Found role in user_roles:', roleData.role);
-        setUserRole(roleData.role as UserRole);
-        setLoading(false);
-        return;
-      }
-
-      // Fallback to profiles table
+      // For custom auth system, user.id is the profile ID, so query profiles table directly
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('role')
-        .eq('user_id', user.id)
+        .eq('id', user.id) // Use 'id' instead of 'user_id' for custom auth
         .maybeSingle();
 
       if (profileError) {
