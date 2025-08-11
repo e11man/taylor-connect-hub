@@ -21,7 +21,9 @@ logger = logging.getLogger(__name__)
 
 # Initialize Resend with latest API
 try:
-    resend_api_key = os.getenv('RESEND_API_KEY', "re_e32x6j2U_Mx5KLTyeAW5oBVYPftpDnH92")
+    resend_api_key = os.getenv('RESEND_API_KEY', '')
+    if not resend_api_key:
+        raise RuntimeError('RESEND_API_KEY is not set')
     resend_client = Resend(api_key=resend_api_key)
     logger.info("Resend client initialized successfully")
 except Exception as e:
@@ -33,7 +35,12 @@ DB_HOST = os.getenv('DB_HOST', 'aws-0-us-east-2.pooler.supabase.com')
 DB_PORT = os.getenv('DB_PORT', '6543')
 DB_NAME = os.getenv('DB_NAME', 'postgres')
 DB_USER = os.getenv('DB_USER', 'postgres.gzzbjifmrwvqbkwbyvhm')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'Idonotunderstandwhatido!')
+DB_PASSWORD = os.getenv('DB_PASSWORD', '')
+
+# Rate limiting / warm-up
+RATE_LIMIT_DELAY_MS = int(os.getenv('RESEND_DELAY_MS', '500'))
+BATCH_DELAY_MS = int(os.getenv('RESEND_BATCH_DELAY_MS', '1500'))
+
 
 def get_db_connection():
     """Get database connection with retry logic"""
@@ -153,13 +160,13 @@ def send_chat_notification_email(notification: Dict) -> bool:
     """Send chat notification email using latest Resend API"""
     try:
         # Determine sender information
-        sender_name = notification.get('sender_name', 'Anonymous')
-        sender_type = notification.get('sender_type', 'anonymous')
+        sender_name = notification.get('sender_name', 'A community member')
         event_title = notification.get('event_title', 'Event')
         event_description = notification.get('event_description', '')
         organization_name = notification.get('organization_name', 'Community Event')
+        user_email = notification['user_email']
         
-        # Create email content with improved design
+        # Create email content
         subject = f"New message in \"{event_title}\" chat"
         
         html_content = f"""
@@ -172,17 +179,12 @@ def send_chat_notification_email(notification: Dict) -> bool:
         </head>
         <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f6f9fc;">
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                <!-- Header -->
                 <div style="background: linear-gradient(135deg, #0A2540 0%, #525f7f 100%); padding: 30px; text-align: center;">
                     <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300;">Taylor Connect Hub</h1>
                     <p style="color: white; margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">New Chat Message</p>
                 </div>
-                
-                <!-- Content -->
                 <div style="padding: 40px 30px;">
                     <h2 style="color: #0A2540; margin-bottom: 25px; font-size: 24px;">New Message in Event Chat</h2>
-                    
-                    <!-- Event Info -->
                     <div style="background: #f6f9fc; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #E8A87C;">
                         <h3 style="color: #0A2540; margin: 0 0 15px 0; font-size: 20px;">{event_title}</h3>
                         <p style="color: #525f7f; margin: 0; font-size: 15px; line-height: 1.6;">
@@ -192,8 +194,6 @@ def send_chat_notification_email(notification: Dict) -> bool:
                             <strong>Organization:</strong> {organization_name}
                         </p>
                     </div>
-                    
-                    <!-- Message Content -->
                     <div style="background: #e8f4fd; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #d1e7dd;">
                         <p style="color: #0A2540; margin: 0 0 15px 0; font-weight: 600; font-size: 16px;">
                             <strong>From:</strong> {sender_name}
@@ -204,16 +204,12 @@ def send_chat_notification_email(notification: Dict) -> bool:
                             </p>
                         </div>
                     </div>
-                    
-                    <!-- Call to Action -->
                     <div style="text-align: center; margin: 35px 0;">
                         <a href="https://taylor-connect-hub.vercel.app/opportunities" 
                            style="background: #0A2540; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 16px; transition: background-color 0.3s;">
                             View Event Chat →
                         </a>
                     </div>
-                    
-                    <!-- Footer Info -->
                     <div style="background: #f6f9fc; padding: 20px; border-radius: 12px; margin: 25px 0;">
                         <p style="color: #525f7f; margin: 0; font-size: 14px; line-height: 1.5;">
                             <strong>Manage Notifications:</strong> You can control your notification preferences in your account settings.<br>
@@ -221,8 +217,6 @@ def send_chat_notification_email(notification: Dict) -> bool:
                         </p>
                     </div>
                 </div>
-                
-                <!-- Footer -->
                 <div style="background: #0A2540; padding: 25px; text-align: center;">
                     <p style="color: #ffffff; margin: 0; font-size: 14px;">© 2024 Taylor Connect Hub. All rights reserved.</p>
                     <p style="color: #E8A87C; margin: 5px 0 0 0; font-size: 12px;">Connecting communities through meaningful service</p>
@@ -231,16 +225,29 @@ def send_chat_notification_email(notification: Dict) -> bool:
         </body>
         </html>
         """
+
+        text_content = (
+            f"New chat message in '{event_title}'.\n\n"
+            f"From: {sender_name}\n\n"
+            f"{notification.get('message', '')}\n\n"
+            "Manage notifications in your account settings: https://taylor-connect-hub.vercel.app/settings/notifications\n"
+        )
         
         # Send email using latest Resend API
         email_response = resend_client.emails.send({
-            "from": "Taylor Connect Hub <noreply@ellmangroup.org>",
-            "to": [notification['user_email']],
+            "from": "Taylor Connect Hub <info@ellmangroup.org>",
+            "to": [user_email],
             "subject": subject,
-            "html": html_content
+            "html": html_content,
+            "text": text_content,
+            "reply_to": "info@ellmangroup.org",
+            "headers": {
+                "List-Unsubscribe": "<mailto:unsubscribe@ellmangroup.org>, <https://taylor-connect-hub.vercel.app/settings/notifications>",
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+            }
         })
         
-        logger.info(f"Email sent successfully to {notification['user_email']}: {email_response.id}")
+        logger.info(f"Email sent successfully to {user_email}: {getattr(email_response, 'id', 'N/A')}")
         return True
         
     except Exception as e:
@@ -320,7 +327,11 @@ def process_chat_notifications():
                 logger.info(f"Skipped notification {i}: {notification.get('user_email', 'unknown')} (preferences or recent activity)")
                 # Mark as sent to avoid reprocessing
                 mark_notification_sent(notification['id'])
-                
+
+            # Rate limiting: delay between emails
+            if i < len(notifications):
+                time.sleep(RATE_LIMIT_DELAY_MS / 1000.0)
+            
         except Exception as e:
             error_count += 1
             logger.error(f"Error processing notification {i}: {e}")

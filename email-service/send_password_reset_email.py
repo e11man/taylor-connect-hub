@@ -6,15 +6,10 @@ import string
 import psycopg2
 from datetime import datetime, timedelta, timezone
 
-# Get API key from environment variable or use default
-resend.api_key = os.getenv('RESEND_API_KEY', "re_e32x6j2U_Mx5KLTyeAW5oBVYPftpDnH92")
-
-# Database connection (you'll need to set these environment variables)
-DB_HOST = os.getenv('DB_HOST', 'aws-0-us-east-2.pooler.supabase.com')
-DB_PORT = os.getenv('DB_PORT', '6543')
-DB_NAME = os.getenv('DB_NAME', 'postgres')
-DB_USER = os.getenv('DB_USER', 'postgres.gzzbjifmrwvqbkwbyvhm')
-DB_PASSWORD = os.getenv('DB_PASSWORD', 'Idonotunderstandwhatido!')
+# Get API key from environment variable
+resend.api_key = os.getenv('RESEND_API_KEY', '')
+if not resend.api_key:
+    raise RuntimeError('RESEND_API_KEY is not set')
 
 def generate_reset_code():
     """Generate a 6-digit reset code"""
@@ -24,11 +19,12 @@ def get_db_connection():
     """Get database connection"""
     try:
         connection = psycopg2.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            database=DB_NAME,
-            user=DB_USER,
-            password=DB_PASSWORD
+            host=os.getenv('DB_HOST', 'aws-0-us-east-2.pooler.supabase.com'),
+            port=os.getenv('DB_PORT', '6543'),
+            database=os.getenv('DB_NAME', 'postgres'),
+            user=os.getenv('DB_USER', 'postgres.gzzbjifmrwvqbkwbyvhm'),
+            password=os.getenv('DB_PASSWORD', ''),
+            connect_timeout=10
         )
         return connection
     except Exception as e:
@@ -73,51 +69,37 @@ def send_password_reset_email(email, reset_code):
     """Send password reset email with 6-digit code"""
     try:
         params = {
-            "from": "Taylor Connect <noreply@ellmangroup.org>",
+            "from": "Taylor Connect Hub <info@ellmangroup.org>",
             "to": [email],
-            "subject": "Reset Your Taylor Connect Hub Password",
+            "subject": "Your Taylor Connect Hub password reset code",
             "html": f"""
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-                <div style="background: linear-gradient(135deg, #00AFCE 0%, #0077B6 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-                    <h1 style="color: white; margin: 0; font-size: 24px;">Taylor Connect Hub</h1>
-                    <p style="color: white; margin: 10px 0 0 0; opacity: 0.9;">Password Reset</p>
+            <div style=\"font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;\">
+                <div style=\"background: linear-gradient(135deg, #00AFCE 0%, #0077B6 100%); padding: 30px; text-align: center; border-radius: 10px 10px 0 0;\">
+                    <h1 style=\"color: white; margin: 0; font-size: 24px;\">Taylor Connect Hub</h1>
+                    <p style=\"color: white; margin: 10px 0 0 0; opacity: 0.9;\">Password Reset</p>
                 </div>
-                
-                <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                    <h2 style="color: #333; margin-bottom: 20px;">Reset Your Password</h2>
-                    
-                    <p style="color: #666; line-height: 1.6; margin-bottom: 25px;">
-                        We received a request to reset your password for your Taylor Connect Hub account. To proceed with the password reset, please enter the verification code below:
-                    </p>
-                    
-                    <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;">
-                        <div style="font-size: 32px; font-weight: bold; color: #00AFCE; letter-spacing: 8px; font-family: 'Courier New', monospace;">
+                <div style=\"background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);\">
+                    <p style=\"color: #666; line-height: 1.6; margin-bottom: 25px;\">Use this code to reset your password:</p>
+                    <div style=\"background: #f8f9fa; padding: 20px; border-radius: 8px; text-align: center; margin: 25px 0;\">
+                        <div style=\"font-size: 32px; font-weight: bold; color: #00AFCE; letter-spacing: 8px; font-family: 'Courier New', monospace;\">
                             {reset_code}
                         </div>
-                        <p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">Your 6-digit reset code</p>
+                        <p style=\"color: #666; margin: 10px 0 0 0; font-size: 14px;\">This code expires in 10 minutes.</p>
                     </div>
-                    
-                    <p style="color: #666; line-height: 1.6; margin-bottom: 20px;">
-                        Enter this code in the password reset screen to create a new password. This code will expire in 10 minutes.
-                    </p>
-                    
-                    <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; border-left: 4px solid #00AFCE; margin: 20px 0;">
-                        <p style="color: #0056b3; margin: 0; font-size: 14px;">
-                            <strong>Security Note:</strong> Never share this code with anyone. Taylor Connect Hub will never ask for this code via phone or email. If you didn't request this password reset, you can safely ignore this email.
-                        </p>
-                    </div>
-                    
-                    <p style="color: #666; line-height: 1.6; margin-top: 25px; font-size: 14px;">
-                        If you didn't request this password reset, your account is secure and no action is needed.
-                    </p>
+                    <p style=\"color: #666; line-height: 1.6; font-size: 14px;\">If you did not request this, you can ignore this message.</p>
                 </div>
-                
-                <div style="text-align: center; margin-top: 20px; color: #999; font-size: 12px;">
+                <div style=\"text-align: center; margin-top: 20px; color: #999; font-size: 12px;\">
                     <p>© 2024 Taylor Connect Hub. All rights reserved.</p>
                     <p>This email was sent to {email}</p>
                 </div>
             </div>
-            """
+            """,
+            "text": f"Your Taylor Connect Hub password reset code is {reset_code}. It expires in 10 minutes. If you did not request this, you can ignore this message.",
+            "reply_to": "info@ellmangroup.org",
+            "headers": {
+                "List-Unsubscribe": "<mailto:unsubscribe@ellmangroup.org>, <https://taylor-connect-hub.vercel.app/settings/notifications>",
+                "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+            }
         }
 
         print(f"Sending password reset email to: {email}")

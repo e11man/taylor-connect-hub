@@ -17,16 +17,18 @@ load_dotenv()
 
 class ContactFormHandler:
     def __init__(self, production_mode=False):
-        self.resend_api_key = os.getenv('RESEND_API_KEY', 're_1234567890abcdef')  # Replace with your actual key
+        self.resend_api_key = os.getenv('RESEND_API_KEY', '')
+        if not self.resend_api_key:
+            raise RuntimeError('RESEND_API_KEY is not set')
         
         if production_mode:
             # For production - requires verified domain
-            self.from_email = "noreply@ellmangroup.org"  # Update with your verified domain
+            self.from_email = "Taylor Connect Hub <info@ellmangroup.org>"
             self.to_email = "josh_ellman@icloud.com"
         else:
-            # For testing - uses Resend's default sender
-            self.from_email = "noreply@ellmangroup.org"
-            self.to_email = "joshalanellman@gmail.com"  # Use your verified email for testing
+            # For testing - uses verified domain
+            self.from_email = "Taylor Connect Hub <info@ellmangroup.org>"
+            self.to_email = os.getenv("TEST_RECIPIENT", "joshalanellman@gmail.com")
         
         self.headers = {
             'Authorization': f'Bearer {self.resend_api_key}',
@@ -34,7 +36,7 @@ class ContactFormHandler:
         }
         
         print("✅ Contact Form Handler initialized")
-        print(f"🔑 Using API key: {self.resend_api_key[:10]}...")
+        print(f"🔑 Using API key: {self.resend_api_key[:6]}… (hidden)")
         print(f"📧 From: {self.from_email}")
         print(f"📧 To: {self.to_email}")
     
@@ -43,13 +45,26 @@ class ContactFormHandler:
         try:
             # Create the email HTML content
             html_content = self._create_email_html(name, email, message)
+            text_content = (
+                f"New contact form submission\n\n"
+                f"Name: {name}\n"
+                f"Email: {email}\n"
+                f"Message: {message}\n\n"
+                "If you no longer wish to receive these messages, you can unsubscribe in settings: https://taylor-connect-hub.vercel.app/settings/notifications\n"
+            )
             
             # Prepare the email data
             email_data = {
                 "from": self.from_email,
                 "to": [self.to_email],
                 "subject": f"New Contact Form Submission - {name}",
-                "html": html_content
+                "html": html_content,
+                "text": text_content,
+                "reply_to": "info@ellmangroup.org",
+                "headers": {
+                    "List-Unsubscribe": "<mailto:unsubscribe@ellmangroup.org>, <https://taylor-connect-hub.vercel.app/settings/notifications>",
+                    "List-Unsubscribe-Post": "List-Unsubscribe=One-Click"
+                }
             }
             
             # Send the email via Resend API
