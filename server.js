@@ -1235,7 +1235,7 @@ app.get('/api/site-statistics', async (req, res) => {
         console.log('Calculating real values from database...');
         
         // Calculate active volunteers (unique users who signed up for events)
-        const { data: userEventsForVolunteers, error: ueVolunteersError } = await supabase
+        const { data: userEventsForVolunteers } = await supabase
           .from('user_events')
           .select('user_id');
 
@@ -1248,7 +1248,7 @@ app.get('/api/site-statistics', async (req, res) => {
         const activeVolunteersCount = uniqueUserIds.size;
 
         // Calculate hours contributed
-        const { data: userEvents, error: ueError } = await supabase
+        const { data: userEvents } = await supabase
           .from('user_events')
           .select(`
             event_id,
@@ -1265,7 +1265,7 @@ app.get('/api/site-statistics', async (req, res) => {
             if (event && event.arrival_time && event.estimated_end_time) {
               const start = new Date(event.arrival_time);
               const end = new Date(event.estimated_end_time);
-              const hours = Math.ceil((end - start) / (1000 * 60 * 60));
+              const hours = Math.max(1, Math.ceil((end - start) / (1000 * 60 * 60)));
               totalHours += hours;
             } else {
               totalHours += 2; // Default 2 hours
@@ -1274,7 +1274,7 @@ app.get('/api/site-statistics', async (req, res) => {
         }
 
         // Calculate partner organizations
-        const { data: events, error: eventsError } = await supabase
+        const { data: events } = await supabase
           .from('events')
           .select('organization_id');
 
@@ -1344,6 +1344,103 @@ app.get('/api/site-statistics', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+
+// ==================== NEW: Impact stats calculator & content sync ====================
+async function calculateImpactStats() {
+  // Volunteers: count active volunteer profiles
+  let volunteersCount = 0;
+  try {
+    const { count: volunteersHeadCount } = await supabase
+      .from('profiles')
+      .select('id', { count: 'exact', head: true })
+      .eq('user_type', 'volunteer')
+      .eq('status', 'active');
+    if (typeof volunteersHeadCount === 'number') volunteersCount = volunteersHeadCount;
+  } catch {}
+
+  // Partner organizations: count approved organizations; fallback to all
+  let orgsCount = 0;
+  try {
+    let resp = await supabase
+      .from('organizations')
+      .select('id', { count: 'exact', head: true })
+      .eq('status', 'approved');
+    if (typeof resp.count === 'number' && resp.count > 0) {
+      orgsCount = resp.count;
+    } else {
+      const fallback = await supabase
+        .from('organizations')
+        .select('id', { count: 'exact', head: true });
+      if (typeof fallback.count === 'number') orgsCount = fallback.count;
+    }
+  } catch {}
+
+  // Hours contributed: sum hours per signup
+  let totalHours = 0;
+  try {
+    const { data: userEvents } = await supabase
+      .from('user_events')
+      .select(`
+        id,
+        events (
+          arrival_time,
+          estimated_end_time
+        )
+      `);
+    if (userEvents) {
+      for (const ue of userEvents) {
+        const ev = ue.events;
+        if (ev && ev.arrival_time && ev.estimated_end_time) {
+          const start = new Date(ev.arrival_time);
+          const end = new Date(ev.estimated_end_time);
+          const hours = Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60)));
+          totalHours += hours;
+        } else {
+          totalHours += 2;
+        }
+      }
+    }
+  } catch {}
+
+  return {
+    volunteers_count: String(volunteersCount || 0),
+    hours_served_total: String(totalHours || 0),
+    partner_orgs_count: String(orgsCount || 0),
+  };
+}
+
+async function updateContentImpactStats() {
+  const stats = await calculateImpactStats();
+  const rows = [
+    { key: 'active_volunteers', value: stats.volunteers_count },
+    { key: 'hours_contributed', value: stats.hours_served_total },
+    { key: 'partner_organizations', value: stats.partner_orgs_count },
+  ];
+
+  for (const row of rows) {
+    // Try update; if zero updated, insert
+    const { data: existing } = await supabase
+      .from('content')
+      .select('id')
+      .eq('page', 'homepage')
+      .eq('section', 'impact')
+      .eq('key', row.key)
+      .single();
+
+    if (existing?.id) {
+      await supabase
+        .from('content')
+        .update({ value: row.value })
+        .eq('id', existing.id);
+    } else {
+      await supabase
+        .from('content')
+        .insert({ page: 'homepage', section: 'impact', key: row.key, value: row.value, language_code: 'en' });
+    }
+  }
+
+  return stats;
+}
 
 app.post('/api/site-statistics', async (req, res) => {
   try {
@@ -1445,8 +1542,8 @@ app.post('/api/site-statistics', async (req, res) => {
       statsData[stat.stat_type] = {
         calculated_value: stat.calculated_value || 0,
         manual_override: stat.manual_override,
-        display_value: stat.manual_override !== null ? stat.manual_override : (stat.calculated_value || 0),
-        last_calculated_at: stat.last_calculated_at || new Date().toISOString()
+        display_value: stat.display_value,
+        last_calculated_at: stat.last_calculated_at
       };
     });
     
@@ -1589,12 +1686,12 @@ app.post('/api/event-signup', async (req, res) => {
     }
 
     // Check if already signed up
-    const { data: existing, error: checkError } = await supabase
+    const { data: existing } = await supabase
       .from('user_events')
       .select('id')
       .eq('user_id', user_id)
       .eq('event_id', event_id)
-      .single();
+      .maybeSingle();
 
     if (existing) {
       return res.status(400).json({ success: false, error: 'Already signed up for this event' });
@@ -1603,21 +1700,19 @@ app.post('/api/event-signup', async (req, res) => {
     // Check event capacity
     const { data: event, error: eventError } = await supabase
       .from('events')
-      .select('max_participants')
+      .select('max_participants, arrival_time, estimated_end_time')
       .eq('id', event_id)
       .single();
 
     if (eventError) throw eventError;
 
     if (event.max_participants) {
-      const { count, error: countError } = await supabase
+      const { count } = await supabase
         .from('user_events')
         .select('*', { count: 'exact', head: true })
         .eq('event_id', event_id);
-
-      if (countError) throw countError;
       
-      if (count >= event.max_participants) {
+      if (typeof count === 'number' && count >= event.max_participants) {
         return res.status(400).json({ success: false, error: 'Event is full' });
       }
     }
@@ -1634,6 +1729,12 @@ app.post('/api/event-signup', async (req, res) => {
       .single();
 
     if (error) throw error;
+
+    // After successful signup, recalculate impact stats and sync content
+    updateContentImpactStats().catch(err => {
+      console.warn('Non-fatal: failed to update content impact stats after signup', err?.message);
+    });
+
     res.json({ success: true, data });
   } catch (error) {
     console.error('Event signup error:', error);
@@ -1893,42 +1994,37 @@ app.delete('/api/event-signup', async (req, res) => {
 // Content-based statistics API - serves stats directly from content table
 app.get('/api/content-stats', async (req, res) => {
   try {
-    // Fetch stats from content table - corrected to use 'impact' section and correct keys
-    const { data: statsData, error } = await supabase
-      .from('content')
-      .select('key, value')
-      .eq('page', 'homepage')
-      .eq('section', 'impact')
-      .in('key', ['active_volunteers', 'hours_contributed', 'partner_organizations']);
+    // Compute latest numbers from DB
+    const computed = await calculateImpactStats();
 
-    if (error) throw error;
-
-    // Convert array to object for easier access
-    const stats = {};
-    statsData.forEach(item => {
-      stats[item.key] = item.value;
+    // Kick off content sync (do not block response if it fails)
+    updateContentImpactStats().catch(err => {
+      console.warn('Non-fatal: failed to sync content impact stats', err?.message);
     });
 
-    // Return in format expected by frontend - map to the expected keys
-    res.json({
-      success: true,
-      data: {
-        volunteers_count: stats.active_volunteers || '0',
-        hours_served_total: stats.hours_contributed || '0', 
-        partner_orgs_count: stats.partner_organizations || '0'
-      }
-    });
+    res.json({ success: true, data: computed });
   } catch (error) {
     console.error('Error fetching content stats:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: error.message,
-      data: {
-        volunteers_count: '0',
-        hours_served_total: '0',
-        partner_orgs_count: '0'
-      }
-    });
+    // Fallback to reading from content table
+    try {
+      const { data: statsData } = await supabase
+        .from('content')
+        .select('key, value')
+        .eq('page', 'homepage')
+        .eq('section', 'impact')
+        .in('key', ['active_volunteers', 'hours_contributed', 'partner_organizations']);
+      const stats = {};
+      (statsData || []).forEach(item => { stats[item.key] = item.value; });
+      res.json({ success: true, data: {
+        volunteers_count: stats.active_volunteers || '0',
+        hours_served_total: stats.hours_contributed || '0',
+        partner_orgs_count: stats.partner_organizations || '0'
+      }});
+    } catch (fallbackErr) {
+      res.status(500).json({ success: false, error: fallbackErr.message, data: {
+        volunteers_count: '0', hours_served_total: '0', partner_orgs_count: '0'
+      }});
+    }
   }
 });
 
