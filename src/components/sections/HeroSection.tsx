@@ -9,13 +9,17 @@ import { motion } from "framer-motion";
 import CountUpNumber from "@/components/ui/CountUpNumber";
 import { useContentSection } from "@/hooks/useContent";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useContentStats } from "@/hooks/useContentStats";
+
+const parseNumber = (val: string | number | undefined): number => {
+  const s = (val ?? '0').toString();
+  const n = parseInt(s.replace(/[^0-9.-]/g, ''), 10);
+  return Number.isFinite(n) ? n : 0;
+};
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
-  const { stats, loading: statsLoading } = useContentStats();
   
   // Extract content with fallbacks
   const titleLine1 = heroContent.titleLine1 || "Connect.";
@@ -29,17 +33,17 @@ const HeroSection = () => {
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: stats?.volunteers_count || "0"
+      value: parseNumber(impactContent.active_volunteers)
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: stats?.hours_served_total || "0"
+      value: parseNumber(impactContent.hours_contributed)
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: stats?.partner_orgs_count || "0"
+      value: parseNumber(impactContent.partner_organizations)
     }
   ];
 
@@ -52,7 +56,7 @@ const HeroSection = () => {
   };
 
   // Show loading skeleton for the entire hero section on initial load
-  if ((heroLoading && Object.keys(heroContent).length === 0) || impactLoading || statsLoading) {
+  if ((heroLoading && Object.keys(heroContent).length === 0) || impactLoading) {
     return (
       <section id="home" className="bg-white section-padding">
         <div className="container-custom">

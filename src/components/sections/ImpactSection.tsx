@@ -3,31 +3,35 @@ import { useContentSection } from "@/hooks/useContent";
 import AnimatedSection from "@/components/ui/animated-section";
 import { motion } from "framer-motion";
 import CountUpNumber from "@/components/ui/CountUpNumber";
-import { useContentStats } from "@/hooks/useContentStats";
 import { Skeleton } from "@/components/ui/skeleton";
+
+const parseNumber = (val: string | number | undefined): number => {
+  const s = (val ?? '0').toString();
+  const n = parseInt(s.replace(/[^0-9.-]/g, ''), 10);
+  return Number.isFinite(n) ? n : 0;
+};
 
 const ImpactSection = () => {
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
   const { content: aboutImpactContent } = useContentSection('about', 'impact');
-  const { stats, loading: statsLoading } = useContentStats();
   
   const statsData = [
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: stats?.volunteers_count || "0",
+      value: parseNumber(impactContent.active_volunteers),
       description: aboutImpactContent.volunteers_description || "Passionate individuals serving Upland"
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: stats?.hours_served_total || "0",
+      value: parseNumber(impactContent.hours_contributed),
       description: aboutImpactContent.hours_description || "Collective time dedicated to service"
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: stats?.partner_orgs_count || "0",
+      value: parseNumber(impactContent.partner_organizations),
       description: aboutImpactContent.organizations_description || "Local organizations making a difference"
     }
   ];
@@ -72,7 +76,7 @@ const ImpactSection = () => {
   return (
     <section id="impact" className="bg-white section-padding">
       <div className="container-custom">
-        {impactLoading || statsLoading ? (
+        {impactLoading ? (
           <div className="text-center max-w-4xl mx-auto mb-16">
             <div className="space-y-4">
               <Skeleton className="h-12 w-1/2 mx-auto" />
@@ -114,7 +118,7 @@ const ImpactSection = () => {
               variants={containerVariants}
               className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto"
             >
-              {statsData.map((stat, index) => (
+              {statsData.map((stat) => (
                 <motion.div 
                   key={stat.label}
                   variants={itemVariants}
