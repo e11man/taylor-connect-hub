@@ -9,11 +9,13 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { useAuth } from '@/contexts/AuthContext';
 import { DynamicText } from '@/components/content/DynamicText';
+import { ForgotPasswordModal } from '@/components/modals/ForgotPasswordModal';
 
 const OrganizationLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotPasswordModalOpen, setForgotPasswordModalOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn } = useAuth();
@@ -28,6 +30,7 @@ const OrganizationLogin = () => {
   const { content: passwordPlaceholder } = useContent('organizationLogin', 'form', 'passwordPlaceholder', 'Enter your password');
   const { content: noAccountPrompt } = useContent('organizationLogin', 'links', 'noAccountPrompt', "Don't have an account?");
   const { content: signUpLink } = useContent('organizationLogin', 'links', 'signUp', 'Sign up');
+  const { content: forgotPasswordLink } = useContent('organizationLogin', 'links', 'forgotPassword', 'Forgot password?');
   const { content: successTitle } = useContent('organizationLogin', 'messages', 'successTitle', 'Welcome Back!');
   const { content: successDescription } = useContent('organizationLogin', 'messages', 'successDescription', 'Successfully signed in to your organization account.');
   const { content: errorTitle } = useContent('organizationLogin', 'messages', 'errorTitle', 'Sign In Failed');
@@ -144,7 +147,13 @@ const OrganizationLogin = () => {
 
                 {/* Forgot Password Link */}
                 <div className="text-right">
-                  {/* Removed Forgot Password link as per new_code */}
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground hover:text-foreground font-montserrat font-medium transition-colors"
+                    onClick={() => setForgotPasswordModalOpen(true)}
+                  >
+                    {forgotPasswordLink}
+                  </button>
                 </div>
 
                 {/* Submit Button */}
@@ -176,7 +185,10 @@ const OrganizationLogin = () => {
 
       <Footer />
       
-      {/* Removed ForgotPasswordModal as per new_code */}
+      <ForgotPasswordModal
+        isOpen={forgotPasswordModalOpen}
+        onClose={() => setForgotPasswordModalOpen(false)}
+      />
     </div>
   );
 };

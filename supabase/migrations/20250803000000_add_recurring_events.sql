@@ -476,7 +476,7 @@ returns table(
   title text,
   description text,
   pattern text,
-  interval int,
+  "interval" int,
   start_date date,
   end_by_date date,
   total_occurrences bigint,
@@ -495,7 +495,7 @@ begin
     es.title,
     es.description,
     es.pattern,
-    es.interval,
+    es."interval",
     es.start_date,
     es.end_by_date,
     count(e.id) as total_occurrences,
@@ -504,7 +504,7 @@ begin
   from public.event_series es
   left join public.events e on e.series_id = es.id
   where es.id = p_series_id
-  group by es.id, es.title, es.description, es.pattern, es.interval, es.start_date, es.end_by_date;
+  group by es.id, es.title, es.description, es.pattern, es."interval", es.start_date, es.end_by_date;
 end;
 $$;
 

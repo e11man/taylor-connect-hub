@@ -56,6 +56,8 @@ export const ForgotPasswordModal = ({ isOpen, onClose }: ForgotPasswordModalProp
 
       if (result.success) {
         setEmailSent(true);
+        // Immediately open the code entry + reset modal so users can enter the code
+        setShowResetModal(true);
         toast({
           title: toastResetEmailSentTitle,
           description: toastResetEmailSentDesc,
