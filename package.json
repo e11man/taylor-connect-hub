@@ -15,7 +15,8 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "seed:org-pending": "node scripts/add-organization-pending-content.js"
+    "seed:org-pending": "node scripts/add-organization-pending-content.js",
+    "seed:safety": "node scripts/add-safety-guidelines-content.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

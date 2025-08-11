@@ -9,52 +9,13 @@ import { motion } from "framer-motion";
 import CountUpNumber from "@/components/ui/CountUpNumber";
 import { useContentSection } from "@/hooks/useContent";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useContentStats } from "@/hooks/useContentStats";
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
-  const [stats, setStats] = useState({
-    volunteers_count: "0",
-    hours_served_total: "0", 
-    partner_orgs_count: "0"
-  });
-  const [statsLoading, setStatsLoading] = useState(true);
-  
-  // Load statistics directly from site_statistics table (same as admin console)
-  useEffect(() => {
-    const loadStats = async () => {
-      try {
-        setStatsLoading(true);
-        const { data, error } = await supabase
-          .from('site_statistics')
-          .select('volunteers_count, hours_served_total, partner_orgs_count')
-          .limit(1);
-
-        if (error) {
-          console.error('Error loading stats:', error);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          const statsData = data[0];
-          setStats({
-            volunteers_count: statsData.volunteers_count?.toString() || "0",
-            hours_served_total: statsData.hours_served_total?.toString() || "0",
-            partner_orgs_count: statsData.partner_orgs_count?.toString() || "0"
-          });
-        }
-      } catch (err) {
-        console.error('Error loading statistics:', err);
-      } finally {
-        setStatsLoading(false);
-      }
-    };
-
-    loadStats();
-  }, []);
+  const { stats, loading: statsLoading } = useContentStats();
   
   // Extract content with fallbacks
   const titleLine1 = heroContent.titleLine1 || "Connect.";
@@ -68,17 +29,17 @@ const HeroSection = () => {
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: stats.volunteers_count
+      value: stats?.volunteers_count || "0"
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: stats.hours_served_total
+      value: stats?.hours_served_total || "0"
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: stats.partner_orgs_count
+      value: stats?.partner_orgs_count || "0"
     }
   ];
 
