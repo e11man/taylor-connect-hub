@@ -24,7 +24,8 @@ const items = [
   { page: 'events', section: 'safety', key: 'guideline_6', value: "Wear appropriate clothing and footwear for the activity", language_code: 'en' },
   { page: 'events', section: 'safety', key: 'guideline_7', value: "Stay hydrated and take breaks when needed", language_code: 'en' },
   { page: 'events', section: 'safety', key: 'accept_button', value: 'I Accept and Understand', language_code: 'en' },
-  { page: 'events', section: 'safety', key: 'cancel_button', value: 'Cancel', language_code: 'en' }
+  { page: 'events', section: 'safety', key: 'cancel_button', value: 'Cancel', language_code: 'en' },
+  { page: 'events', section: 'safety', key: 'opportunities_limit', value: "Browse below and join up to 2 opportunities.", language_code: 'en' }
 ];
 
 async function seedSafety() {
