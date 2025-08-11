@@ -69,6 +69,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       localStorage.setItem('user_session', JSON.stringify(data.session));
       setSession(data.session);
       setUser(data.session.user);
+
+      // After login, cleanup commitments for canceled/expired events
+      try {
+        await fetch(`${import.meta.env.DEV ? 'http://localhost:3001' : ''}/api/cleanup-user-commitments`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: data.session.user.id })
+        });
+      } catch (e) {
+        // Non-fatal if cleanup API is unavailable
+        console.warn('Cleanup commitments API call failed (non-fatal):', e);
+      }
+
       setUserEventsRefreshTrigger(prev => prev + 1);
       
       // Redirect regular users (students and external users) to dashboard

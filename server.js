@@ -1636,7 +1636,112 @@ app.post('/api/event-signup', async (req, res) => {
     if (error) throw error;
     res.json({ success: true, data });
   } catch (error) {
-    console.error('Error signing up for event:', error);
+    console.error('Event signup error:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// NEW: Cleanup a user's commitments for canceled or expired events
+app.post('/api/cleanup-user-commitments', async (req, res) => {
+  try {
+    const { user_id } = req.body;
+    if (!user_id) {
+      return res.status(400).json({ success: false, error: 'Missing required field: user_id' });
+    }
+
+    // Fetch user's signups
+    const { data: userSignups, error: signupsError } = await supabase
+      .from('user_events')
+      .select('id, event_id')
+      .eq('user_id', user_id);
+
+    if (signupsError) {
+      return res.status(500).json({ success: false, error: signupsError.message });
+    }
+
+    if (!userSignups || userSignups.length === 0) {
+      return res.json({ success: true, removed: 0 });
+    }
+
+    const eventIds = userSignups.map(s => s.event_id);
+
+    // Try to fetch events with status; if status not present, fall back without it
+    let events;
+    let eventsError;
+
+    {
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, date, estimated_end_time, status')
+        .in('id', eventIds);
+      events = data;
+      eventsError = error;
+    }
+
+    if (eventsError) {
+      // Retry without status column (for older schemas)
+      const { data, error } = await supabase
+        .from('events')
+        .select('id, date, estimated_end_time')
+        .in('id', eventIds);
+      events = data;
+      eventsError = error;
+    }
+
+    if (eventsError) {
+      return res.status(500).json({ success: false, error: eventsError.message });
+    }
+
+    const now = Date.now();
+    const oneHourMs = 60 * 60 * 1000;
+
+    // Determine which signups should be removed
+    const signupIdsToRemove = [];
+
+    for (const signup of userSignups) {
+      const ev = events.find(e => e.id === signup.event_id);
+      if (!ev) continue;
+
+      const hasStatus = Object.prototype.hasOwnProperty.call(ev, 'status');
+      const statusValue = hasStatus ? (ev.status || '').toLowerCase() : '';
+
+      // Remove if canceled/cancelled
+      const isCanceled = statusValue === 'cancelled' || statusValue === 'canceled';
+
+      // Compute expiration: if estimated_end_time exists, expired 1h after; else use date + 2h, then +1h grace
+      let isExpired = false;
+      try {
+        if (ev.estimated_end_time) {
+          const endTs = new Date(ev.estimated_end_time).getTime();
+          isExpired = now > (endTs + oneHourMs);
+        } else if (ev.date) {
+          const startTs = new Date(ev.date).getTime();
+          const fallbackEnd = startTs + (2 * 60 * 60 * 1000);
+          isExpired = now > (fallbackEnd + oneHourMs);
+        }
+      } catch {}
+
+      if (isCanceled || isExpired) {
+        signupIdsToRemove.push(signup.id);
+      }
+    }
+
+    if (signupIdsToRemove.length === 0) {
+      return res.json({ success: true, removed: 0 });
+    }
+
+    const { error: deleteError } = await supabase
+      .from('user_events')
+      .delete()
+      .in('id', signupIdsToRemove);
+
+    if (deleteError) {
+      return res.status(500).json({ success: false, error: deleteError.message });
+    }
+
+    return res.json({ success: true, removed: signupIdsToRemove.length });
+  } catch (error) {
+    console.error('cleanup-user-commitments error:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
