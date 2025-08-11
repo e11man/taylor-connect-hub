@@ -10,11 +10,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Check, MessageSquare } from 'lucide-react';
+import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Check, MessageSquare, RotateCcw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DynamicText } from '@/components/content/DynamicText';
 import { ContentManagement } from '@/components/admin/ContentManagement';
 import { EventChatView } from '@/components/admin/EventChatView';
+import OrganizationRejectionModal from '@/components/modals/OrganizationRejectionModal';
 
 interface User {
   id: string;
@@ -397,6 +398,8 @@ export const AdminDashboard = () => {
   const [viewEventModal, setViewEventModal] = useState(false);
   const [editEventModal, setEditEventModal] = useState(false);
   const [chatEventModal, setChatEventModal] = useState(false);
+  const [rejectOrgModal, setRejectOrgModal] = useState(false);
+  const [orgToReject, setOrgToReject] = useState<Organization | null>(null);
   
   // Selected items for modals
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -901,25 +904,13 @@ export const AdminDashboard = () => {
 
   const promoteToPA = async (userId: string) => {
     try {
-      // Update both profiles and user_roles tables
+      // Update only the profiles table since this app uses custom auth
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ role: 'pa' })
         .eq('id', userId);
 
       if (profileError) throw profileError;
-
-      // Also update or insert into user_roles table
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .upsert({ 
-          user_id: userId, 
-          role: 'pa' 
-        }, { 
-          onConflict: 'user_id' 
-        });
-
-      if (roleError) throw roleError;
 
       toast({
         title: "Success",
@@ -931,6 +922,58 @@ export const AdminDashboard = () => {
       toast({
         title: "Error",
         description: err.message || 'Failed to promote user',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const demoteFromPA = async (userId: string) => {
+    try {
+      // Demote PA back to user role
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ role: 'user' })
+        .eq('id', userId);
+
+      if (profileError) throw profileError;
+
+      toast({
+        title: "Success",
+        description: "User demoted from PA successfully",
+      });
+
+      loadData(); // Refresh data
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to demote user',
+        variant: "destructive",
+      });
+    }
+  };
+
+  const unrejectOrganization = async (orgId: string) => {
+    try {
+      const { error } = await supabase
+        .from('organizations')
+        .update({ 
+          status: 'pending',
+          rejection_reason: null
+        })
+        .eq('id', orgId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Organization status reset to pending",
+      });
+
+      loadData(); // Refresh data
+    } catch (err: any) {
+      toast({
+        title: "Error",
+        description: err.message || 'Failed to unreject organization',
         variant: "destructive",
       });
     }
@@ -1392,6 +1435,11 @@ export const AdminDashboard = () => {
                                  Promote to PA
                                </Button>
                              )}
+                             {user.role === 'pa' && (
+                               <Button size="sm" variant="outline" onClick={() => demoteFromPA(user.id)}>
+                                 Demote from PA
+                               </Button>
+                             )}
                              <Button size="sm" variant="outline" onClick={() => viewUser(user)}>
                                <Eye className="w-4 h-4" />
                              </Button>
@@ -1563,6 +1611,11 @@ export const AdminDashboard = () => {
                                   <XCircle className="w-4 h-4" />
                                 </Button>
                               </>
+                            )}
+                            {org.status === 'rejected' && (
+                              <Button size="sm" variant="default" onClick={() => unrejectOrganization(org.id)} title="Reset to pending status">
+                                <RotateCcw className="w-4 h-4" />
+                              </Button>
                             )}
                             <Button size="sm" variant="outline" onClick={() => viewOrganization(org)}>
                               <Eye className="w-4 h-4" />
