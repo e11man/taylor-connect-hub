@@ -17,8 +17,8 @@ const NotFound = () => {
       <div className="text-center">
         <h1 className="text-4xl font-bold mb-4">
           <DynamicText 
-            page="notFound" 
-            section="main" 
+            page="errors" 
+            section="404" 
             contentKey="title"
             fallback="404"
             as="span"
@@ -26,8 +26,8 @@ const NotFound = () => {
         </h1>
         <p className="text-xl text-gray-600 mb-4">
           <DynamicText 
-            page="notFound" 
-            section="main" 
+            page="errors" 
+            section="404" 
             contentKey="subtitle"
             fallback="Oops! Page not found"
             as="span"
@@ -35,9 +35,9 @@ const NotFound = () => {
         </p>
         <a href="/" className="text-blue-500 hover:text-blue-700 underline">
           <DynamicText 
-            page="notFound" 
-            section="main" 
-            contentKey="linkText"
+            page="errors" 
+            section="404" 
+            contentKey="back_home"
             fallback="Go back home"
             as="span"
           />
