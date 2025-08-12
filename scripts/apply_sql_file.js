@@ -70,10 +70,21 @@ async function main() {
   const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
   const chunks = splitPostgresStatements(sqlContent);
 
-  const client = new Client({ connectionString, statement_timeout: 120000, ssl: { rejectUnauthorized: false } });
+  const client = new Client({
+    connectionString,
+    ssl: { rejectUnauthorized: false },
+    statement_timeout: 120000,
+    query_timeout: 120000,
+    connectionTimeoutMillis: 10000,
+  });
 
   console.log(`Connecting to database...`);
-  await client.connect();
+  try {
+    await client.connect();
+  } catch (connectErr) {
+    console.error('❌ Failed to connect to database:', connectErr.message);
+    process.exit(1);
+  }
 
   try {
     console.log(`Applying ${chunks.length} statement(s) from: ${sqlFilePath}`);
