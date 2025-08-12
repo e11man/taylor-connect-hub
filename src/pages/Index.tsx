@@ -2,6 +2,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import HeroSection from "@/components/sections/HeroSection";
+import CommunityTransitionImage from "@/components/sections/CommunityTransitionImage";
 import MissionSection from "@/components/sections/MissionSection";
 import OpportunitiesSection from "@/components/sections/OpportunitiesSection";
 import TestimonialsSection from "@/components/sections/TestimonialsSection";
@@ -31,6 +32,7 @@ const Index = () => {
       
       <main>
         <HeroSection />
+        <CommunityTransitionImage />
         <MissionSection />
         <OpportunitiesSection />
         <TestimonialsSection setAuthModalOpen={setAuthModalOpen} />
