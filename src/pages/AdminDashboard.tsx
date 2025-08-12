@@ -1966,12 +1966,12 @@ export const AdminDashboard = () => {
 
       {/* Edit Event Modal */}
       <Dialog open={editEventModal} onOpenChange={setEditEventModal}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh]">
           <DialogHeader>
             <DialogTitle>Edit Event</DialogTitle>
             <DialogDescription>Update event information</DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 overflow-y-auto max-h-[calc(90vh-120px)]">
             <div>
               <Label htmlFor="event-title">Title</Label>
               <Input
