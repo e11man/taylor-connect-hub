@@ -51,14 +51,15 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
       return;
     }
     
-    if (isTaylorUser && (!selectedDorm || !selectedFloor)) {
-      toast({
-        title: "Error", 
-        description: "Please select your dorm and floor.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Dorm selection is now optional for Taylor users
+    // if (isTaylorUser && (!selectedDorm || !selectedFloor)) {
+    //   toast({
+    //     title: "Error", 
+    //     description: "Please select your dorm and floor.",
+    //     variant: "destructive",
+      // });
+      // return;
+    // }
 
     setIsLoading(true);
 
@@ -67,8 +68,8 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         email,
         password,
         user_type: isTaylorUser ? 'student' : 'external',
-        dorm: selectedDorm,
-        wing: selectedFloor,
+        dorm: selectedDorm || null,
+        wing: selectedFloor || null,
       });
 
       if (error) {
@@ -104,6 +105,8 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
   };
 
   const handleVerificationComplete = () => {
+    // If auto-login was successful, the user will already be redirected
+    // If not, show the success message and close the modal
     toast({
       title: "Account Verified! 🎉",
       description: "Your account has been successfully verified. You can now sign in!",
@@ -120,6 +123,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
     return (
       <Taylor2FAVerification
         email={email}
+        password={password}
         onVerificationComplete={handleVerificationComplete}
         onBack={handleBackToSignUp}
       />
@@ -221,7 +225,9 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         {isTaylorUser && (
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Residence Hall</label>
+              <label className="text-sm font-medium text-foreground">
+                Residence Hall <span className="text-muted-foreground text-xs">(Optional)</span>
+              </label>
               <Select onValueChange={setSelectedDorm} value={selectedDorm}>
                 <SelectTrigger className="w-full h-12 bg-background border-input">
                   <SelectValue placeholder="Select Your Dorm" />
@@ -235,7 +241,9 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Floor/Wing</label>
+              <label className="text-sm font-medium text-foreground">
+                Floor/Wing <span className="text-muted-foreground text-xs">(Optional)</span>
+              </label>
               <Select onValueChange={setSelectedFloor} value={selectedFloor} disabled={!selectedDorm}>
                 <SelectTrigger className={`w-full h-12 bg-background border-input ${
                   !selectedDorm ? 'opacity-50 cursor-not-allowed' : ''
@@ -267,8 +275,9 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
             isLoading ||
             password !== confirmPassword || 
             !password || 
-            !confirmPassword || 
-            (isTaylorUser && (!selectedDorm || !selectedFloor))
+            !confirmPassword
+            // Dorm selection is now optional
+            // || (isTaylorUser && (!selectedDorm || !selectedFloor))
           }
         >
           {isLoading ? "Creating Account..." : "Create Account"}

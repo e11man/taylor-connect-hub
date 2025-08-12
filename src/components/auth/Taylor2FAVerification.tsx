@@ -7,19 +7,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { sendVerificationCode } from '@/utils/emailService';
 import { DynamicText } from '@/components/content/DynamicText';
 import { useContent } from '@/hooks/useContent';
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Taylor2FAVerificationProps {
   email: string;
   onVerificationComplete: () => void;
   onBack: () => void;
+  password?: string; // Add password for auto-login
 }
 
-export function Taylor2FAVerification({ email, onVerificationComplete, onBack }: Taylor2FAVerificationProps) {
+export function Taylor2FAVerification({ email, onVerificationComplete, onBack, password }: Taylor2FAVerificationProps) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isLoading, setIsLoading] = useState(false);
   const [canResend, setCanResend] = useState(false);
   const [countdown, setCountdown] = useState(60);
   const { toast } = useToast();
+  const { signIn } = useAuth();
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   // Dynamic content
   const { content: invalidCodeTitle } = useContent('twoFA', 'errors', 'invalidCodeTitle', 'Invalid Code');
@@ -142,6 +145,32 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack }:
         title: accountVerifiedTitle,
         description: accountVerifiedDesc,
       });
+      
+      // Auto-login the user after successful verification
+      if (password) {
+        try {
+          const loginResult = await signIn(email, password);
+          if (loginResult.error) {
+            toast({
+              title: "Auto-login Failed",
+              description: "Account verified but login failed. Please log in manually.",
+              variant: "destructive",
+            });
+          } else {
+            // Auto-login successful, user will be redirected to dashboard
+            toast({
+              title: "Welcome! 🎉",
+              description: "Account verified and logged in successfully!",
+            });
+          }
+        } catch (error) {
+          toast({
+            title: "Auto-login Error",
+            description: "Account verified but login failed. Please log in manually.",
+            variant: "destructive",
+          });
+        }
+      }
       
       onVerificationComplete();
     } catch (error) {
