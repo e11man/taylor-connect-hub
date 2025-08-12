@@ -12,7 +12,8 @@ def generate_verification_code():
     return ''.join(random.choices(string.digits, k=6))
 
 def send_verification_email(email, verification_code):
-    """Send verification email with 6-digit code"""
+    """Send verification email with 6-digit code""" 
+    # dont mask as tayllr univerty 
     try:
         params = {
             "from": "acme <noreply@ellmangroup.org>",
