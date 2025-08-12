@@ -28,7 +28,11 @@ const CountUpNumber: React.FC<CountUpNumberProps> = ({
   format,
 }) => {
   const targetNumber = useMemo(() => {
-    const numeric = Number(value);
+    console.log("CountUpNumber value:", value, typeof value);
+    // Remove any commas or non-numeric characters except decimal point
+    const cleanValue = typeof value === 'string' ? value.replace(/[^\d.]/g, '') : value;
+    const numeric = Number(cleanValue);
+    console.log("CountUpNumber parsed:", numeric);
     return Number.isFinite(numeric) ? numeric : 0;
   }, [value]);
 

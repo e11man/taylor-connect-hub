@@ -9,13 +9,11 @@ import { motion } from "framer-motion";
 import CountUpNumber from "@/components/ui/CountUpNumber";
 import { useContentSection } from "@/hooks/useContent";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useContentStats } from "@/hooks/useContentStats";
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
-  const { stats, loading: statsLoading } = useContentStats();
   
   // Extract content with fallbacks
   const titleLine1 = heroContent.titleLine1 || "Connect.";
@@ -25,21 +23,22 @@ const HeroSection = () => {
   const ctaButton = heroContent.ctaButton || "Get Started";
   const secondaryButton = heroContent.secondaryButton || "Learn More";
   
+  // Simple stats using the existing content system
   const statsData = [
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: stats?.volunteers_count || "0"
+      value: impactContent.active_volunteers || "0"
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: stats?.hours_served_total || "0"
+      value: impactContent.hours_contributed || "0"
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: stats?.partner_orgs_count || "0"
+      value: impactContent.partner_organizations || "0"
     }
   ];
 
@@ -52,7 +51,7 @@ const HeroSection = () => {
   };
 
   // Show loading skeleton for the entire hero section on initial load
-  if ((heroLoading && Object.keys(heroContent).length === 0) || impactLoading || statsLoading) {
+  if ((heroLoading && Object.keys(heroContent).length === 0) || impactLoading) {
     return (
       <section id="home" className="bg-white section-padding">
         <div className="container-custom">
