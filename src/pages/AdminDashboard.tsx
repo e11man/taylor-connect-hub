@@ -24,6 +24,7 @@ interface User {
   created_at: string;
   status: string;
   role: string;
+  requested_role?: string | null;
   organization_name?: string;
   user_id?: string | null;
 }
@@ -855,6 +856,22 @@ export const AdminDashboard = () => {
     }
   };
 
+  const approveLeadership = async (userId: string, requestedRole: string) => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: requestedRole, requested_role: null })
+        .eq('id', userId);
+
+      if (error) throw error;
+
+      toast({ title: 'Success', description: 'Leadership role approved' });
+      loadData();
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message || 'Failed to approve leadership', variant: 'destructive' });
+    }
+  };
+
   const approveOrganization = async (orgId: string) => {
     try {
       const { error } = await supabase
@@ -1439,6 +1456,11 @@ export const AdminDashboard = () => {
                              {user.status === 'pending' && (
                                <Button size="sm" onClick={() => approveUser(user.id)}>
                                  <CheckCircle className="w-4 h-4" />
+                               </Button>
+                             )}
+                             {user.requested_role && user.role === 'user' && (
+                               <Button size="sm" variant="outline" onClick={() => approveLeadership(user.id, user.requested_role!)}>
+                                 Approve Leadership ({user.requested_role})
                                </Button>
                              )}
                              {user.role === 'user' && (

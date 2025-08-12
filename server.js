@@ -1729,6 +1729,22 @@ app.post('/api/event-signup', async (req, res) => {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
     }
 
+    // If attempting to sign up another user, enforce leadership role
+    if (signed_up_by && signed_up_by !== user_id) {
+      const { data: signerProfile, error: signerError } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', signed_up_by)
+        .single();
+      if (signerError || !signerProfile) {
+        return res.status(403).json({ success: false, error: 'Invalid signer' });
+      }
+      const allowed = ['pa', 'faculty', 'student_leader', 'admin'];
+      if (!allowed.includes(signerProfile.role)) {
+        return res.status(403).json({ success: false, error: 'Only approved leaders can sign up others' });
+      }
+    }
+
     // Check if user exists in profiles table
     const { data: userProfile, error: userError } = await supabase
       .from('profiles')
@@ -1820,6 +1836,23 @@ app.post('/api/group-signup', async (req, res) => {
     
     if (!user_ids || !Array.isArray(user_ids) || user_ids.length === 0 || !event_id) {
       return res.status(400).json({ success: false, error: 'Missing required fields' });
+    }
+
+    // Enforce leadership role for group signups
+    if (!signed_up_by) {
+      return res.status(400).json({ success: false, error: 'signed_up_by is required for group signup' });
+    }
+    const { data: signerProfile, error: signerError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', signed_up_by)
+      .single();
+    if (signerError || !signerProfile) {
+      return res.status(403).json({ success: false, error: 'Invalid signer' });
+    }
+    const allowedRoles = ['pa', 'faculty', 'student_leader', 'admin'];
+    if (!allowedRoles.includes(signerProfile.role)) {
+      return res.status(403).json({ success: false, error: 'Only approved leaders can perform group signup' });
     }
 
     // Check if all users exist in profiles table

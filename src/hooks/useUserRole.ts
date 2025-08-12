@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
-type UserRole = 'pa' | 'admin' | 'user' | null;
+type UserRole = 'pa' | 'faculty' | 'student_leader' | 'admin' | 'user' | null;
 
 export const useUserRole = () => {
   const [userRole, setUserRole] = useState<UserRole>(null);
@@ -50,7 +50,7 @@ export const useUserRole = () => {
     }
   };
 
-  const isPA = userRole === 'pa' || userRole === 'admin';
+  const isPA = userRole === 'pa' || userRole === 'faculty' || userRole === 'student_leader' || userRole === 'admin';
   const isAdmin = userRole === 'admin';
 
   return {

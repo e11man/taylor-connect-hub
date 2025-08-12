@@ -20,6 +20,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [selectedDorm, setSelectedDorm] = useState('');
   const [selectedFloor, setSelectedFloor] = useState('');
+  const [requestedRole, setRequestedRole] = useState<string>('');
   const [isTaylorUser, setIsTaylorUser] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -70,6 +71,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         user_type: isTaylorUser ? 'student' : 'external',
         dorm: selectedDorm || null,
         wing: selectedFloor || null,
+        requested_role: requestedRole || null,
       });
 
       if (error) {
@@ -153,6 +155,21 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
           className="h-12"
           required
         />
+
+        <div className="space-y-1">
+          <label className="text-sm font-medium">Leadership role (optional)</label>
+          <Select onValueChange={setRequestedRole} value={requestedRole}>
+            <SelectTrigger className="h-12">
+              <SelectValue placeholder="None" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pa">PA</SelectItem>
+              <SelectItem value="faculty">Faculty</SelectItem>
+              <SelectItem value="student_leader">Student Leader</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">Admin approval required. Approved leaders can sign up groups.</p>
+        </div>
         
         <div className="space-y-2">
           <div className="relative">
