@@ -166,9 +166,9 @@ const DashboardOpportunities = () => {
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(event =>
-        event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.location.toLowerCase().includes(searchTerm.toLowerCase())
+        (event.title && event.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (event.description && event.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (event.location && event.location.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -178,6 +178,7 @@ const DashboardOpportunities = () => {
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
       
       filtered = filtered.filter(event => {
+        if (!event.date) return false;
         const eventDate = new Date(event.date);
         switch (dateFilter) {
           case 'today':
@@ -199,7 +200,7 @@ const DashboardOpportunities = () => {
     // Location filter
     if (locationFilter !== 'all') {
       filtered = filtered.filter(event =>
-        event.location.toLowerCase().includes(locationFilter.toLowerCase())
+        event.location && event.location.toLowerCase().includes(locationFilter.toLowerCase())
       );
     }
 
