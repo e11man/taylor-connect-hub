@@ -163,73 +163,12 @@ def send_chat_notification_email(notification: Dict) -> bool:
         subject = f"New message in \"{event_title}\" chat"
         
         html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="utf-8">
-            <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>New Chat Message</title>
-        </head>
-        <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f6f9fc;">
-            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
-                <!-- Header -->
-                <div style="background: linear-gradient(135deg, #0A2540 0%, #525f7f 100%); padding: 30px; text-align: center;">
-                    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300;">Taylor Connect Hub</h1>
-                    <p style="color: white; margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">New Chat Message</p>
-                </div>
-                
-                <!-- Content -->
-                <div style="padding: 40px 30px;">
-                    <h2 style="color: #0A2540; margin-bottom: 25px; font-size: 24px;">New Message in Event Chat</h2>
-                    
-                    <!-- Event Info -->
-                    <div style="background: #f6f9fc; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #E8A87C;">
-                        <h3 style="color: #0A2540; margin: 0 0 15px 0; font-size: 20px;">{event_title}</h3>
-                        <p style="color: #525f7f; margin: 0; font-size: 15px; line-height: 1.6;">
-                            {event_description[:150]}{'...' if len(event_description) > 150 else ''}
-                        </p>
-                        <p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">
-                            <strong>Organization:</strong> {organization_name}
-                        </p>
-                    </div>
-                    
-                    <!-- Message Content -->
-                    <div style="background: #e8f4fd; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #d1e7dd;">
-                        <p style="color: #0A2540; margin: 0 0 15px 0; font-weight: 600; font-size: 16px;">
-                            <strong>From:</strong> {sender_name}
-                        </p>
-                        <div style="background: white; padding: 20px; border-radius: 8px; border-left: 3px solid #E8A87C;">
-                            <p style="color: #333; margin: 0; font-style: italic; line-height: 1.6; font-size: 16px;">
-                                "{notification.get('message', '')}"
-                            </p>
-                        </div>
-                    </div>
-                    
-                    <!-- Call to Action -->
-                    <div style="text-align: center; margin: 35px 0;">
-                        <a href="https://taylor-connect-hub.vercel.app/opportunities" 
-                           style="background: #0A2540; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 16px; transition: background-color 0.3s;">
-                            View Event Chat →
-                        </a>
-                    </div>
-                    
-                    <!-- Footer Info -->
-                    <div style="background: #f6f9fc; padding: 20px; border-radius: 12px; margin: 25px 0;">
-                        <p style="color: #525f7f; margin: 0; font-size: 14px; line-height: 1.5;">
-                            <strong>Manage Notifications:</strong> You can control your notification preferences in your account settings.<br>
-                            <strong>Event Updates:</strong> Stay informed about changes and new opportunities.
-                        </p>
-                    </div>
-                </div>
-                
-                <!-- Footer -->
-                <div style="background: #0A2540; padding: 25px; text-align: center;">
-                    <p style="color: #ffffff; margin: 0; font-size: 14px;">© 2024 Taylor Connect Hub. All rights reserved.</p>
-                    <p style="color: #E8A87C; margin: 5px 0 0 0; font-size: 12px;">Connecting communities through meaningful service</p>
-                </div>
-            </div>
-        </body>
-        </html>
+        <p>Taylor Connect Hub - New Chat Message</p>
+        <p>New message in "{event_title}" event chat</p>
+        <p><strong>From:</strong> {sender_name}</p>
+        <p><strong>Message:</strong> "{notification.get('message', '')}"</p>
+        <p><strong>Event:</strong> {event_title} ({organization_name})</p>
+        <p>Visit Taylor Connect Hub to view the full conversation and respond.</p>
         """
         
         # Send email using latest Resend API
