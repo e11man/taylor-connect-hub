@@ -17,7 +17,8 @@
     "preview": "vite preview",
     "seed:org-pending": "node scripts/add-organization-pending-content.js",
     "seed:safety": "node scripts/add-safety-guidelines-content.js",
-    "test:user-roles-upsert": "node scripts/test_user_role_upsert.js"
+    "test:user-roles-upsert": "node scripts/test_user_role_upsert.js",
+    "db:apply:requested-role": "node scripts/apply_sql_file.js supabase/migrations/20250812_add_leadership_roles_and_requested_role.sql"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",
