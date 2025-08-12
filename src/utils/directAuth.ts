@@ -13,6 +13,7 @@ interface UserData {
   description?: string;
   website?: string;
   phone?: string;
+  requested_role?: 'pa' | 'faculty' | 'student_leader' | null;
 }
 
 interface AuthResponse {
@@ -75,6 +76,7 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
     if (userData.user_type === 'student' || userData.user_type === 'external') {
       if (userData.dorm) profileData.dorm = userData.dorm;
       if (userData.wing) profileData.wing = userData.wing;
+      if (userData.requested_role) profileData.requested_role = userData.requested_role;
     }
 
     // Insert into profiles table

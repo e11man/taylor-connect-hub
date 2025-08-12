@@ -92,6 +92,7 @@ const OrganizationRegister: React.FC = () => {
           description: formData.organizationDescription,
           website: formData.website,
           phone: formData.phoneNumber,
+          requested_role: null,
         });
 
         if (error) {
