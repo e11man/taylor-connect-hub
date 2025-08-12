@@ -1,21 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-if (!supabaseUrl || !supabaseServiceKey) {
-  console.error('Missing Supabase environment variables:', {
-    supabaseUrl: !!supabaseUrl,
-    supabaseServiceKey: !!supabaseServiceKey
-  });
-  return res.status(500).json({ 
-    error: 'Server configuration error',
-    details: 'Missing Supabase configuration'
-  });
-}
-
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
 export default async function handler(req, res) {
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -31,6 +15,23 @@ export default async function handler(req, res) {
   }
 
   try {
+    // Read env inside request scope (avoids errors at import time on Vercel)
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    if (!supabaseUrl || !supabaseServiceKey) {
+      console.error('Missing Supabase environment variables:', {
+        supabaseUrl: !!supabaseUrl,
+        supabaseServiceKey: !!supabaseServiceKey
+      });
+      return res.status(500).json({ 
+        error: 'Server configuration error',
+        details: 'Missing Supabase configuration'
+      });
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
     const { email } = req.body;
 
     if (!email) {
@@ -60,15 +61,13 @@ export default async function handler(req, res) {
     // Generate a 6-digit reset code
     const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
     
-    // Set expiration time (10 minutes from now)
-    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
-
     // Update the profiles table with reset code and expiration
     const { error: updateError } = await supabase
       .from('profiles')
       .update({ 
         verification_code: resetCode, 
-        updated_at: expiresAt 
+        // Use current timestamp; expiry is enforced by checking age <= 10 minutes
+        updated_at: new Date().toISOString() 
       })
       .eq('email', email);
 
