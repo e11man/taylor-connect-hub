@@ -25,6 +25,7 @@ interface User {
   status: string;
   role: string;
   organization_name?: string;
+  user_id?: string | null;
 }
 
 interface Organization {
@@ -448,13 +449,20 @@ export const AdminDashboard = () => {
       
       if (userEventsError) throw userEventsError;
 
-      // Delete from user_roles table
-      const { error: userRolesError } = await supabase
-        .from('user_roles')
-        .delete()
-        .eq('user_id', userId);
-      
-      if (userRolesError) throw userRolesError;
+      // Delete from user_roles table using the linked auth user id when available
+      const { data: profileRow, error: fetchProfileError } = await supabase
+        .from('profiles')
+        .select('user_id')
+        .eq('id', userId)
+        .single();
+      if (fetchProfileError) throw fetchProfileError;
+      if (profileRow?.user_id) {
+        const { error: userRolesError } = await supabase
+          .from('user_roles')
+          .delete()
+          .eq('user_id', profileRow.user_id);
+        if (userRolesError) throw userRolesError;
+      }
 
       // Delete from notification_preferences
       const { error: notifPrefsError } = await supabase
@@ -1057,17 +1065,20 @@ export const AdminDashboard = () => {
 
       if (profileError) throw profileError;
 
-      // Also update user_roles table
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .upsert({ 
-          user_id: selectedUser.id, 
-          role: editUserForm.role as "pa" | "admin" | "user"
-        }, { 
-          onConflict: 'user_id' 
-        });
+      // Also update user_roles table when we have a linked auth user id
+      const authUserId = selectedUser.user_id ?? null;
+      if (authUserId) {
+        const { error: roleError } = await supabase
+          .from('user_roles')
+          .upsert({ 
+            user_id: authUserId, 
+            role: editUserForm.role as "pa" | "admin" | "user"
+          }, { 
+            onConflict: 'user_id' 
+          });
 
-      if (roleError) throw roleError;
+        if (roleError) throw roleError;
+      }
 
       toast({
         title: "Success",
