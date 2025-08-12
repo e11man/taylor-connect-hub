@@ -131,7 +131,7 @@ serve(async (req) => {
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
               <!-- Header -->
               <div style="background: linear-gradient(135deg, #0A2540 0%, #525f7f 100%); padding: 30px; text-align: center;">
-                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300;">Taylor Connect Hub</h1>
+                                    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300;">acme</h1>
                 <p style="color: white; margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">New Chat Message</p>
               </div>
               
@@ -181,7 +181,7 @@ serve(async (req) => {
               
               <!-- Footer -->
               <div style="background: #0A2540; padding: 25px; text-align: center;">
-                <p style="color: #ffffff; margin: 0; font-size: 14px;">© 2024 Taylor Connect Hub. All rights reserved.</p>
+                                    <p style="color: #ffffff; margin: 0; font-size: 14px;">© 2024 acme. All rights reserved.</p>
                 <p style="color: #E8A87C; margin: 5px 0 0 0; font-size: 12px;">Connecting communities through meaningful service</p>
               </div>
             </div>
@@ -192,7 +192,7 @@ serve(async (req) => {
           // Send email with retry logic and rate limiting
           const emailResponse = await retryWithBackoff(async () => {
             return await resend.emails.send({
-              from: 'Taylor Connect Hub <noreply@ellmangroup.org>',
+              from: 'acme <noreply@ellmangroup.org>',
               to: [user_email],
               subject: `New message in "${event_title}" chat`,
               html: htmlContent,

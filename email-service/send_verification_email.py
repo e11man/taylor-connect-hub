@@ -18,7 +18,7 @@ def send_verification_email(email, verification_code):
         params = {
             "from": "acme <noreply@ellmangroup.org>",
             "to": [email],
-            "subject": "Verify Your Taylor Connect Hub Account",
+            "subject": "Verify Your acme Account",
             "html": f"<p>Code: {verification_code}</p>"
         }
 

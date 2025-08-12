@@ -34,10 +34,10 @@ export default async function handler(req, res) {
     const emailResult = await resend.emails.send({
       from: 'acme <noreply@ellmangroup.org>',
       to: [email],
-      subject: 'Verify Your Taylor Connect Hub Account',
+      subject: 'Verify Your acme Account',
       html: `
-        <p>Taylor Connect Hub - Account Verification</p>
-        <p>Thank you for creating your Taylor Connect Hub account!</p>
+        <p>acme - Account Verification</p>
+        <p>Thank you for creating your acme account!</p>
         <p>Your verification code is: <strong>${verificationCode}</strong></p>
         <p>Enter this code to complete your registration. This code expires in 10 minutes.</p>
         <p>If you didn't create this account, you can ignore this email.</p>

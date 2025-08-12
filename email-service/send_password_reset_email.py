@@ -73,12 +73,12 @@ def send_password_reset_email(email, reset_code):
     """Send password reset email with 6-digit code"""
     try:
         params = {
-            "from": "Taylor Connect <noreply@ellmangroup.org>",
+            "from": "acme <noreply@ellmangroup.org>",
             "to": [email],
-            "subject": "Reset Your Taylor Connect Hub Password",
+            "subject": "Reset Your acme Password",
             "html": f"""
-            <p>Taylor Connect Hub - Password Reset</p>
-            <p>We received a request to reset your password for your Taylor Connect Hub account.</p>
+            <p>acme - Password Reset</p>
+            <p>We received a request to reset your password for your acme account.</p>
             <p>Your password reset code is: <strong>{reset_code}</strong></p>
             <p>Enter this code to create a new password. This code expires in 10 minutes.</p>
             <p>If you didn't request this password reset, you can ignore this email.</p>

@@ -159,7 +159,7 @@ export default async function handler(req, res) {
       <body>
           <div class="container">
               <div class="header">
-                  <h1>🌟 Taylor Connect Hub</h1>
+                  <h1>🌟 acme</h1>
                   <p>New Contact Form Submission</p>
               </div>
               
@@ -187,7 +187,7 @@ export default async function handler(req, res) {
               </div>
               
               <div class="footer">
-                  <p>This message was sent through the Taylor Connect Hub contact form.</p>
+                  <p>This message was sent through the acme contact form.</p>
                   <div class="timestamp">
                       Received on ${timestamp}
                   </div>
@@ -199,7 +199,7 @@ export default async function handler(req, res) {
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-      from: 'Taylor Connect Hub <noreply@ellmangroup.org>',
+              from: 'acme <noreply@ellmangroup.org>',
       to: ['josh_ellman@icloud.com'],
       subject: `New Contact Form Submission - ${name}`,
       html: htmlContent,

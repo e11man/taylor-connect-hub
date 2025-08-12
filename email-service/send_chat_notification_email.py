@@ -163,17 +163,17 @@ def send_chat_notification_email(notification: Dict) -> bool:
         subject = f"New message in \"{event_title}\" chat"
         
         html_content = f"""
-        <p>Taylor Connect Hub - New Chat Message</p>
+        <p>acme - New Chat Message</p>
         <p>New message in "{event_title}" event chat</p>
         <p><strong>From:</strong> {sender_name}</p>
         <p><strong>Message:</strong> "{notification.get('message', '')}"</p>
         <p><strong>Event:</strong> {event_title} ({organization_name})</p>
-        <p>Visit Taylor Connect Hub to view the full conversation and respond.</p>
+        <p>Visit acme to view the full conversation and respond.</p>
         """
         
         # Send email using latest Resend API
         email_response = resend_client.emails.send({
-            "from": "Taylor Connect Hub <noreply@ellmangroup.org>",
+            "from": "acme <noreply@ellmangroup.org>",
             "to": [notification['user_email']],
             "subject": subject,
             "html": html_content
