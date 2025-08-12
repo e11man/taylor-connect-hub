@@ -20,21 +20,7 @@ interface UpdatePasswordResponse {
 
 export const sendPasswordResetCode = async (email: string): Promise<PasswordResetResponse> => {
   try {
-    // First, check if the user exists
-    const { data: user, error: userError } = await supabase
-      .from('profiles')
-      .select('id, email')
-      .eq('email', email)
-      .single();
-
-    if (userError || !user) {
-      return {
-        success: false,
-        message: 'No account found with this email address.'
-      };
-    }
-
-    // Call the Python script to send the reset email
+    // Call the Vercel API route to send the reset email
     const response = await fetch('/api/send-password-reset', {
       method: 'POST',
       headers: {
@@ -54,7 +40,7 @@ export const sendPasswordResetCode = async (email: string): Promise<PasswordRese
     } else {
       return {
         success: false,
-        message: result.message || 'Failed to send password reset code.'
+        message: result.message || result.error || 'Failed to send password reset code.'
       };
     }
   } catch (error) {
@@ -68,39 +54,29 @@ export const sendPasswordResetCode = async (email: string): Promise<PasswordRese
 
 export const verifyResetCode = async (email: string, code: string): Promise<VerifyResetCodeResponse> => {
   try {
-    // Check if the code is valid and not expired
-    const { data: user, error } = await supabase
-      .from('profiles')
-      .select('id, verification_code, updated_at')
-      .eq('email', email)
-      .eq('verification_code', code)
-      .single();
+    // Call the Vercel API route to verify the reset code
+    const response = await fetch('/api/verify-reset-code', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, code }),
+    });
 
-    if (error || !user) {
+    const result = await response.json();
+
+    if (result.success) {
+      return {
+        success: true,
+        message: 'Reset code verified successfully.',
+        userId: null // We'll get this from the API if needed
+      };
+    } else {
       return {
         success: false,
-        message: 'Invalid or expired reset code.'
+        message: result.message || result.error || 'Invalid or expired reset code.'
       };
     }
-
-    // Check if the code has expired (10 minutes)
-    const codeTime = new Date(user.updated_at);
-    const now = new Date();
-    const timeDiff = now.getTime() - codeTime.getTime();
-    const minutesDiff = timeDiff / (1000 * 60);
-
-    if (minutesDiff > 10) {
-      return {
-        success: false,
-        message: 'Reset code has expired. Please request a new one.'
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Reset code verified successfully.',
-      userId: user.id
-    };
   } catch (error) {
     console.error('Error verifying reset code:', error);
     return {
@@ -116,40 +92,28 @@ export const updatePasswordWithResetCode = async (
   newPassword: string
 ): Promise<UpdatePasswordResponse> => {
   try {
-    // First verify the reset code
-    const verifyResult = await verifyResetCode(email, code);
-    if (!verifyResult.success) {
+    // Call the Vercel API route to update the password
+    const response = await fetch('/api/update-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email, code, newPassword }),
+    });
+
+    const result = await response.json();
+
+    if (result.success) {
+      return {
+        success: true,
+        message: 'Password updated successfully!'
+      };
+    } else {
       return {
         success: false,
-        message: verifyResult.message
+        message: result.message || result.error || 'Failed to update password. Please try again.'
       };
     }
-
-    // Hash the new password
-    const hashedPassword = await hashPassword(newPassword);
-
-    // Update the password in the database
-    const { error } = await supabase
-      .from('profiles')
-      .update({ 
-        password_hash: hashedPassword,
-        verification_code: null, // Clear the reset code
-        updated_at: new Date().toISOString()
-      })
-      .eq('email', email);
-
-    if (error) {
-      console.error('Error updating password:', error);
-      return {
-        success: false,
-        message: 'Failed to update password. Please try again.'
-      };
-    }
-
-    return {
-      success: true,
-      message: 'Password updated successfully!'
-    };
   } catch (error) {
     console.error('Error updating password:', error);
     return {
