@@ -101,7 +101,9 @@ app.post('/api/send-verification-code', async (req, res) => {
   }
 });
 
-// Password reset endpoint using Python script
+
+
+// Password reset endpoint using Supabase client and Python script for email
 app.post('/api/send-password-reset', async (req, res) => {
   try {
     const { email } = req.body;
@@ -112,11 +114,46 @@ app.post('/api/send-password-reset', async (req, res) => {
 
     console.log('Sending password reset code to:', email);
 
-    // Call the Python script
+    // First, check if the user exists and generate reset code
+    const { data: user, error: userError } = await supabase
+      .from('profiles')
+      .select('id, email')
+      .eq('email', email)
+      .single();
+
+    if (userError || !user) {
+      return res.status(404).json({ 
+        error: 'No account found with this email address.' 
+      });
+    }
+
+    // Generate a 6-digit reset code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Set expiration time (10 minutes from now)
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+    // Update the profiles table with reset code and expiration
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ 
+        verification_code: resetCode, 
+        updated_at: expiresAt 
+      })
+      .eq('email', email);
+
+    if (updateError) {
+      console.error('Error updating profiles table:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to generate reset code. Please try again.' 
+      });
+    }
+
+    // Call the Python script only for sending the email
     const pythonScriptPath = path.join(process.cwd(), 'email-service', 'send_password_reset_email.py');
     
     return new Promise((resolve, reject) => {
-      const args = [pythonScriptPath, email];
+      const args = [pythonScriptPath, email, resetCode];
       
       // Set up environment to use the virtual environment
       const env = { ...process.env };
@@ -142,15 +179,11 @@ app.post('/api/send-password-reset', async (req, res) => {
       
       pythonProcess.on('close', (code) => {
         if (code === 0) {
-          // Extract the reset code from the output
-          const codeMatch = output.match(/CODE:(\d{6})/);
-          const sentCode = codeMatch ? codeMatch[1] : null;
-          
           console.log('Password reset email sent successfully via Python script');
           res.json({ 
             success: true, 
             message: 'Password reset code sent successfully',
-            code: sentCode // For testing purposes
+            code: resetCode // For testing purposes
           });
           resolve();
         } else {
@@ -171,6 +204,128 @@ app.post('/api/send-password-reset', async (req, res) => {
         });
         reject();
       });
+    });
+
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Password reset verification endpoint
+app.post('/api/verify-reset-code', async (req, res) => {
+  try {
+    const { email, code } = req.body;
+
+    if (!email || !code) {
+      return res.status(400).json({ error: 'Email and code are required' });
+    }
+
+    console.log('Verifying reset code for:', email);
+
+    // Check if the reset code matches and hasn't expired
+    const { data: user, error } = await supabase
+      .from('profiles')
+      .select('id, email, verification_code, updated_at')
+      .eq('email', email)
+      .eq('verification_code', code)
+      .single();
+
+    if (error || !user) {
+      return res.status(400).json({ 
+        error: 'Invalid or expired reset code.' 
+      });
+    }
+
+    // Check if the code has expired (10 minutes)
+    const codeTime = new Date(user.updated_at);
+    const now = new Date();
+    const timeDiff = now.getTime() - codeTime.getTime();
+    const minutesDiff = timeDiff / (1000 * 60);
+
+    if (minutesDiff > 10) {
+      return res.status(400).json({ 
+        error: 'Reset code has expired. Please request a new one.' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Reset code verified successfully' 
+    });
+
+  } catch (error) {
+    console.error('Server error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Password update endpoint
+app.post('/api/update-password', async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+
+    if (!email || !code || !newPassword) {
+      return res.status(400).json({ error: 'Email, code, and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'Password must be at least 6 characters long' });
+    }
+
+    console.log('Updating password for:', email);
+
+    // First verify the reset code
+    const { data: user, error: verifyError } = await supabase
+      .from('profiles')
+      .select('id, email, verification_code, updated_at')
+      .eq('email', email)
+      .eq('verification_code', code)
+      .single();
+
+    if (verifyError || !user) {
+      return res.status(400).json({ 
+        error: 'Invalid or expired reset code.' 
+      });
+    }
+
+    // Check if the code has expired (10 minutes)
+    const codeTime = new Date(user.updated_at);
+    const now = new Date();
+    const timeDiff = now.getTime() - codeTime.getTime();
+    const minutesDiff = timeDiff / (1000 * 60);
+
+    if (minutesDiff > 10) {
+      return res.status(400).json({ 
+        error: 'Reset code has expired. Please request a new one.' 
+      });
+    }
+
+    // Hash the new password (using bcrypt)
+    const bcrypt = require('bcrypt');
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    // Update the password and clear the reset code
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ 
+        password_hash: hashedPassword,
+        verification_code: null,
+        updated_at: new Date().toISOString()
+      })
+      .eq('email', email);
+
+    if (updateError) {
+      console.error('Error updating password:', updateError);
+      return res.status(500).json({ 
+        error: 'Failed to update password. Please try again.' 
+      });
+    }
+
+    res.json({ 
+      success: true, 
+      message: 'Password updated successfully!' 
     });
 
   } catch (error) {

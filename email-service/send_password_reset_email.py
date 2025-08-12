@@ -13,7 +13,7 @@ resend.api_key = os.getenv('RESEND_API_KEY', "re_e32x6j2U_Mx5KLTyeAW5oBVYPftpDnH
 DB_HOST = os.getenv('DB_HOST', 'aws-0-us-east-2.pooler.supabase.com')
 DB_PORT = os.getenv('DB_PORT', '6543')
 DB_NAME = os.getenv('DB_NAME', 'postgres')
-DB_USER = os.getenv('DB_USER', 'postgres.gzzbjifmrwvqbkwbyvhm')
+DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', 'Idonotunderstandwhatido!')
 
 def generate_reset_code():
@@ -185,24 +185,20 @@ def update_password(email, new_password_hash):
         connection.close()
 
 if __name__ == "__main__":
-    # Get email from command line argument or use default
-    email = sys.argv[1] if len(sys.argv) > 1 else "josh_ellman@icloud.com"
+    # Get email from command line argument
+    if len(sys.argv) < 2:
+        print("Usage: python send_password_reset_email.py <email> <reset_code>")
+        sys.exit(1)
     
-    # Get reset code from command line argument or generate one
+    email = sys.argv[1]
     reset_code = sys.argv[2] if len(sys.argv) > 2 else generate_reset_code()
     
-    # Store the reset code in the database
-    if store_reset_code(email, reset_code):
-        # Send email
-        success = send_password_reset_email(email, reset_code)
-        
-        if success:
-            print(f"Password reset code {reset_code} sent to {email}")
-            # Output the code so it can be captured by the calling process
-            print(f"CODE:{reset_code}")
-        else:
-            print(f"Failed to send password reset email to {email}")
-            sys.exit(1)
+    # Only send email (database operations are now handled by the server)
+    success = send_password_reset_email(email, reset_code)
+    
+    if success:
+        print(f"Password reset email sent to {email}")
+        print(f"CODE:{reset_code}")
     else:
-        print(f"Failed to store reset code for {email}")
+        print(f"Failed to send password reset email to {email}")
         sys.exit(1) 
