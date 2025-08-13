@@ -387,6 +387,7 @@ export const AdminDashboard = () => {
   const [selectedOrganizations, setSelectedOrganizations] = useState<Set<string>>(new Set());
   const [emailFilter, setEmailFilter] = useState<string>('all');
   const [orgFilter, setOrgFilter] = useState<string>('all');
+  const [leadershipFilter, setLeadershipFilter] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
@@ -724,7 +725,10 @@ export const AdminDashboard = () => {
     const matchesSearch = user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (user.organization_name || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = emailFilter === 'all' || user.role === emailFilter;
-    return matchesSearch && matchesFilter;
+    const matchesLeadership = leadershipFilter === 'all' || (
+      leadershipFilter === 'pending' && !!user.requested_role
+    );
+    return matchesSearch && matchesFilter && matchesLeadership;
   });
 
   const filteredOrganizations = organizations.filter(org => {
@@ -1363,6 +1367,15 @@ export const AdminDashboard = () => {
                     <SelectItem value="user">Regular Users</SelectItem>
                     <SelectItem value="pa">PAs</SelectItem>
                     <SelectItem value="admin">Admins</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={leadershipFilter} onValueChange={setLeadershipFilter}>
+                  <SelectTrigger className="w-[220px]">
+                    <SelectValue placeholder="Leadership filter" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All (Leadership)</SelectItem>
+                    <SelectItem value="pending">Pending Leadership Only</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
