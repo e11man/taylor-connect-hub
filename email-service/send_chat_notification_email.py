@@ -173,7 +173,7 @@ def send_chat_notification_email(notification: Dict) -> bool:
         
         # Send email using latest Resend API
         email_response = resend_client.emails.send({
-            "from": "acme <noreply@ellmangroup.org>",
+            "from": "acme <noreply@uplandmainstreet.org>",
             "to": [notification['user_email']],
             "subject": subject,
             "html": html_content

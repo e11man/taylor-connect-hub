@@ -32,7 +32,7 @@ export default async function handler(req, res) {
 
     // Send the email using Resend
     const emailResult = await resend.emails.send({
-      from: 'acme <noreply@ellmangroup.org>',
+      from: 'acme <noreply@uplandmainstreet.org>',
       to: [email],
       subject: 'Verify Your acme Account',
       html: `

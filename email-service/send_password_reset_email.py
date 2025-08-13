@@ -73,7 +73,7 @@ def send_password_reset_email(email, reset_code):
     """Send password reset email with 6-digit code"""
     try:
         params = {
-            "from": "acme <noreply@ellmangroup.org>",
+            "from": "acme <noreply@uplandmainstreet.org>",
             "to": [email],
             "subject": "Reset Your acme Password",
             "html": f"""

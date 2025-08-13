@@ -6,9 +6,9 @@ resend.api_key = "re_e32x6j2U_Mx5KLTyeAW5oBVYPftpDnH92"
 # Wait a moment to avoid rate limiting
 time.sleep(1)
 
-# Using your verified domain ellmangroup.org
+# Using your verified domain uplandmainstreet.org
 params = {
-    "from": "Taylor Connect <noreply@ellmangroup.org>",  # Using your verified domain
+    "from": "Taylor Connect <noreply@uplandmainstreet.org>",  # Using your verified domain
     "to": ["josh_ellman@icloud.com"],
     "subject": "Taylor Connect Test",
     "html": "<p>This is a test email from Taylor Connect Hub</p>"

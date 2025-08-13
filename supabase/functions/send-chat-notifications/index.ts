@@ -192,7 +192,7 @@ serve(async (req) => {
           // Send email with retry logic and rate limiting
           const emailResponse = await retryWithBackoff(async () => {
             return await resend.emails.send({
-              from: 'acme <noreply@ellmangroup.org>',
+              from: 'acme <noreply@uplandmainstreet.org>',
               to: [user_email],
               subject: `New message in "${event_title}" chat`,
               html: htmlContent,

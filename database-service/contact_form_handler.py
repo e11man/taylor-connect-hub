@@ -21,11 +21,11 @@ class ContactFormHandler:
         
         if production_mode:
             # For production - requires verified domain
-            self.from_email = "noreply@ellmangroup.org"  # Update with your verified domain
+            self.from_email = "noreply@uplandmainstreet.org"  # Update with your verified domain
             self.to_email = "josh_ellman@icloud.com"
         else:
             # For testing - uses Resend's default sender
-            self.from_email = "noreply@ellmangroup.org"
+            self.from_email = "noreply@uplandmainstreet.org"
             self.to_email = "joshalanellman@gmail.com"  # Use your verified email for testing
         
         self.headers = {

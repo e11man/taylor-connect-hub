@@ -96,7 +96,7 @@ export default async function handler(req, res) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          from: 'Community Connect <noreply@ellmangroup.org>',
+          from: 'Community Connect <noreply@uplandmainstreet.org>',
           to: [email],
           subject: 'Reset Your Community Connect Password',
           html: `

@@ -16,7 +16,7 @@ def send_verification_email(email, verification_code):
     # dont mask as tayllr univerty 
     try:
         params = {
-            "from": "acme <noreply@ellmangroup.org>",
+            "from": "acme <noreply@uplandmainstreet.org>",
             "to": [email],
             "subject": "Verify Your acme Account",
             "html": f"<p>Code: {verification_code}</p>"
