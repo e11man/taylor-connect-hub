@@ -87,6 +87,10 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
       .single();
       
     if (error) {
+      // Check if it's a duplicate email error
+      if (error.code === '23505' || error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
+        return { error: { message: 'An account with this email already exists. Please sign in or use a different email.' } };
+      }
       return { error: { message: error.message } };
     }
 
