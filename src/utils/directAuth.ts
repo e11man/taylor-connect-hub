@@ -87,6 +87,10 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
       .single();
       
     if (error) {
+      // Check for duplicate email error (unique constraint violation)
+      if (error.code === '23505' || error.message.includes('duplicate key') || error.message.includes('unique constraint')) {
+        return { error: { message: 'An account with this email already exists. Please use a different email or try logging in.' } };
+      }
       return { error: { message: error.message } };
     }
 
@@ -109,7 +113,12 @@ export const registerUser = async (userData: UserData): Promise<AuthResponse> =>
       if (orgError) {
         // Rollback profile creation if organization creation fails
         await supabase.from('profiles').delete().eq('id', data.id);
-        return { error: { message: orgError.message } };
+        
+        // Check for duplicate organization error
+        if (orgError.code === '23505' || orgError.message.includes('duplicate key') || orgError.message.includes('unique constraint')) {
+          return { error: { message: 'An organization with this information already exists.' } };
+        }
+        return { error: { message: 'Failed to create organization profile. Please try again.' } };
       }
     }
 
