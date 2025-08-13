@@ -90,11 +90,21 @@ const GroupSignupModal = ({
 
       if (error) throw error;
 
-      // Client-side filtering to exclude current user and ensure only regular users (role=user)
-      // Include all user_types except 'organization' to be robust
+      // Client-side filtering to exclude current user
+      // Include all user_types except 'organization' 
+      // Show all regular users (exclude leadership roles like admin, pa, faculty, student_leader)
+      const leadershipRoles = ['admin', 'pa', 'faculty', 'student_leader'];
       let profilesData = (allProfilesData || [])
         .filter(profile => profile.id !== user.id)
-        .filter(profile => (profile.role === 'user') && (profile.user_type !== 'organization'));
+        .filter(profile => profile.user_type !== 'organization')
+        .filter(profile => !leadershipRoles.includes(profile.role));
+
+      console.log('Group signup modal - User filtering:', {
+        currentUserId: user.id,
+        totalProfiles: allProfilesData?.length || 0,
+        afterFiltering: profilesData.length,
+        currentUserProfile
+      });
 
       // Filter by same floor if enabled
       if (showOnlyMyFloor && currentUserProfile && currentUserProfile.dorm && currentUserProfile.wing) {
