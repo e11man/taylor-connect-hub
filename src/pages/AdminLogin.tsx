@@ -59,8 +59,7 @@ const AdminLogin = () => {
         description: successDescription,
       });
       
-      // Navigate to admin dashboard
-      navigate('/admin/dashboard');
+      // Redirection is now handled automatically in AuthContext
     } catch (error: any) {
       console.error('Admin login error:', error);
       
