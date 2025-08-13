@@ -68,8 +68,7 @@ const OrganizationLogin = () => {
         description: successDescription,
       });
 
-      // Navigate to organization dashboard
-      navigate('/organization-dashboard');
+      // Redirection is now handled automatically in AuthContext
     } catch (error: any) {
       console.error("❌ Organization login failed:", error);
       

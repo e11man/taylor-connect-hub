@@ -71,18 +71,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(data.session.user);
       setUserEventsRefreshTrigger(prev => prev + 1);
       
-      // Redirect regular users (students and external users) to dashboard
-      // Don't redirect organizations or admins - they have their own flows
+      // Redirect all users to their appropriate dashboards
       const userType = data.session.user.user_type;
       const userRole = data.session.user.role;
+      const userStatus = data.session.user.status;
       
-      if (userType === 'student' || userType === 'external') {
-        // Only redirect if user is active
-        if (data.session.user.status === 'active') {
+      // Only redirect if user is active
+      if (userStatus === 'active') {
+        // Check role first (admin role takes precedence)
+        if (userRole === 'admin') {
+          navigate('/admin/dashboard');
+        } else if (userType === 'organization') {
+          navigate('/organization-dashboard');
+        } else if (userType === 'student' || userType === 'external') {
           navigate('/dashboard');
         }
       }
-      // Organizations and admins will handle their own redirection in their respective login components
     }
     return { data, error };
   };
