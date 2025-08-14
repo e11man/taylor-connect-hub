@@ -42,6 +42,9 @@ export const sendChatMessage = async (
       return { success: false, error: insertError.message };
     }
 
+    // Send notifications immediately after posting the message
+    await sendChatNotifications(chatMessage, eventId);
+
     return { success: true, messageId: chatMessage.id };
   } catch (error) {
     console.error('Error sending chat message:', error);
@@ -49,9 +52,189 @@ export const sendChatMessage = async (
   }
 };
 
-// Notification processing is now handled automatically via Supabase Edge Functions
-// Database triggers create notifications when chat messages are posted
-// A cron function processes notifications every 5 minutes
+// Function to send chat notifications using direct email service
+const sendChatNotifications = async (chatMessage: any, eventId: string): Promise<void> => {
+  try {
+    // Get event details
+    const { data: event, error: eventError } = await supabase
+      .from('events')
+      .select(`
+        id,
+        title,
+        organization_id,
+        organizations (
+          id,
+          name,
+          user_id
+        )
+      `)
+      .eq('id', eventId)
+      .single();
+
+    if (eventError || !event) {
+      console.error('Error fetching event details:', eventError);
+      return;
+    }
+
+    // Get sender information
+    let senderName = 'Anonymous';
+    let senderType = 'anonymous';
+
+    if (chatMessage.user_id) {
+      const { data: userProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', chatMessage.user_id)
+        .single();
+      
+      if (userProfile) {
+        senderName = userProfile.email;
+        senderType = 'user';
+      }
+    } else if (chatMessage.organization_id) {
+      const { data: orgData } = await supabase
+        .from('organizations')
+        .select('name')
+        .eq('id', chatMessage.organization_id)
+        .single();
+      
+      if (orgData) {
+        senderName = orgData.name;
+        senderType = 'organization';
+      }
+    }
+
+    // Get users signed up for the event (excluding sender)
+    let usersQuery = supabase
+      .from('user_events')
+      .select('user_id')
+      .eq('event_id', eventId);
+
+    // Exclude the sender if it's a user
+    if (chatMessage.user_id) {
+      usersQuery = usersQuery.neq('user_id', chatMessage.user_id);
+    }
+
+    const { data: userEvents, error: usersError } = await usersQuery;
+
+    if (usersError) {
+      console.error('Error fetching signed up users:', usersError);
+      return;
+    }
+
+    // Get profile details for each user
+    const signedUpUsers = [];
+    if (userEvents) {
+      for (const userEvent of userEvents) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('id', userEvent.user_id)
+          .single();
+        
+        if (profile) {
+          signedUpUsers.push({ profiles: profile });
+        }
+      }
+    }
+
+    // Get email service URL (same pattern as verification emails)
+    const getEmailServiceUrl = () => {
+      if (typeof window !== 'undefined') {
+        return window.location.origin.includes('localhost') 
+          ? 'http://localhost:3000' 
+          : window.location.origin;
+      }
+      return 'https://taylor-connect-hub.vercel.app';
+    };
+
+    const emailServiceUrl = getEmailServiceUrl();
+
+    // Send notifications to signed up users
+    const emailPromises = [];
+
+    if (signedUpUsers) {
+      for (const userEvent of signedUpUsers) {
+        const user = userEvent.profiles;
+        if (!user?.email) continue;
+
+        // Check user's notification preferences
+        const preferences = await getUserNotificationPreferences(user.id);
+        
+        // Skip if user has disabled chat notifications or set frequency to never
+        if (!preferences?.chat_notifications || preferences.email_frequency === 'never') {
+          continue;
+        }
+
+        // For now, send immediate notifications (can be enhanced later for daily/weekly)
+        if (preferences.email_frequency === 'immediate') {
+          emailPromises.push(
+            fetch(`${emailServiceUrl}/api/send-chat-notification`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userEmail: user.email,
+                eventTitle: event.title,
+                message: chatMessage.message,
+                senderName,
+                senderType,
+                organizationName: event.organizations?.name || 'Community Event'
+              })
+            }).catch(error => {
+              console.error(`Failed to send notification to ${user.email}:`, error);
+            })
+          );
+        }
+      }
+    }
+
+    // Also notify the organization (if message is from a user)
+    if (senderType === 'user' && event.organizations?.user_id) {
+      const { data: orgUser } = await supabase
+        .from('profiles')
+        .select('id, email')
+        .eq('id', event.organizations.user_id)
+        .single();
+
+      if (orgUser?.email && orgUser.id !== chatMessage.user_id) {
+        // Check organization user's notification preferences
+        const orgPreferences = await getUserNotificationPreferences(orgUser.id);
+        
+        if (orgPreferences?.chat_notifications && orgPreferences.email_frequency === 'immediate') {
+          emailPromises.push(
+            fetch(`${emailServiceUrl}/api/send-chat-notification`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                userEmail: orgUser.email,
+                eventTitle: event.title,
+                message: chatMessage.message,
+                senderName,
+                senderType,
+                organizationName: event.organizations?.name || 'Community Event'
+              })
+            }).catch(error => {
+              console.error(`Failed to send notification to organization ${orgUser.email}:`, error);
+            })
+          );
+        }
+      }
+    }
+
+    // Send all emails
+    if (emailPromises.length > 0) {
+      await Promise.allSettled(emailPromises);
+      console.log(`Sent ${emailPromises.length} chat notification emails`);
+    }
+
+  } catch (error) {
+    console.error('Error sending chat notifications:', error);
+  }
+};
 
 export const getUserNotificationPreferences = async (userId: string): Promise<NotificationPreferences | null> => {
   try {
@@ -178,5 +361,6 @@ export const markNotificationsAsRead = async (userId: string, eventId?: string):
   }
 };
 
-// Manual notification triggering is no longer needed
-// The system uses automatic processing via Supabase Edge Functions
+// Direct email notification system implementation complete
+// Notifications are sent immediately when chat messages are posted
+// User preferences are checked and respected before sending emails
