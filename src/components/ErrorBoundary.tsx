@@ -30,6 +30,19 @@ export class ErrorBoundary extends Component<Props, State> {
     // Log error details for debugging
     console.error('ErrorBoundary caught an error:', error, errorInfo);
     
+    // In production, send error to monitoring service
+    if (import.meta.env.PROD) {
+      // Log to console with structured data for Vercel logs
+      console.error('Production Error Details:', {
+        message: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        timestamp: new Date().toISOString(),
+        url: window.location.href,
+        userAgent: navigator.userAgent
+      });
+    }
+    
     // Check for specific Supabase/database errors
     if (error.message?.includes('schema') || error.message?.includes('Database error')) {
       console.error('Database schema error detected:', {
@@ -84,7 +97,15 @@ export class ErrorBoundary extends Component<Props, State> {
                     </p>
                   </>
                 ) : (
-                  <p>An unexpected error occurred. Please try refreshing the page.</p>
+                  <>
+                    <p>An unexpected error occurred. Please try refreshing the page.</p>
+                    {/* Show error message in production for debugging */}
+                    {import.meta.env.PROD && this.state.error?.message && (
+                      <p className="text-sm text-gray-600 mt-2">
+                        Error details: {this.state.error.message}
+                      </p>
+                    )}
+                  </>
                 )}
               </AlertDescription>
             </Alert>

@@ -41,8 +41,34 @@ const queryClient = new QueryClient({
   },
 });
 
+// Custom error fallback component
+const ErrorFallback = () => (
+  <div className="min-h-screen bg-gradient-to-br from-[#f8fafb] to-white flex items-center justify-center p-4">
+    <div className="max-w-2xl w-full space-y-4">
+      <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+        <h1 className="text-2xl font-semibold text-red-800 mb-2">Something went wrong</h1>
+        <p className="text-red-600">An unexpected error occurred. Please try refreshing the page.</p>
+        <div className="mt-4 flex gap-4">
+          <button 
+            onClick={() => window.location.reload()} 
+            className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Refresh Page
+          </button>
+          <button 
+            onClick={() => window.location.href = '/'} 
+            className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+          >
+            Go to Home
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 const App = () => (
-  <ErrorBoundary>
+  <ErrorBoundary fallback={<ErrorFallback />}>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
