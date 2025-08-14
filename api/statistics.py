@@ -69,13 +69,12 @@ def calculate_live_statistics():
     try:
         live_stats = {}
         
-        # Calculate active volunteers (unique users who have signed up for events)
-        user_events_response = supabase.table('user_events').select('user_id', count='exact').execute()
-        unique_users_response = supabase.table('user_events').select('user_id').execute()
+        # Calculate active volunteers (ALL users in the system)
+        profiles_response = supabase.table('profiles').select('*', count='exact').execute()
         
-        if unique_users_response.data:
-            unique_user_ids = set(event['user_id'] for event in unique_users_response.data)
-            live_stats['active_volunteers'] = len(unique_user_ids)
+        if profiles_response.data:
+            # Count all users regardless of status
+            live_stats['active_volunteers'] = len(profiles_response.data)
         else:
             live_stats['active_volunteers'] = 0
         

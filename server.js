@@ -1389,18 +1389,13 @@ app.get('/api/site-statistics', async (req, res) => {
         // Calculate real values from the database
         console.log('Calculating real values from database...');
         
-        // Calculate active volunteers (unique users who signed up for events)
-        const { data: userEventsForVolunteers, error: ueVolunteersError } = await supabase
-          .from('user_events')
-          .select('user_id');
+        // Calculate active volunteers (ALL users in the system)
+        const { data: profiles, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id')
+          .or('status.eq.active,status.eq.pending,status.is.null');
 
-        const uniqueUserIds = new Set();
-        if (userEventsForVolunteers) {
-          userEventsForVolunteers.forEach(ue => {
-            uniqueUserIds.add(ue.user_id);
-          });
-        }
-        const activeVolunteersCount = uniqueUserIds.size;
+        const activeVolunteersCount = profiles?.length || 0;
 
         // Calculate hours contributed
         const { data: userEvents, error: ueError } = await supabase
@@ -1509,10 +1504,11 @@ app.post('/api/site-statistics', async (req, res) => {
       console.log('Update function not available, calculating manually:', calcError.message);
       
       // Manual calculation fallback
-      // Calculate active volunteers
+      // Calculate active volunteers (ALL users in the system)
       const { data: activeVolunteers, error: avError } = await supabase
-        .from('user_events')
-        .select('user_id', { count: 'exact', head: true });
+        .from('profiles')
+        .select('id', { count: 'exact', head: true })
+        .or('status.eq.active,status.eq.pending,status.is.null');
 
       const activeVolunteersCount = activeVolunteers?.length || 0;
 
