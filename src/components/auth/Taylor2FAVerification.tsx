@@ -245,23 +245,23 @@ export function Taylor2FAVerification({ email, onVerificationComplete, onBack, p
           <label className="text-sm font-medium">
             <DynamicText page="twoFA" section="form" contentKey="codeInputLabel" fallback="Enter Verification Code" />
           </label>
-          <div className="flex gap-2 justify-center">
-            {otp.map((digit, index) => (
-              <Input
-                key={index}
-                ref={(el) => (inputRefs.current[index] = el)}
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleOtpChange(index, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(index, e)}
-                className="w-12 h-12 text-center text-lg font-mono"
-                placeholder={codeInputPlaceholder}
-              />
-            ))}
-          </div>
+          <Input
+            type="text"
+            placeholder="Enter 6-digit code"
+            value={otp.join('')}
+            onChange={(e) => {
+              // Only allow digits and limit to 6 characters
+              const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+              // Split into array for backward compatibility
+              const newOtp = value.split('').concat(Array(6).fill('')).slice(0, 6);
+              setOtp(newOtp);
+            }}
+            className="h-12 text-center text-lg font-mono tracking-widest"
+            maxLength={6}
+          />
+          <p className="text-xs text-muted-foreground text-center">
+            Paste or type your 6-digit verification code
+          </p>
         </div>
 
         <Button

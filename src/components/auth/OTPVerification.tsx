@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -116,22 +116,25 @@ export function OTPVerification({ email, onVerificationComplete, onBack }: OTPVe
       </div>
       
       <div className="space-y-6">
-        <div className="flex justify-center">
-          <InputOTP 
-            maxLength={6} 
-            value={otp} 
-            onChange={setOtp}
-            className="justify-center"
-          >
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-foreground">
+            Verification Code
+          </label>
+          <Input
+            type="text"
+            placeholder="Enter 6-digit code"
+            value={otp}
+            onChange={(e) => {
+              // Only allow digits and limit to 6 characters
+              const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+              setOtp(value);
+            }}
+            className="h-12 text-center text-lg font-mono tracking-widest"
+            maxLength={6}
+          />
+          <p className="text-xs text-muted-foreground text-center">
+            Paste or type your 6-digit verification code
+          </p>
         </div>
 
         <Button 

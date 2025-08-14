@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { User, Mail, Home, Shield, Bell, Save, KeyRound, Building } from 'lucide-react';
+import { User, Mail, Home, Shield, Bell, Save, KeyRound, Building, Info } from 'lucide-react';
 import { ChangeDormModal } from '@/components/modals/ChangeDormModal';
 import { UpdatePasswordModal } from '@/components/modals/UpdatePasswordModal';
 import { dormAndFloorData } from '@/utils/dormData';
@@ -259,8 +259,8 @@ export const ProfileSettings = () => {
               id="email"
               type="email"
               value={profile.email}
-              onChange={(e) => setProfile(prev => prev ? {...prev, email: e.target.value} : null)}
-              placeholder="your.email@example.com"
+              disabled
+              className="bg-muted cursor-not-allowed"
             />
             <p className="text-sm text-muted-foreground">
               This email will be used for notifications and account recovery
@@ -276,12 +276,10 @@ export const ProfileSettings = () => {
               </Label>
               <Select
                 value={profile.dorm || ''}
-                onValueChange={(value) => {
-                  setProfile(prev => prev ? {...prev, dorm: value, wing: ''} : null);
-                }}
+                disabled
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your dorm" />
+                <SelectTrigger className="bg-muted cursor-not-allowed">
+                  <SelectValue placeholder="No dorm selected" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.keys(dormAndFloorData).map((dormName) => (
@@ -300,13 +298,10 @@ export const ProfileSettings = () => {
               </Label>
               <Select
                 value={profile.wing || ''}
-                onValueChange={(value) => {
-                  setProfile(prev => prev ? {...prev, wing: value} : null);
-                }}
-                disabled={!profile.dorm}
+                disabled
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select your wing" />
+                <SelectTrigger className="bg-muted cursor-not-allowed">
+                  <SelectValue placeholder="No wing selected" />
                 </SelectTrigger>
                 <SelectContent>
                   {getAvailableWings(profile.dorm).map((wing) => (
@@ -318,13 +313,20 @@ export const ProfileSettings = () => {
               </Select>
             </div>
           </div>
+          
+          <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
+            <p className="flex items-center gap-2">
+              <Info className="h-4 w-4" />
+              Dorm and wing information is displayed for reference only. Contact an administrator if you need to update this information.
+            </p>
+          </div>
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
             <Button
               variant="outline"
-              onClick={() => setChangeDormModalOpen(true)}
-              className="flex items-center gap-2"
+              disabled
+              className="flex items-center gap-2 cursor-not-allowed"
             >
               <Building className="h-4 w-4" />
               Change Dorm/Wing

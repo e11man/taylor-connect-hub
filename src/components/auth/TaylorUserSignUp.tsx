@@ -160,9 +160,10 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
           <label className="text-sm font-medium">Leadership role (optional)</label>
           <Select onValueChange={setRequestedRole} value={requestedRole}>
             <SelectTrigger className="h-12">
-              <SelectValue placeholder="None" />
+              <SelectValue placeholder="Select a role (optional)" />
             </SelectTrigger>
             <SelectContent>
+              <SelectItem value="">None</SelectItem>
               <SelectItem value="pa">PA</SelectItem>
               <SelectItem value="faculty">Faculty</SelectItem>
               <SelectItem value="student_leader">Student Leader</SelectItem>
