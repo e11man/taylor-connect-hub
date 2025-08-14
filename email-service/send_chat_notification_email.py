@@ -163,17 +163,46 @@ def send_chat_notification_email(notification: Dict) -> bool:
         subject = f"New message in \"{event_title}\" chat"
         
         html_content = f"""
-        <p>acme - New Chat Message</p>
-        <p>New message in "{event_title}" event chat</p>
-        <p><strong>From:</strong> {sender_name}</p>
-        <p><strong>Message:</strong> "{notification.get('message', '')}"</p>
-        <p><strong>Event:</strong> {event_title} ({organization_name})</p>
-        <p>Visit acme to view the full conversation and respond.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #1B365F; margin: 0; font-size: 28px; font-weight: 600;">Main Street Connect</h1>
+                <p style="color: #666; margin: 10px 0 0 0; font-size: 16px;">New Chat Message</p>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+                <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                    New message in <strong style="color: #00AFCE;">"{event_title}"</strong> event chat
+                </p>
+                
+                <div style="background: white; padding: 20px; border-radius: 8px; border-left: 4px solid #00AFCE; margin: 20px 0;">
+                    <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 10px 0;">
+                        <strong style="color: #1B365F;">From:</strong> {sender_name}
+                    </p>
+                    <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 10px 0;">
+                        <strong style="color: #1B365F;">Message:</strong> "{notification.get('message', '')}"
+                    </p>
+                    <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0;">
+                        <strong style="color: #1B365F;">Event:</strong> {event_title} ({organization_name})
+                    </p>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="https://uplandmainstreet.org" style="background: #00AFCE; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 16px;">
+                        View Full Conversation
+                    </a>
+                </div>
+            </div>
+            
+            <div style="border-top: 2px solid #E14F3D; margin-top: 30px; padding-top: 20px; text-align: center;">
+                <p style="color: #1B365F; margin: 0; font-size: 18px; font-weight: 600;">Main Street Connect</p>
+                <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Connecting communities through meaningful volunteer opportunities</p>
+            </div>
+        </div>
         """
         
         # Send email using latest Resend API
         email_response = resend_client.emails.send({
-            "from": "acme <noreply@uplandmainstreet.org>",
+            "from": "Main Street Connect <noreply@uplandmainstreet.org>",
             "to": [notification['user_email']],
             "subject": subject,
             "html": html_content

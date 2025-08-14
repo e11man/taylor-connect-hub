@@ -130,8 +130,8 @@ serve(async (req) => {
           <body style="margin: 0; padding: 0; font-family: Arial, sans-serif; background-color: #f6f9fc;">
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff;">
               <!-- Header -->
-              <div style="background: linear-gradient(135deg, #0A2540 0%, #525f7f 100%); padding: 30px; text-align: center;">
-                                    <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 300;">acme</h1>
+              <div style="background: linear-gradient(135deg, #1B365F 0%, #00AFCE 100%); padding: 30px; text-align: center;">
+                <h1 style="color: white; margin: 0; font-size: 28px; font-weight: 600;">Main Street Connect</h1>
                 <p style="color: white; margin: 10px 0 0 0; opacity: 0.9; font-size: 16px;">New Chat Message</p>
               </div>
               
@@ -140,9 +140,9 @@ serve(async (req) => {
                 <h2 style="color: #0A2540; margin-bottom: 25px; font-size: 24px;">New Message in Event Chat</h2>
                 
                 <!-- Event Info -->
-                <div style="background: #f6f9fc; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #E8A87C;">
-                  <h3 style="color: #0A2540; margin: 0 0 15px 0; font-size: 20px;">${event_title}</h3>
-                  <p style="color: #525f7f; margin: 0; font-size: 15px; line-height: 1.6;">
+                <div style="background: #f6f9fc; padding: 25px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #E14F3D;">
+                  <h3 style="color: #1B365F; margin: 0 0 15px 0; font-size: 20px;">${event_title}</h3>
+                  <p style="color: #666; margin: 0; font-size: 15px; line-height: 1.6;">
                     ${event_description ? (event_description.length > 150 ? event_description.substring(0, 150) + '...' : event_description) : 'Join the conversation and stay updated with this event.'}
                   </p>
                   <p style="color: #666; margin: 10px 0 0 0; font-size: 14px;">
@@ -152,10 +152,10 @@ serve(async (req) => {
                 
                 <!-- Message Content -->
                 <div style="background: #e8f4fd; padding: 25px; border-radius: 12px; margin: 25px 0; border: 1px solid #d1e7dd;">
-                  <p style="color: #0A2540; margin: 0 0 15px 0; font-weight: 600; font-size: 16px;">
+                  <p style="color: #1B365F; margin: 0 0 15px 0; font-weight: 600; font-size: 16px;">
                     <strong>From:</strong> ${sender_name}
                   </p>
-                  <div style="background: white; padding: 20px; border-radius: 8px; border-left: 3px solid #E8A87C;">
+                  <div style="background: white; padding: 20px; border-radius: 8px; border-left: 3px solid #E14F3D;">
                     <p style="color: #333; margin: 0; font-style: italic; line-height: 1.6; font-size: 16px;">
                       "${message}"
                     </p>
@@ -165,14 +165,14 @@ serve(async (req) => {
                 <!-- Call to Action -->
                 <div style="text-align: center; margin: 35px 0;">
                   <a href="https://taylor-connect-hub.vercel.app/opportunities" 
-                     style="background: #0A2540; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 16px; transition: background-color 0.3s;">
+                     style="background: #00AFCE; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; font-size: 16px; transition: background-color 0.3s;">
                     View Event Chat →
                   </a>
                 </div>
                 
                 <!-- Footer Info -->
                 <div style="background: #f6f9fc; padding: 20px; border-radius: 12px; margin: 25px 0;">
-                  <p style="color: #525f7f; margin: 0; font-size: 14px; line-height: 1.5;">
+                  <p style="color: #666; margin: 0; font-size: 14px; line-height: 1.5;">
                     <strong>Manage Notifications:</strong> You can control your notification preferences in your account settings.<br>
                     <strong>Event Updates:</strong> Stay informed about changes and new opportunities.
                   </p>
@@ -180,9 +180,9 @@ serve(async (req) => {
               </div>
               
               <!-- Footer -->
-              <div style="background: #0A2540; padding: 25px; text-align: center;">
-                                    <p style="color: #ffffff; margin: 0; font-size: 14px;">© 2024 acme. All rights reserved.</p>
-                <p style="color: #E8A87C; margin: 5px 0 0 0; font-size: 12px;">Connecting communities through meaningful service</p>
+              <div style="background: #1B365F; padding: 25px; text-align: center;">
+                <p style="color: #ffffff; margin: 0; font-size: 14px;">© 2024 Main Street Connect. All rights reserved.</p>
+                <p style="color: #E14F3D; margin: 5px 0 0 0; font-size: 12px;">Connecting communities through meaningful volunteer opportunities</p>
               </div>
             </div>
           </body>
@@ -192,7 +192,7 @@ serve(async (req) => {
           // Send email with retry logic and rate limiting
           const emailResponse = await retryWithBackoff(async () => {
             return await resend.emails.send({
-              from: 'acme <noreply@uplandmainstreet.org>',
+              from: 'Main Street Connect <noreply@uplandmainstreet.org>',
               to: [user_email],
               subject: `New message in "${event_title}" chat`,
               html: htmlContent,

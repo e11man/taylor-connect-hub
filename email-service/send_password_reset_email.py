@@ -73,15 +73,43 @@ def send_password_reset_email(email, reset_code):
     """Send password reset email with 6-digit code"""
     try:
         params = {
-            "from": "acme <noreply@uplandmainstreet.org>",
+            "from": "Main Street Connect <noreply@uplandmainstreet.org>",
             "to": [email],
-            "subject": "Reset Your acme Password",
+            "subject": "Reset Your Main Street Connect Password",
             "html": f"""
-            <p>acme - Password Reset</p>
-            <p>We received a request to reset your password for your acme account.</p>
-            <p>Your password reset code is: <strong>{reset_code}</strong></p>
-            <p>Enter this code to create a new password. This code expires in 10 minutes.</p>
-            <p>If you didn't request this password reset, you can ignore this email.</p>
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <h1 style="color: #1B365F; margin: 0; font-size: 28px; font-weight: 600;">Main Street Connect</h1>
+                    <p style="color: #666; margin: 10px 0 0 0; font-size: 16px;">Password Reset</p>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+                    <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        We received a request to reset your password for your Main Street Connect account.
+                    </p>
+                    
+                    <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Your password reset code is: <strong style="color: #E14F3D; font-size: 18px;">{reset_code}</strong>
+                    </p>
+                    
+                    <p style="color: #333; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                        Enter this code to create a new password. This code expires in 10 minutes.
+                    </p>
+                    
+                    <div style="background: #E14F3D; color: white; padding: 15px; border-radius: 8px; text-align: center; margin: 20px 0;">
+                        <p style="margin: 0; font-size: 18px; font-weight: 600;">Reset Code: {reset_code}</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; color: #666; font-size: 14px;">
+                    <p style="margin: 0 0 10px 0;">If you didn't request this password reset, you can safely ignore this email.</p>
+                </div>
+                
+                <div style="border-top: 2px solid #E14F3D; margin-top: 30px; padding-top: 20px; text-align: center;">
+                    <p style="color: #1B365F; margin: 0; font-size: 18px; font-weight: 600;">Main Street Connect</p>
+                    <p style="color: #666; margin: 5px 0 0 0; font-size: 14px;">Connecting communities through meaningful volunteer opportunities</p>
+                </div>
+            </div>
             """
         }
 

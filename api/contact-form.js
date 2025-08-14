@@ -159,8 +159,8 @@ export default async function handler(req, res) {
       <body>
           <div class="container">
               <div class="header">
-                  <h1>🌟 acme</h1>
-                  <p>New Contact Form Submission</p>
+                  <h1 style="color: #1B365F; margin: 0; font-size: 28px; font-weight: 600;">🌟 Main Street Connect</h1>
+                  <p style="color: #666; margin: 10px 0 0 0; font-size: 16px;">New Contact Form Submission</p>
               </div>
               
               <div class="content">
@@ -187,7 +187,7 @@ export default async function handler(req, res) {
               </div>
               
               <div class="footer">
-                  <p>This message was sent through the acme contact form.</p>
+                  <p>This message was sent through the Main Street Connect contact form.</p>
                   <div class="timestamp">
                       Received on ${timestamp}
                   </div>
@@ -199,7 +199,7 @@ export default async function handler(req, res) {
 
     // Send email using Resend
     const { data, error } = await resend.emails.send({
-              from: 'acme <noreply@uplandmainstreet.org>',
+      from: 'Main Street Connect <noreply@uplandmainstreet.org>',
       to: ['josh_ellman@icloud.com'],
       subject: `New Contact Form Submission - ${name}`,
       html: htmlContent,
