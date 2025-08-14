@@ -16,28 +16,28 @@ const HeroSection = () => {
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
   
   // Extract content with fallbacks
-  const titleLine1 = heroContent.titleLine1 || "Connect.";
-  const titleLine2 = heroContent.titleLine2 || "Volunteer.";
-  const titleLine3 = heroContent.titleLine3 || "Make a Difference.";
-  const subtitle = heroContent.subtitle || "Join thousands of volunteers making a positive impact in their communities. Find opportunities that match your skills and passion.";
-  const ctaButton = heroContent.ctaButton || "Get Started";
-  const secondaryButton = heroContent.secondaryButton || "Learn More";
+  const titleLine1 = heroContent.titleLine1 || <DynamicText page="homepage" section="hero" contentKey="titleLine1" fallback=<DynamicText page="sections" section="hero" contentKey="title_line_1" fallback="Connect." /> />;
+  const titleLine2 = heroContent.titleLine2 || <DynamicText page="homepage" section="hero" contentKey="titleLine2" fallback=<DynamicText page="sections" section="hero" contentKey="title_line_2" fallback="Volunteer." /> />;
+  const titleLine3 = heroContent.titleLine3 || <DynamicText page="homepage" section="hero" contentKey="titleLine3" fallback=<DynamicText page="sections" section="hero" contentKey="title_line_3" fallback="Make a Difference." /> />;
+  const subtitle = heroContent.subtitle || <DynamicText page="homepage" section="hero" contentKey="subtitle" fallback=<DynamicText page="sections" section="hero" contentKey="subtitle" fallback="Join thousands of volunteers making a positive impact in their communities. Find opportunities that match your skills and passion." /> />;
+  const ctaButton = heroContent.ctaButton || <DynamicText page="cta" section="main" contentKey="primary_button" fallback=<DynamicText page="header" section="buttons" contentKey="get_started" fallback=<DynamicText page="homepage" section="hero" contentKey="ctaButton" fallback=<DynamicText page="sections" section="hero" contentKey="cta_button" fallback="Get Started" /> /> /> />;
+  const secondaryButton = heroContent.secondaryButton || <DynamicText page="about" section="hero" contentKey="secondaryButton" fallback=<DynamicText page="cta" section="main" contentKey="secondaryButton" fallback=<DynamicText page="cta" section="main" contentKey="secondary_button" fallback=<DynamicText page="homepage" section="hero" contentKey="secondaryButton" fallback=<DynamicText page="sections" section="hero" contentKey="secondary_button" fallback="Learn More" /> /> /> /> />;
   
   // Simple stats using the existing content system
   const statsData = [
     { 
       icon: Users, 
-      label: impactContent.volunteers_label || "Active Volunteers", 
+      label: impactContent.volunteers_label || <DynamicText page="homepage" section="impact" contentKey="volunteers_label" fallback=<DynamicText page="impact" section="main" contentKey="volunteers_label" fallback="Active Volunteers" /> />, 
       value: impactContent.active_volunteers || "0"
     },
     { 
       icon: Clock, 
-      label: impactContent.hours_label || "Hours Contributed", 
+      label: impactContent.hours_label || <DynamicText page="homepage" section="impact" contentKey="hours_label" fallback=<DynamicText page="impact" section="main" contentKey="hours_label" fallback="Hours Contributed" /> />, 
       value: impactContent.hours_contributed || "0"
     },
     { 
       icon: Building, 
-      label: impactContent.organizations_label || "Partner Organizations", 
+      label: impactContent.organizations_label || <DynamicText page="adminDashboard" section="page" contentKey="partner_organizations" fallback=<DynamicText page="homepage" section="impact" contentKey="organizations_label" fallback=<DynamicText page="impact" section="main" contentKey="organizations_label" fallback="Partner Organizations" /> /> />, 
       value: impactContent.partner_organizations || "0"
     }
   ];

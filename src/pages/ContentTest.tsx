@@ -66,13 +66,13 @@ const ContentTest = () => {
           <h2 className="text-xl font-semibold mb-4">DynamicText Component</h2>
           <div className="space-y-2">
             <div>
-              <strong>Title Line 1:</strong> <DynamicText page="home" section="hero" contentKey="titleLine1" fallback="Connect." />
+              <strong>Title Line 1:</strong> <DynamicText page="home" section="hero" contentKey="titleLine1" fallback=<DynamicText page="homepage" section="hero" contentKey="titleLine1" fallback=<DynamicText page="sections" section="hero" contentKey="title_line_1" fallback="Connect." /> /> />
             </div>
             <div>
-              <strong>Title Line 2:</strong> <DynamicText page="home" section="hero" contentKey="titleLine2" fallback="Volunteer." />
+              <strong>Title Line 2:</strong> <DynamicText page="home" section="hero" contentKey="titleLine2" fallback=<DynamicText page="homepage" section="hero" contentKey="titleLine2" fallback=<DynamicText page="sections" section="hero" contentKey="title_line_2" fallback="Volunteer." /> /> />
             </div>
             <div>
-              <strong>CTA Button:</strong> <DynamicText page="home" section="hero" contentKey="ctaButton" fallback="Get Started" />
+              <strong>CTA Button:</strong> <DynamicText page="home" section="hero" contentKey="ctaButton" fallback=<DynamicText page="cta" section="main" contentKey="primary_button" fallback=<DynamicText page="header" section="buttons" contentKey="get_started" fallback=<DynamicText page="homepage" section="hero" contentKey="ctaButton" fallback=<DynamicText page="sections" section="hero" contentKey="cta_button" fallback="Get Started" /> /> /> /> />
             </div>
           </div>
         </div>

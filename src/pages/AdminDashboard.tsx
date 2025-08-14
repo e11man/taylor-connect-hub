@@ -1198,7 +1198,7 @@ export const AdminDashboard = () => {
               <div className="flex justify-between items-center">
           <div>
             <h1 className="text-3xl font-bold">
-              <DynamicText page="adminDashboard" section="header" contentKey="title" fallback="Admin Dashboard" />
+              <DynamicText page="adminDashboard" section="header" contentKey="title" fallback=<DynamicText page="dashboard" section="admin" contentKey="welcome" fallback="Admin Dashboard" /> />
             </h1>
             <p className="text-gray-600">
               <DynamicText page="adminDashboard" section="header" contentKey="subtitle" fallback="Manage users, organizations, events, and content" />
@@ -1220,15 +1220,15 @@ export const AdminDashboard = () => {
           </TabsTrigger>
           <TabsTrigger value="users" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            <DynamicText page="adminDashboard" section="tabs" contentKey="users" fallback="Users" />
+            <DynamicText page="adminDashboard" section="tabs" contentKey="users" fallback=<DynamicText page="dashboard" section="admin" contentKey="users" fallback="Users" /> />
           </TabsTrigger>
           <TabsTrigger value="organizations" className="flex items-center gap-2">
             <Building2 className="w-4 h-4" />
-            <DynamicText page="adminDashboard" section="tabs" contentKey="organizations" fallback="Organizations" />
+            <DynamicText page="adminDashboard" section="tabs" contentKey="organizations" fallback=<DynamicText page="dashboard" section="admin" contentKey="organizations" fallback="Organizations" /> />
           </TabsTrigger>
           <TabsTrigger value="events" className="flex items-center gap-2">
             <FileText className="w-4 h-4" />
-            <DynamicText page="adminDashboard" section="tabs" contentKey="events" fallback="Events" />
+            <DynamicText page="adminDashboard" section="tabs" contentKey="events" fallback=<DynamicText page="dashboard" section="admin" contentKey="events" fallback="Events" /> />
           </TabsTrigger>
           <TabsTrigger value="content" className="flex items-center gap-2">
             <Edit className="w-4 h-4" />

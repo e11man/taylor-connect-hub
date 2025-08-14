@@ -127,13 +127,13 @@ const ResetPassword = () => {
             <CardContent className="text-center py-8">
               <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
               <h2 className="text-2xl font-bold text-primary mb-2">
-                <DynamicText page="resetPassword" section="success" contentKey="heading" fallback="Password Updated!" />
+                <DynamicText page="resetPassword" section="success" contentKey="heading" fallback=<DynamicText page="messages" section="success" contentKey="password_updated" fallback=<DynamicText page="resetPassword" section="success" contentKey="heading" fallback="Password Updated!" /> /> />
               </h2>
               <p className="text-muted-foreground mb-4">
-                <DynamicText page="resetPassword" section="success" contentKey="description" fallback="Your password has been successfully updated. You will be redirected to the login page shortly." />
+                <DynamicText page="resetPassword" section="success" contentKey="description" fallback=<DynamicText page="messages" section="success" contentKey="password_update_description" fallback=<DynamicText page="resetPassword" section="success" contentKey="description" fallback="Your password has been successfully updated. You will be redirected to the login page shortly." /> /> />
               </p>
               <Button onClick={() => navigate('/')} className="w-full">
-                <DynamicText page="resetPassword" section="success" contentKey="goHomeButton" fallback="Go to Home" />
+                <DynamicText page="resetPassword" section="success" contentKey="goHomeButton" fallback=<DynamicText page="messages" section="success" contentKey="go_home" fallback="Go to Home" /> />
               </Button>
             </CardContent>
           </Card>
@@ -169,7 +169,7 @@ const ResetPassword = () => {
               
               <div className="space-y-2">
                 <Label htmlFor="password">
-                  <DynamicText page="resetPassword" section="form" contentKey="newPasswordLabel" fallback="New Password" />
+                  <DynamicText page="resetPassword" section="form" contentKey="newPasswordLabel" fallback=<DynamicText page="modals" section="updatePassword" contentKey="new_password_label" fallback="New Password" /> />
                 </Label>
                 <div className="relative">
                   <Input
@@ -190,13 +190,13 @@ const ResetPassword = () => {
                   </button>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  <DynamicText page="resetPassword" section="form" contentKey="helperPasswordMin" fallback="Password must be at least 6 characters long" />
+                  <DynamicText page="resetPassword" section="form" contentKey="helperPasswordMin" fallback=<DynamicText page="forms" section="validation" contentKey="password_too_short" fallback=<DynamicText page="modals" section="updatePassword" contentKey="password_min_requirement" fallback="Password must be at least 6 characters long" /> /> />
                 </p>
               </div>
               
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">
-                  <DynamicText page="resetPassword" section="form" contentKey="confirmNewPasswordLabel" fallback="Confirm New Password" />
+                  <DynamicText page="resetPassword" section="form" contentKey="confirmNewPasswordLabel" fallback=<DynamicText page="modals" section="updatePassword" contentKey="confirm_password_label" fallback="Confirm New Password" /> />
                 </Label>
                 <div className="relative">
                   <Input

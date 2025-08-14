@@ -82,6 +82,18 @@ export const EventChatView: React.FC<EventChatViewProps> = ({
     }
   }, [messages]);
 
+  // Auto-scroll to bottom when modal opens
+  useEffect(() => {
+    if (isOpen && scrollAreaRef.current) {
+      setTimeout(() => {
+        const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+      }, 100);
+    }
+  }, [isOpen]);
+
   const fetchMessages = async () => {
     if (!eventId) return;
     
@@ -286,7 +298,7 @@ export const EventChatView: React.FC<EventChatViewProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl sm:max-h-[80vh] h-[80vh] flex flex-col p-0">
-        <DialogHeader className="px-6 py-4 border-b">
+        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <MessageSquare className="w-5 h-5 text-[#1B365F]" />
@@ -303,7 +315,7 @@ export const EventChatView: React.FC<EventChatViewProps> = ({
         </DialogHeader>
 
         <div className="flex-1 flex flex-col min-h-0">
-          <ScrollArea ref={scrollAreaRef} className="flex-1 p-6">
+          <ScrollArea ref={scrollAreaRef} className="flex-1 p-6 overflow-y-auto min-h-0">
             {loading ? (
               <div className="flex items-center justify-center h-32">
                 <div className="text-center">
@@ -318,7 +330,7 @@ export const EventChatView: React.FC<EventChatViewProps> = ({
                 <p className="text-sm text-gray-400">Be the first to start the conversation!</p>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-4 pb-4">
                 {messages.map((message, index) => {
                   const prevMessage = index > 0 ? messages[index - 1] : null;
                   const showDate = !prevMessage || 
@@ -384,7 +396,7 @@ export const EventChatView: React.FC<EventChatViewProps> = ({
           </ScrollArea>
 
           {/* Message input */}
-          <div className="border-t p-4 bg-gray-50">
+          <div className="border-t p-4 bg-gray-50 flex-shrink-0">
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 text-sm text-[#525f7f]">
                 <Shield className="w-4 h-4 text-[#00AFCE]" />

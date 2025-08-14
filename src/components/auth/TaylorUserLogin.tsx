@@ -103,7 +103,7 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
     } catch (error) {
       toast({
         title: toastErrorTitle,
-        description: "An unexpected error occurred. Please try again.",
+        description: <DynamicText page="messages" section="error" contentKey="unexpected_error" fallback="An unexpected error occurred. Please try again." />,
         variant: "destructive",
       });
     } finally {
@@ -136,10 +136,10 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
     <div className="w-full max-w-sm mx-auto">
       <div className="text-center space-y-2 mb-6">
         <h2 className="text-2xl font-bold text-primary">
-          <DynamicText page="userLogin" section="header" contentKey="title" fallback="Welcome Back" />
+          <DynamicText page="userLogin" section="header" contentKey="title" fallback=<DynamicText page="auth" section="login" contentKey="title" fallback=<DynamicText page="auth" section="login" contentKey="welcome_back" fallback="Welcome Back" /> /> />
         </h2>
         <p className="text-muted-foreground text-sm">
-          <DynamicText page="userLogin" section="header" contentKey="subtitle" fallback="Sign in to your Taylor Connect Hub account." />
+          <DynamicText page="userLogin" section="header" contentKey="subtitle" fallback=<DynamicText page="auth" section="login" contentKey="sign_in_subtitle" fallback="Sign in to your Taylor Connect Hub account." /> />
         </p>
       </div>
       

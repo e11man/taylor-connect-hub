@@ -448,7 +448,7 @@ export const Statistics = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatCard
-          title="Active Volunteers"
+          title=<DynamicText page="homepage" section="impact" contentKey="volunteers_label" fallback=<DynamicText page="impact" section="main" contentKey="volunteers_label" fallback="Active Volunteers" /> />
           icon={Users}
           recorded={statistics.recorded.active_volunteers}
           live={statistics.live.active_volunteers}
@@ -456,7 +456,7 @@ export const Statistics = () => {
         />
         
         <StatCard
-          title="Hours Contributed"
+          title=<DynamicText page="homepage" section="impact" contentKey="hours_label" fallback=<DynamicText page="impact" section="main" contentKey="hours_label" fallback="Hours Contributed" /> />
           icon={Clock}
           recorded={statistics.recorded.hours_contributed}
           live={statistics.live.hours_contributed}
@@ -465,7 +465,7 @@ export const Statistics = () => {
         />
         
         <StatCard
-          title="Partner Organizations"
+          title=<DynamicText page="adminDashboard" section="page" contentKey="partner_organizations" fallback=<DynamicText page="homepage" section="impact" contentKey="organizations_label" fallback=<DynamicText page="impact" section="main" contentKey="organizations_label" fallback="Partner Organizations" /> /> />
           icon={Building2}
           recorded={statistics.recorded.partner_organizations}
           live={statistics.live.partner_organizations}

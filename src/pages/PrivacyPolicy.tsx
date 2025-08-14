@@ -19,33 +19,33 @@ const PrivacyPolicy = () => {
   const privacyFeatures = [
     {
       icon: Shield,
-      title: featuresContent.data_protection_title || "Data Protection",
-      description: featuresContent.data_protection_description || "Your personal information is protected with industry-standard security measures."
+      title: featuresContent.data_protection_title || <DynamicText page="privacy" section="features" contentKey="data_protection_title" fallback=<DynamicText page="terms" section="features" contentKey="data_protection_title" fallback="Data Protection" /> />,
+      description: featuresContent.data_protection_description || <DynamicText page="privacy" section="features" contentKey="data_protection_description" fallback="Your personal information is protected with industry-standard security measures." />
     },
     {
       icon: Eye,
-      title: featuresContent.transparency_title || "Transparency",
-      description: featuresContent.transparency_description || "We're clear about what data we collect and how we use it."
+      title: featuresContent.transparency_title || <DynamicText page="privacy" section="features" contentKey="transparency_title" fallback="Transparency" />,
+      description: featuresContent.transparency_description || <DynamicText page="privacy" section="features" contentKey="transparency_description" fallback="We're clear about what data we collect and how we use it." />
     },
     {
       icon: Lock,
-      title: featuresContent.secure_storage_title || "Secure Storage",
-      description: featuresContent.secure_storage_description || "All data is encrypted and stored securely in our database."
+      title: featuresContent.secure_storage_title || <DynamicText page="privacy" section="features" contentKey="secure_storage_title" fallback="Secure Storage" />,
+      description: featuresContent.secure_storage_description || <DynamicText page="privacy" section="features" contentKey="secure_storage_description" fallback="All data is encrypted and stored securely in our database." />
     },
     {
       icon: Users,
-      title: featuresContent.user_control_title || "User Control",
-      description: featuresContent.user_control_description || "You have full control over your data and can request changes anytime."
+      title: featuresContent.user_control_title || <DynamicText page="privacy" section="features" contentKey="user_control_title" fallback="User Control" />,
+      description: featuresContent.user_control_description || <DynamicText page="privacy" section="features" contentKey="user_control_description" fallback="You have full control over your data and can request changes anytime." />
     },
     {
       icon: Database,
-      title: featuresContent.limited_collection_title || "Limited Collection",
-      description: featuresContent.limited_collection_description || "We only collect the information necessary to provide our services."
+      title: featuresContent.limited_collection_title || <DynamicText page="privacy" section="features" contentKey="limited_collection_title" fallback="Limited Collection" />,
+      description: featuresContent.limited_collection_description || <DynamicText page="privacy" section="features" contentKey="limited_collection_description" fallback="We only collect the information necessary to provide our services." />
     },
     {
       icon: Bell,
-      title: featuresContent.notifications_title || "Notifications",
-      description: featuresContent.notifications_description || "You control how and when you receive communications from us."
+      title: featuresContent.notifications_title || <DynamicText page="privacy" section="features" contentKey="notifications_title" fallback="Notifications" />,
+      description: featuresContent.notifications_description || <DynamicText page="privacy" section="features" contentKey="notifications_description" fallback="You control how and when you receive communications from us." />
     }
   ];
 
@@ -62,7 +62,7 @@ const PrivacyPolicy = () => {
                   page="privacy" 
                   section="hero" 
                   contentKey="title"
-                  fallback="Privacy Policy"
+                  fallback=<DynamicText page="footer" section="links" contentKey="privacy" fallback=<DynamicText page="footer" section="links" contentKey="privacy_link" fallback=<DynamicText page="organizationRegister" section="page" contentKey="privacy_link" fallback=<DynamicText page="privacy" section="hero" contentKey="title" fallback="Privacy Policy" /> /> /> />
                   as="span"
                 />
               </h1>
@@ -71,7 +71,7 @@ const PrivacyPolicy = () => {
                   page="privacy" 
                   section="hero" 
                   contentKey="subtitle"
-                  fallback="How we protect and handle your information"
+                  fallback=<DynamicText page="privacy" section="hero" contentKey="subtitle" fallback="How we protect and handle your information" />
                   as="span"
                 />
               </p>
@@ -82,7 +82,7 @@ const PrivacyPolicy = () => {
                     page="privacy" 
                     section="hero" 
                     contentKey="description"
-                    fallback="Last updated: January 2024"
+                    fallback=<DynamicText page="privacy" section="hero" contentKey="description" fallback=<DynamicText page="terms" section="hero" contentKey="description" fallback="Last updated: January 2024" /> />
                     as="span"
                   />
                 </p>
@@ -130,7 +130,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="main" 
                       contentKey="intro_title"
-                      fallback="Introduction"
+                      fallback=<DynamicText page="privacy" section="main" contentKey="intro_title" fallback=<DynamicText page="terms" section="main" contentKey="intro_title" fallback="Introduction" /> />
                       as="span"
                     />
                   </h2>
@@ -152,7 +152,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="collection" 
                       contentKey="title"
-                      fallback="Information We Collect"
+                      fallback=<DynamicText page="privacy" section="collection" contentKey="title" fallback="Information We Collect" />
                       as="span"
                     />
                   </h2>
@@ -163,7 +163,7 @@ const PrivacyPolicy = () => {
                           page="privacy" 
                           section="collection" 
                           contentKey="personal_title"
-                          fallback="Personal Information"
+                          fallback=<DynamicText page="privacy" section="collection" contentKey="personal_title" fallback="Personal Information" />
                           as="span"
                         />
                       </h3>
@@ -172,7 +172,7 @@ const PrivacyPolicy = () => {
                           page="privacy" 
                           section="collection" 
                           contentKey="personal_text"
-                          fallback="We collect information you provide directly to us, such as when you create an account, sign up for events, or contact us. This may include your name, email address, phone number, and other contact information."
+                          fallback=<DynamicText page="privacy" section="collection" contentKey="personal_text" fallback="We collect information you provide directly to us, such as when you create an account, sign up for events, or contact us. This may include your name, email address, phone number, and other contact information." />
                           as="span"
                         />
                       </p>
@@ -183,7 +183,7 @@ const PrivacyPolicy = () => {
                           page="privacy" 
                           section="collection" 
                           contentKey="usage_title"
-                          fallback="Usage Information"
+                          fallback=<DynamicText page="privacy" section="collection" contentKey="usage_title" fallback="Usage Information" />
                           as="span"
                         />
                       </h3>
@@ -192,7 +192,7 @@ const PrivacyPolicy = () => {
                           page="privacy" 
                           section="collection" 
                           contentKey="usage_text"
-                          fallback="We automatically collect certain information about your use of our platform, including your IP address, browser type, operating system, and pages visited."
+                          fallback=<DynamicText page="privacy" section="collection" contentKey="usage_text" fallback="We automatically collect certain information about your use of our platform, including your IP address, browser type, operating system, and pages visited." />
                           as="span"
                         />
                       </p>
@@ -207,7 +207,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="usage" 
                       contentKey="title"
-                      fallback="How We Use Your Information"
+                      fallback=<DynamicText page="privacy" section="usage" contentKey="title" fallback="How We Use Your Information" />
                       as="span"
                     />
                   </h2>
@@ -216,7 +216,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="usage" 
                       contentKey="description"
-                      fallback="We use the information we collect to:"
+                      fallback=<DynamicText page="privacy" section="usage" contentKey="description" fallback="We use the information we collect to:" />
                       as="span"
                     />
                   </p>
@@ -226,7 +226,7 @@ const PrivacyPolicy = () => {
                         page="privacy" 
                         section="usage" 
                         contentKey="purpose1"
-                        fallback="Provide and maintain our services"
+                        fallback=<DynamicText page="privacy" section="usage" contentKey="purpose1" fallback="Provide and maintain our services" />
                         as="span"
                       />
                     </li>
@@ -235,7 +235,7 @@ const PrivacyPolicy = () => {
                         page="privacy" 
                         section="usage" 
                         contentKey="purpose2"
-                        fallback="Connect you with volunteer opportunities"
+                        fallback=<DynamicText page="privacy" section="usage" contentKey="purpose2" fallback="Connect you with volunteer opportunities" />
                         as="span"
                       />
                     </li>
@@ -244,7 +244,7 @@ const PrivacyPolicy = () => {
                         page="privacy" 
                         section="usage" 
                         contentKey="purpose3"
-                        fallback="Send you important updates and notifications"
+                        fallback=<DynamicText page="privacy" section="usage" contentKey="purpose3" fallback="Send you important updates and notifications" />
                         as="span"
                       />
                     </li>
@@ -253,7 +253,7 @@ const PrivacyPolicy = () => {
                         page="privacy" 
                         section="usage" 
                         contentKey="purpose4"
-                        fallback="Improve our platform and user experience"
+                        fallback=<DynamicText page="privacy" section="usage" contentKey="purpose4" fallback="Improve our platform and user experience" />
                         as="span"
                       />
                     </li>
@@ -267,7 +267,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="sharing" 
                       contentKey="title"
-                      fallback="Information Sharing"
+                      fallback=<DynamicText page="privacy" section="sharing" contentKey="title" fallback="Information Sharing" />
                       as="span"
                     />
                   </h2>
@@ -276,7 +276,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="sharing" 
                       contentKey="description"
-                      fallback="We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy or as required by law."
+                      fallback=<DynamicText page="privacy" section="sharing" contentKey="description" fallback="We do not sell, trade, or otherwise transfer your personal information to third parties without your consent, except as described in this policy or as required by law." />
                       as="span"
                     />
                   </p>
@@ -289,7 +289,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="security" 
                       contentKey="title"
-                      fallback="Data Security"
+                      fallback=<DynamicText page="privacy" section="security" contentKey="title" fallback="Data Security" />
                       as="span"
                     />
                   </h2>
@@ -298,7 +298,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="security" 
                       contentKey="description"
-                      fallback="We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction."
+                      fallback=<DynamicText page="privacy" section="security" contentKey="description" fallback="We implement appropriate technical and organizational security measures to protect your personal information against unauthorized access, alteration, disclosure, or destruction." />
                       as="span"
                     />
                   </p>
@@ -311,7 +311,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="rights" 
                       contentKey="title"
-                      fallback="Your Rights"
+                      fallback=<DynamicText page="privacy" section="rights" contentKey="title" fallback="Your Rights" />
                       as="span"
                     />
                   </h2>
@@ -320,7 +320,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="rights" 
                       contentKey="description"
-                      fallback="You have the right to:"
+                      fallback=<DynamicText page="privacy" section="rights" contentKey="description" fallback="You have the right to:" />
                       as="span"
                     />
                   </p>
@@ -330,7 +330,7 @@ const PrivacyPolicy = () => {
                         page="privacy" 
                         section="rights" 
                         contentKey="right1"
-                        fallback="Access your personal information"
+                        fallback=<DynamicText page="privacy" section="rights" contentKey="right1" fallback="Access your personal information" />
                         as="span"
                       />
                     </li>
@@ -339,7 +339,7 @@ const PrivacyPolicy = () => {
                         page="privacy" 
                         section="rights" 
                         contentKey="right2"
-                        fallback="Correct inaccurate information"
+                        fallback=<DynamicText page="privacy" section="rights" contentKey="right2" fallback="Correct inaccurate information" />
                         as="span"
                       />
                     </li>
@@ -348,7 +348,7 @@ const PrivacyPolicy = () => {
                         page="privacy" 
                         section="rights" 
                         contentKey="right3"
-                        fallback="Request deletion of your information"
+                        fallback=<DynamicText page="privacy" section="rights" contentKey="right3" fallback="Request deletion of your information" />
                         as="span"
                       />
                     </li>
@@ -357,7 +357,7 @@ const PrivacyPolicy = () => {
                         page="privacy" 
                         section="rights" 
                         contentKey="right4"
-                        fallback="Opt out of certain communications"
+                        fallback=<DynamicText page="privacy" section="rights" contentKey="right4" fallback="Opt out of certain communications" />
                         as="span"
                       />
                     </li>
@@ -371,7 +371,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="contact" 
                       contentKey="title"
-                      fallback="Contact Us"
+                      fallback=<DynamicText page="privacy" section="contact" contentKey="title" fallback="Contact Us" />
                       as="span"
                     />
                   </h2>
@@ -380,7 +380,7 @@ const PrivacyPolicy = () => {
                       page="privacy" 
                       section="contact" 
                       contentKey="description"
-                      fallback="If you have any questions about this Privacy Policy or our data practices, please contact us at privacy@taylor.edu"
+                      fallback=<DynamicText page="privacy" section="contact" contentKey="description" fallback="If you have any questions about this Privacy Policy or our data practices, please contact us at privacy@taylor.edu" />
                       as="span"
                     />
                   </p>

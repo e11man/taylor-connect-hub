@@ -70,6 +70,18 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
     }
   }, [messages]);
 
+  // Auto-scroll to bottom when modal opens
+  useEffect(() => {
+    if (isOpen && scrollAreaRef.current) {
+      setTimeout(() => {
+        const scrollContainer = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+        if (scrollContainer) {
+          scrollContainer.scrollTop = scrollContainer.scrollHeight;
+        }
+      }, 100);
+    }
+  }, [isOpen]);
+
 
 
   const handleSendMessage = async () => {
@@ -119,15 +131,15 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[80vh] h-[80vh] flex flex-col p-0">
+        <DialogHeader className="px-6 py-4 border-b flex-shrink-0">
           <DialogTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5" />
             Chat - {eventTitle}
           </DialogTitle>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 min-h-[400px] p-6" ref={scrollAreaRef}>
+        <ScrollArea className="flex-1 p-6 overflow-y-auto min-h-0" ref={scrollAreaRef}>
           {messages.length === 0 ? (
             <div className="text-center text-muted-foreground py-12">
               <div className="mb-4">
@@ -137,7 +149,7 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
               </div>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-6 pb-4">
               {messages.map((message) => {
                 const alignRight = !!message.organization_id || message.user_role === 'admin';
                 return (
@@ -170,7 +182,7 @@ export const EventChatModal = ({ isOpen, onClose, eventId, eventTitle, organizat
           )}
         </ScrollArea>
 
-        <div className="px-6 py-4 border-t bg-gray-50 rounded-b-lg">
+        <div className="px-6 py-4 border-t bg-gray-50 flex-shrink-0">
           <div className="space-y-3">
             {!user && (
               <div className="text-sm text-muted-foreground">

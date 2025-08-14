@@ -27,7 +27,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
-      return "Password must be at least 6 characters long";
+      return <DynamicText page="forms" section="validation" contentKey="password_too_short" fallback=<DynamicText page="modals" section="updatePassword" contentKey="password_min_requirement" fallback="Password must be at least 6 characters long" /> />;
     }
     return null;
   };
@@ -37,7 +37,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
     if (!currentPassword || !newPassword || !confirmPassword) {
       toast({
         title: "Error",
-        description: "Please fill in all fields",
+        description: <DynamicText page="messages" section="error" contentKey="fill_all_fields" fallback="Please fill in all fields" />,
         variant: "destructive",
       });
       return;
@@ -46,7 +46,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
     if (newPassword !== confirmPassword) {
       toast({
         title: "Error",
-        description: "New passwords do not match",
+        description: <DynamicText page="messages" section="error" contentKey="new_passwords_dont_match" fallback="New passwords do not match" />,
         variant: "destructive",
       });
       return;
@@ -65,7 +65,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
     if (currentPassword === newPassword) {
       toast({
         title: "Error",
-        description: "New password must be different from current password",
+        description: <DynamicText page="messages" section="error" contentKey="new_password_different" fallback="New password must be different from current password" />,
         variant: "destructive",
       });
       return;
@@ -74,7 +74,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
     if (!user?.id) {
       toast({
         title: "Error",
-        description: "Could not verify current user",
+        description: <DynamicText page="messages" section="error" contentKey="could_not_verify_user" fallback="Could not verify current user" />,
         variant: "destructive",
       });
       return;
@@ -92,7 +92,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
       if (hashError) {
         toast({
           title: "Error",
-          description: "Could not verify current user",
+          description: <DynamicText page="messages" section="error" contentKey="could_not_verify_user" fallback="Could not verify current user" />,
           variant: "destructive",
         });
         return;
@@ -104,7 +104,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
       if (!isCurrentPasswordValid) {
         toast({
           title: "Error",
-          description: "Current password is incorrect",
+          description: <DynamicText page="messages" section="error" contentKey="current_password_incorrect" fallback="Current password is incorrect" />,
           variant: "destructive",
         });
         return;
@@ -125,7 +125,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
       if (updateError) {
         toast({
           title: "Error",
-          description: "Failed to update password",
+          description: <DynamicText page="messages" section="error" contentKey="failed_update_password" fallback="Failed to update password" />,
           variant: "destructive",
         });
       } else {
@@ -138,7 +138,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "An unexpected error occurred. Please try again.",
+        description: error.message || <DynamicText page="messages" section="error" contentKey="unexpected_error" fallback="An unexpected error occurred. Please try again." />,
         variant: "destructive",
       });
     } finally {
@@ -178,7 +178,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
               <Input
                 id="current-password"
                 type={showCurrentPassword ? "text" : "password"}
-                placeholder="Enter current password"
+                placeholder=<DynamicText page="modals" section="updatePassword" contentKey="current_password_placeholder" fallback="Enter current password" />
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className="h-12 pr-12"
@@ -200,7 +200,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
               <Input
                 id="new-password"
                 type={showNewPassword ? "text" : "password"}
-                placeholder="Enter new password"
+                placeholder=<DynamicText page="modals" section="updatePassword" contentKey="new_password_placeholder" fallback="Enter new password" />
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="h-12 pr-12"
@@ -225,7 +225,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
               <Input
                 id="confirm-password"
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder="Confirm new password"
+                placeholder=<DynamicText page="modals" section="updatePassword" contentKey="confirm_password_placeholder" fallback="Confirm new password" />
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="h-12 pr-12"

@@ -16,8 +16,8 @@ const Footer = () => {
   const { content: socialContent } = useContentSection('footer', 'social');
   
   const footerLinks = [
-    { name: linksContent.about || "About", href: "/about" },
-    { name: linksContent.contact || "Contact", href: isHomePage ? "#contact" : "/#contact" },
+    { name: linksContent.about || <DynamicText page="footer" section="links" contentKey="about" fallback=<DynamicText page="footer" section="links" contentKey="about_link" fallback=<DynamicText page="header" section="nav" contentKey="about" fallback=<DynamicText page="header" section="nav" contentKey="about_link" fallback="About" /> /> /> />, href: "/about" },
+    { name: linksContent.contact || <DynamicText page="footer" section="links" contentKey="contact" fallback=<DynamicText page="footer" section="links" contentKey="contact_link" fallback=<DynamicText page="header" section="nav" contentKey="contact" fallback=<DynamicText page="header" section="nav" contentKey="contact_link" fallback="Contact" /> /> /> />, href: isHomePage ? "#contact" : "/#contact" },
     { name: linksContent.privacy || "Privacy", href: "/privacy" },
     { name: linksContent.terms || "Terms", href: "/terms" }
   ];
@@ -26,35 +26,35 @@ const Footer = () => {
     {
       icon: Facebook,
       url: socialContent.facebook_url || "https://www.facebook.com/TaylorUniversity",
-      label: socialContent.facebook_label || "Facebook",
+      label: socialContent.facebook_label || <DynamicText page="footer" section="social" contentKey="facebook_label" fallback=<DynamicText page="footer" section="social" contentKey="facebook" fallback="Facebook" /> />,
       color: "hover:bg-blue-600",
       hidden: socialContent.facebook_hidden === 'true'
     },
     {
       icon: Instagram,
-      url: socialContent.instagram_url || "https://www.instagram.com/tayloruniversity",
-      label: socialContent.instagram_label || "Instagram",
+      url: socialContent.instagram_url || <DynamicText page="footer" section="social" contentKey="instagram_url" fallback="https://www.instagram.com/tayloruniversity" />,
+      label: socialContent.instagram_label || <DynamicText page="footer" section="social" contentKey="instagram_label" fallback=<DynamicText page="footer" section="social" contentKey="instagram" fallback="Instagram" /> />,
       color: "hover:bg-gradient-to-r from-purple-500 to-pink-500",
       hidden: socialContent.instagram_hidden === 'true'
     },
     {
       icon: Twitter,
-      url: socialContent.twitter_url || "https://twitter.com/TaylorU",
-      label: socialContent.twitter_label || "Twitter",
+      url: socialContent.twitter_url || <DynamicText page="footer" section="social" contentKey="twitter_url" fallback="https://twitter.com/TaylorU" />,
+      label: socialContent.twitter_label || <DynamicText page="footer" section="social" contentKey="twitter_label" fallback=<DynamicText page="footer" section="social" contentKey="twitter" fallback="Twitter" /> />,
       color: "hover:bg-blue-400",
       hidden: socialContent.twitter_hidden === 'true'
     },
     {
       icon: Linkedin,
-      url: socialContent.linkedin_url || "https://www.linkedin.com/school/taylor-university",
-      label: socialContent.linkedin_label || "LinkedIn",
+      url: socialContent.linkedin_url || <DynamicText page="footer" section="social" contentKey="linkedin_url" fallback="https://www.linkedin.com/school/taylor-university" />,
+      label: socialContent.linkedin_label || <DynamicText page="footer" section="social" contentKey="linkedin_label" fallback=<DynamicText page="footer" section="social" contentKey="linkedin" fallback="LinkedIn" /> />,
       color: "hover:bg-blue-700",
       hidden: socialContent.linkedin_hidden === 'true'
     },
     {
       icon: Youtube,
-      url: socialContent.youtube_url || "https://www.youtube.com/user/TaylorUniversity",
-      label: socialContent.youtube_label || "YouTube",
+      url: socialContent.youtube_url || <DynamicText page="footer" section="social" contentKey="youtube_url" fallback="https://www.youtube.com/user/TaylorUniversity" />,
+      label: socialContent.youtube_label || <DynamicText page="footer" section="social" contentKey="youtube_label" fallback="YouTube" />,
       color: "hover:bg-red-600",
       hidden: socialContent.youtube_hidden === 'true'
     }
@@ -79,7 +79,7 @@ const Footer = () => {
                   page="footer" 
                   section="brand" 
                   contentKey="name"
-                  fallback="Community Connect"
+                  fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Community Connect" /> />
                   as="span"
                 />
               </span>
@@ -153,7 +153,7 @@ const Footer = () => {
               }}
               viewport={{ once: false }}
             >
-              {socialContent.title || "Follow Us"}
+              {socialContent.title || <DynamicText page="footer" section="social" contentKey="title" fallback="Follow Us" />}
             </motion.h3>
             
             <div className="flex justify-center items-center gap-3">
@@ -225,7 +225,7 @@ const Footer = () => {
               </span>
               <motion.img
                 src={tuLogo}
-                alt={partnershipContent.partner_name || "Taylor University"}
+                alt={partnershipContent.partner_name || <DynamicText page="footer" section="partnership" contentKey="partner_name" fallback="Taylor University" />}
                 className="h-6 w-auto opacity-80 hover:opacity-100 transition-opacity duration-300"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.2 }}

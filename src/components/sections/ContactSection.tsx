@@ -76,7 +76,7 @@ const ContactSection = () => {
     {
       icon: Mail,
       title: "Email Us",
-      content: contactInfo.email || "connect@taylor.edu",
+      content: contactInfo.email || <DynamicText page="contact" section="info" contentKey="email" fallback="connect@taylor.edu" />,
       description: contactInfo.email_description || "Send us a message anytime"
     },
     {
@@ -88,7 +88,7 @@ const ContactSection = () => {
     {
       icon: MapPin,
       title: "Visit Us", 
-      content: contactInfo.address || "236 West Reade Avenue, Upland, IN 46989",
+      content: contactInfo.address || <DynamicText page="contact" section="info" contentKey="address" fallback="236 West Reade Avenue, Upland, IN 46989" />,
       description: contactInfo.address_description || "Taylor University Campus"
     }
   ];
@@ -109,7 +109,7 @@ const ContactSection = () => {
           <div className="text-center mb-12">
             <AnimatedText variant="blur" delay={0.2}>
               <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-                <DynamicText page="contact" section="main" contentKey="title" fallback="Get In Touch" />
+                <DynamicText page="contact" section="main" contentKey="title" fallback=<DynamicText page="sections" section="contact" contentKey="title" fallback="Get In Touch" /> />
               </h2>
             </AnimatedText>
             
@@ -126,7 +126,7 @@ const ContactSection = () => {
           <AnimatedSection variant="slideLeft" delay={0.4}>
             <AnimatedText variant="slideUp" delay={0.5}>
               <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-8 text-primary">
-                <DynamicText page="about" section="contact" contentKey="contact_info_title" fallback="Contact Information" />
+                <DynamicText page="about" section="contact" contentKey="contact_info_title" fallback=<DynamicText page="sections" section="contact" contentKey="contact_info_title" fallback=<DynamicText page="terms" section="contact" contentKey="title" fallback="Contact Information" /> /> />
               </h3>
             </AnimatedText>
             
@@ -207,7 +207,7 @@ const ContactSection = () => {
                   }}
                   viewport={{ once: false }}
                 >
-                  <DynamicText page="about" section="contact" contentKey="quick_response_title" fallback="Quick Response" />
+                  <DynamicText page="about" section="contact" contentKey="quick_response_title" fallback=<DynamicText page="sections" section="contact" contentKey="quick_response_title" fallback="Quick Response" /> />
                 </motion.h4>
                 <motion.p 
                   className="text-muted-foreground text-sm leading-relaxed"
@@ -236,7 +236,7 @@ const ContactSection = () => {
             >
               <AnimatedText variant="slideUp" delay={0.6}>
               <h3 className="text-2xl md:text-3xl font-montserrat font-bold mb-6 text-primary">
-                <DynamicText page="about" section="contact" contentKey="send_message_title" fallback="Send us a Message" />
+                <DynamicText page="about" section="contact" contentKey="send_message_title" fallback=<DynamicText page="sections" section="contact" contentKey="send_message_title" fallback="Send us a Message" /> />
               </h3>
               </AnimatedText>
               

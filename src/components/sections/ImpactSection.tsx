@@ -13,21 +13,21 @@ const ImpactSection = () => {
   const statsData = [
     { 
       icon: Users, 
-      label: impactContent.volunteers_label || "Active Volunteers", 
+      label: impactContent.volunteers_label || <DynamicText page="homepage" section="impact" contentKey="volunteers_label" fallback=<DynamicText page="impact" section="main" contentKey="volunteers_label" fallback="Active Volunteers" /> />, 
       value: impactContent.active_volunteers || "0",
-      description: aboutImpactContent.volunteers_description || "Passionate individuals serving Upland"
+      description: aboutImpactContent.volunteers_description || <DynamicText page="impact" section="main" contentKey="volunteers_description" fallback="Passionate individuals serving Upland" />
     },
     { 
       icon: Clock, 
-      label: impactContent.hours_label || "Hours Contributed", 
+      label: impactContent.hours_label || <DynamicText page="homepage" section="impact" contentKey="hours_label" fallback=<DynamicText page="impact" section="main" contentKey="hours_label" fallback="Hours Contributed" /> />, 
       value: impactContent.hours_contributed || "0",
-      description: aboutImpactContent.hours_description || "Collective time dedicated to service"
+      description: aboutImpactContent.hours_description || <DynamicText page="impact" section="main" contentKey="hours_description" fallback="Collective time dedicated to service" />
     },
     { 
       icon: Building, 
-      label: impactContent.organizations_label || "Partner Organizations", 
+      label: impactContent.organizations_label || <DynamicText page="adminDashboard" section="page" contentKey="partner_organizations" fallback=<DynamicText page="homepage" section="impact" contentKey="organizations_label" fallback=<DynamicText page="impact" section="main" contentKey="organizations_label" fallback="Partner Organizations" /> /> />, 
       value: impactContent.partner_organizations || "0",
-      description: aboutImpactContent.organizations_description || "Local organizations making a difference"
+      description: aboutImpactContent.organizations_description || <DynamicText page="impact" section="main" contentKey="organizations_description" fallback="Local organizations making a difference" />
     }
   ];
 

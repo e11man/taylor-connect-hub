@@ -231,7 +231,7 @@ export const PasswordResetModal = ({ isOpen, onClose, email }: PasswordResetModa
           <div className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="new-password">
-                <DynamicText page="passwordResetModal" section="form" contentKey="newPasswordLabel" fallback="New Password" />
+                <DynamicText page="passwordResetModal" section="form" contentKey="newPasswordLabel" fallback=<DynamicText page="modals" section="updatePassword" contentKey="new_password_label" fallback="New Password" /> />
               </Label>
               <div className="relative">
                 <Input
@@ -251,13 +251,13 @@ export const PasswordResetModal = ({ isOpen, onClose, email }: PasswordResetModa
                 </button>
               </div>
               <p className="text-xs text-muted-foreground">
-                <DynamicText page="passwordResetModal" section="form" contentKey="helperMinLength" fallback="Password must be at least 6 characters long" />
+                <DynamicText page="passwordResetModal" section="form" contentKey="helperMinLength" fallback=<DynamicText page="forms" section="validation" contentKey="password_too_short" fallback=<DynamicText page="modals" section="updatePassword" contentKey="password_min_requirement" fallback="Password must be at least 6 characters long" /> /> />
               </p>
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="confirm-password">
-                <DynamicText page="passwordResetModal" section="form" contentKey="confirmNewPasswordLabel" fallback="Confirm New Password" />
+                <DynamicText page="passwordResetModal" section="form" contentKey="confirmNewPasswordLabel" fallback=<DynamicText page="modals" section="updatePassword" contentKey="confirm_password_label" fallback="Confirm New Password" /> />
               </Label>
               <div className="relative">
                 <Input

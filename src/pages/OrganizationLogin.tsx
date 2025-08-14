@@ -28,7 +28,7 @@ const OrganizationLogin = () => {
   const { content: signingIn } = useContent('organizationLogin', 'form', 'signingIn', 'Signing in...');
   const { content: emailPlaceholder } = useContent('organizationLogin', 'form', 'emailPlaceholder', 'Enter your email');
   const { content: passwordPlaceholder } = useContent('organizationLogin', 'form', 'passwordPlaceholder', 'Enter your password');
-  const { content: noAccountPrompt } = useContent('organizationLogin', 'links', 'noAccountPrompt', "Don't have an account?");
+  const { content: noAccountPrompt } = useContent('organizationLogin', 'links', 'noAccountPrompt', <DynamicText page="auth" section="login" contentKey="no_account" fallback=<DynamicText page="auth" section="login" contentKey="no_account_text" fallback="Don't have an account?" /> />);
   const { content: signUpLink } = useContent('organizationLogin', 'links', 'signUp', 'Sign up');
   const { content: forgotPasswordLink } = useContent('organizationLogin', 'links', 'forgotPassword', 'Forgot password?');
   const { content: successTitle } = useContent('organizationLogin', 'messages', 'successTitle', 'Welcome Back!');
@@ -95,7 +95,7 @@ const OrganizationLogin = () => {
                 {/* Removed Lock icon as per new_code */}
               </div>
               <h1 className="text-3xl md:text-4xl font-montserrat font-bold mb-4 text-primary">
-                <DynamicText page="organizationLogin" section="title" contentKey="default" fallback="Organization Login" />
+                <DynamicText page="organizationLogin" section="title" contentKey="default" fallback=<DynamicText page="organizationLogin" section="page" contentKey="title" fallback="Organization Login" /> />
               </h1>
               <p className="text-lg text-muted-foreground font-montserrat">
                 <DynamicText page="organizationLogin" section="description" contentKey="default" fallback="Sign in to your organization account" />

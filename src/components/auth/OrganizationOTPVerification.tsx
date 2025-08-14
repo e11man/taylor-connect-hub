@@ -101,7 +101,7 @@ export function OrganizationOTPVerification({
       console.error('❌ Unexpected error during verification:', error);
       toast({
         title: "Error",
-        description: "An unexpected error occurred. Please try again.",
+        description: <DynamicText page="messages" section="error" contentKey="unexpected_error" fallback="An unexpected error occurred. Please try again." />,
         variant: "destructive",
       });
     } finally {

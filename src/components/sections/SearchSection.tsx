@@ -17,13 +17,13 @@ const SearchSection = () => {
   const { content: categoriesContent } = useContentSection('search', 'categories');
 
   const categories = [
-    { id: "all", name: categoriesContent.all || "All" },
-    { id: "community", name: categoriesContent.community || "Community" },
-    { id: "education", name: categoriesContent.education || "Education" },
-    { id: "environment", name: categoriesContent.environment || "Environment" },
-    { id: "health", name: categoriesContent.health || "Health" },
-    { id: "fundraising", name: categoriesContent.fundraising || "Fundraising" },
-    { id: "other", name: categoriesContent.other || "Other" }
+    { id: "all", name: categoriesContent.all || <DynamicText page="search" section="categories" contentKey="all" fallback="All" /> },
+    { id: "community", name: categoriesContent.community || <DynamicText page="search" section="categories" contentKey="community" fallback="Community" /> },
+    { id: "education", name: categoriesContent.education || <DynamicText page="opportunities" section="main" contentKey="filter_education" fallback=<DynamicText page="search" section="categories" contentKey="education" fallback="Education" /> /> },
+    { id: "environment", name: categoriesContent.environment || <DynamicText page="opportunities" section="main" contentKey="filter_environment" fallback=<DynamicText page="search" section="categories" contentKey="environment" fallback="Environment" /> /> },
+    { id: "health", name: categoriesContent.health || <DynamicText page="search" section="categories" contentKey="health" fallback="Health" /> },
+    { id: "fundraising", name: categoriesContent.fundraising || <DynamicText page="search" section="categories" contentKey="fundraising" fallback="Fundraising" /> },
+    { id: "other", name: categoriesContent.other || <DynamicText page="opportunities" section="main" contentKey="filter_other" fallback=<DynamicText page="search" section="categories" contentKey="other" fallback="Other" /> /> }
   ];
 
   return (
@@ -78,7 +78,7 @@ const SearchSection = () => {
               >
                 <Input
                   type="text"
-                  placeholder={searchContent.placeholder || "Search by title, description, or category..."}
+                  placeholder={searchContent.placeholder || <DynamicText page="search" section="main" contentKey="placeholder" fallback="Search by title, description, or category..." />}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="pl-10 sm:pl-12 pr-12 sm:pr-4 py-4 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl border-2 border-gray-200 focus:border-[#00AFCE] bg-white transition-all duration-300 hover:shadow-md focus:shadow-lg min-h-[48px] sm:min-h-[56px]"

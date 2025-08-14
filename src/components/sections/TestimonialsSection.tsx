@@ -24,25 +24,25 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ setAuthModalO
   const testimonials = [
     {
       id: 1,
-      content: testimonial1Content.testimonial1_quote || "Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in our community.",
+      content: testimonial1Content.testimonial1_quote || <DynamicText page="testimonials" section="testimonial1" contentKey="content" fallback="Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in our community." />,
       author: testimonial1Content.testimonial1_author || "Sarah Johnson",
-      role: testimonial1Content.testimonial1_role || "Volunteer",
+      role: testimonial1Content.testimonial1_role || <DynamicText page="testimonials" section="testimonial1" contentKey="role" fallback="Volunteer" />,
       initial: "S",
       highlight: false
     },
     {
       id: 2,
-      content: testimonial2Content.testimonial2_quote || "The platform made it so easy to find volunteers for our literacy program. We've been able to reach twice as many students this year.",
+      content: testimonial2Content.testimonial2_quote || <DynamicText page="testimonials" section="testimonial2" contentKey="content" fallback="The platform made it so easy to find volunteers for our literacy program. We've been able to reach twice as many students this year." />,
       author: testimonial2Content.testimonial2_author || "Marcus Chen",
-      role: testimonial2Content.testimonial2_role || "Program Director", 
+      role: testimonial2Content.testimonial2_role || <DynamicText page="testimonials" section="testimonial2" contentKey="role" fallback="Program Director" />, 
       initial: "M",
       highlight: false
     },
     {
       id: 3,
-      content: testimonial3Content.testimonial3_quote || "I love how the opportunities are categorized and filtered. It's never been easier to find causes I'm passionate about.",
+      content: testimonial3Content.testimonial3_quote || <DynamicText page="testimonials" section="testimonial3" contentKey="content" fallback="I love how the opportunities are categorized and filtered. It's never been easier to find causes I'm passionate about." />,
       author: testimonial3Content.testimonial3_author || "Emma Rodriguez",
-      role: testimonial3Content.testimonial3_role || "Student",
+      role: testimonial3Content.testimonial3_role || <DynamicText page="testimonials" section="testimonial3" contentKey="role" fallback="Student" />,
       initial: "E",
       highlight: true
     }

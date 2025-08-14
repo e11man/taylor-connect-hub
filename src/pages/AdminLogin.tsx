@@ -127,7 +127,7 @@ const AdminLogin = () => {
                     page="admin" 
                     section="login" 
                     contentKey="emailLabel"
-                    fallback="Email"
+                    fallback=<DynamicText page="auth" section="login" contentKey="email_label" fallback=<DynamicText page="auth" section="signup" contentKey="email_label" fallback=<DynamicText page="modals" section="forgotPassword" contentKey="email_display" fallback=<DynamicText page="organizationLogin" section="page" contentKey="email_label" fallback=<DynamicText page="organizationRegister" section="page" contentKey="email_label" fallback=<DynamicText page="sections" section="contact" contentKey="email_label" fallback="Email" /> /> /> /> /> />
                     as="span"
                   />
                 </Label>
@@ -149,7 +149,7 @@ const AdminLogin = () => {
                     page="admin" 
                     section="login" 
                     contentKey="passwordLabel"
-                    fallback="Password"
+                    fallback=<DynamicText page="auth" section="login" contentKey="password_label" fallback=<DynamicText page="auth" section="signup" contentKey="password_label" fallback=<DynamicText page="organizationLogin" section="page" contentKey="password_label" fallback=<DynamicText page="organizationRegister" section="page" contentKey="password_label" fallback="Password" /> /> /> />
                     as="span"
                   />
                 </Label>
@@ -182,7 +182,7 @@ const AdminLogin = () => {
                     page="admin" 
                     section="login" 
                     contentKey="submitButton"
-                    fallback="Sign In"
+                    fallback=<DynamicText page="auth" section="login" contentKey="submit" fallback=<DynamicText page="auth" section="login" contentKey="sign_in_button" fallback=<DynamicText page="header" section="buttons" contentKey="sign_in_button" fallback=<DynamicText page="organizationLogin" section="page" contentKey="sign_in_button" fallback="Sign In" /> /> /> />
                     as="span"
                   />
                 )}

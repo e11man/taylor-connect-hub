@@ -164,7 +164,7 @@ const OrganizationRegister: React.FC = () => {
                   page="organizationRegister" 
                   section="form" 
                   contentKey="organizationNameLabel"
-                  fallback="Organization Name"
+                  fallback=<DynamicText page="modals" section="request_volunteers" contentKey="name_label" fallback=<DynamicText page="organizationRegister" section="page" contentKey="organization_name_label" fallback="Organization Name" /> />
                   as="span"
                 />
               </label>
@@ -228,7 +228,7 @@ const OrganizationRegister: React.FC = () => {
                   page="organizationRegister" 
                   section="form" 
                   contentKey="emailLabel"
-                  fallback="Email"
+                  fallback=<DynamicText page="auth" section="login" contentKey="email_label" fallback=<DynamicText page="auth" section="signup" contentKey="email_label" fallback=<DynamicText page="modals" section="forgotPassword" contentKey="email_display" fallback=<DynamicText page="organizationLogin" section="page" contentKey="email_label" fallback=<DynamicText page="organizationRegister" section="page" contentKey="email_label" fallback=<DynamicText page="sections" section="contact" contentKey="email_label" fallback="Email" /> /> /> /> /> />
                   as="span"
                 />
               </label>
@@ -260,7 +260,7 @@ const OrganizationRegister: React.FC = () => {
                   page="organizationRegister" 
                   section="form" 
                   contentKey="passwordLabel"
-                  fallback="Password"
+                  fallback=<DynamicText page="auth" section="login" contentKey="password_label" fallback=<DynamicText page="auth" section="signup" contentKey="password_label" fallback=<DynamicText page="organizationLogin" section="page" contentKey="password_label" fallback=<DynamicText page="organizationRegister" section="page" contentKey="password_label" fallback="Password" /> /> /> />
                   as="span"
                 />
               </label>
@@ -275,7 +275,7 @@ const OrganizationRegister: React.FC = () => {
                   className={`w-full pl-10 pr-12 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
                     errors.password ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={formContent?.passwordPlaceholder || "Create a password"}
+                  placeholder={formContent?.passwordPlaceholder || <DynamicText page="auth" section="signup" contentKey="password_placeholder" fallback="Create a password" />}
                 />
                 <button
                   type="button"
@@ -301,7 +301,7 @@ const OrganizationRegister: React.FC = () => {
                   page="organizationRegister" 
                   section="form" 
                   contentKey="confirmPasswordLabel"
-                  fallback="Confirm Password"
+                  fallback=<DynamicText page="auth" section="signup" contentKey="confirm_password_label" fallback=<DynamicText page="organizationRegister" section="page" contentKey="confirm_password_label" fallback="Confirm Password" /> />
                   as="span"
                 />
               </label>
@@ -316,7 +316,7 @@ const OrganizationRegister: React.FC = () => {
                   className={`w-full pl-10 pr-12 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
                     errors.confirmPassword ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={formContent?.confirmPasswordPlaceholder || "Confirm your password"}
+                  placeholder={formContent?.confirmPasswordPlaceholder || <DynamicText page="auth" section="signup" contentKey="confirm_password_placeholder" fallback="Confirm your password" />}
                 />
                 <button
                   type="button"
@@ -342,7 +342,7 @@ const OrganizationRegister: React.FC = () => {
                   page="organizationRegister" 
                   section="form" 
                   contentKey="organizationDescriptionLabel"
-                  fallback="Organization Description"
+                  fallback=<DynamicText page="organizationRegister" section="page" contentKey="description_label" fallback="Organization Description" />
                   as="span"
                 />
               </label>
@@ -372,7 +372,7 @@ const OrganizationRegister: React.FC = () => {
                   page="organizationRegister" 
                   section="form" 
                   contentKey="websiteLabel"
-                  fallback="Website (Optional)"
+                  fallback=<DynamicText page="organizationRegister" section="page" contentKey="website_label" fallback="Website (Optional)" />
                   as="span"
                 />
               </label>
@@ -397,7 +397,7 @@ const OrganizationRegister: React.FC = () => {
                   page="organizationRegister" 
                   section="form" 
                   contentKey="phoneNumberLabel"
-                  fallback="Phone Number (Optional)"
+                  fallback=<DynamicText page="organizationRegister" section="page" contentKey="phone_label" fallback="Phone Number (Optional)" />
                   as="span"
                 />
               </label>

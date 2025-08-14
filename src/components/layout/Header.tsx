@@ -55,15 +55,15 @@ const Header = () => {
   }
   
   const NAV_LINKS = [
-    { name: navContent.home || "Home", href: "/", isRoute: true },
-    { name: navContent.about || "About", href: "/about", isRoute: true },
-    { name: navContent.contact || "Contact", href: isHomePage ? "#contact" : "/#contact", isRoute: false }
+    { name: navContent.home || <DynamicText page="header" section="nav" contentKey="home" fallback=<DynamicText page="header" section="nav" contentKey="home_link" fallback="Home" /> />, href: "/", isRoute: true },
+    { name: navContent.about || <DynamicText page="footer" section="links" contentKey="about" fallback=<DynamicText page="footer" section="links" contentKey="about_link" fallback=<DynamicText page="header" section="nav" contentKey="about" fallback=<DynamicText page="header" section="nav" contentKey="about_link" fallback="About" /> /> /> />, href: "/about", isRoute: true },
+    { name: navContent.contact || <DynamicText page="footer" section="links" contentKey="contact" fallback=<DynamicText page="footer" section="links" contentKey="contact_link" fallback=<DynamicText page="header" section="nav" contentKey="contact" fallback=<DynamicText page="header" section="nav" contentKey="contact_link" fallback="Contact" /> /> /> />, href: isHomePage ? "#contact" : "/#contact", isRoute: false }
   ];
 
   // Add dashboard link for logged-in users
   const USER_NAV_LINKS = user ? [
     ...NAV_LINKS,
-    { name: "Dashboard", href: getDashboardUrl(), isRoute: true }
+    { name: <DynamicText page="header" section="buttons" contentKey="dashboard" fallback=<DynamicText page="header" section="buttons" contentKey="dashboard_button" fallback="Dashboard" /> />, href: getDashboardUrl(), isRoute: true }
   ] : NAV_LINKS;
 
   // Lock scroll when mobile nav is open
@@ -186,7 +186,7 @@ const Header = () => {
           {/* Close button */}
           <button
             className="self-end mb-6 p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition shadow"
-            aria-label="Close menu"
+            aria-label=<DynamicText page="header" section="navigation" contentKey="close_menu" fallback="Close menu" />
             onClick={closeMenu}
             tabIndex={isOpen ? 0 : -1}
           >
@@ -207,7 +207,7 @@ const Header = () => {
                 page="header" 
                 section="brand" 
                 contentKey="name"
-                fallback="Community Connect"
+                fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Community Connect" /> />
                 as="span"
               />
             </span>
@@ -259,7 +259,7 @@ const Header = () => {
                     page="header" 
                     section="buttons" 
                     contentKey="requestVolunteers"
-                    fallback="Request Volunteers"
+                    fallback=<DynamicText page="header" section="buttons" contentKey="request_volunteers" fallback=<DynamicText page="modals" section="request_volunteers" contentKey="title" fallback="Request Volunteers" /> />
                     as="span"
                   />
                 </PrimaryButton>
@@ -286,7 +286,7 @@ const Header = () => {
                   page="header" 
                   section="buttons" 
                   contentKey="signOut"
-                  fallback="Sign Out"
+                  fallback=<DynamicText page="header" section="buttons" contentKey="sign_out" fallback="Sign Out" />
                   as="span"
                 />
               </button>
@@ -319,7 +319,7 @@ const Header = () => {
                   page="header" 
                   section="buttons" 
                   contentKey="requestVolunteers"
-                  fallback="Request Volunteers"
+                  fallback=<DynamicText page="header" section="buttons" contentKey="request_volunteers" fallback=<DynamicText page="modals" section="request_volunteers" contentKey="title" fallback="Request Volunteers" /> />
                   as="span"
                 />
               </PrimaryButton>
@@ -354,7 +354,7 @@ const Header = () => {
               page="header" 
               section="brand" 
               contentKey="name"
-              fallback="Community Connect"
+              fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Community Connect" /> />
               as="span"
             />
           </span>
@@ -428,7 +428,7 @@ const Header = () => {
                       page="header" 
                       section="buttons" 
                       contentKey="requestVolunteers"
-                      fallback="Request Volunteers"
+                      fallback=<DynamicText page="header" section="buttons" contentKey="request_volunteers" fallback=<DynamicText page="modals" section="request_volunteers" contentKey="title" fallback="Request Volunteers" /> />
                       as="span"
                     />
                   </PrimaryButton>
@@ -456,7 +456,7 @@ const Header = () => {
                       page="header" 
                       section="buttons" 
                       contentKey="requestVolunteers"
-                      fallback="Request Volunteers"
+                      fallback=<DynamicText page="header" section="buttons" contentKey="request_volunteers" fallback=<DynamicText page="modals" section="request_volunteers" contentKey="title" fallback="Request Volunteers" /> />
                       as="span"
                     />
                   </PrimaryButton>
@@ -477,7 +477,7 @@ const Header = () => {
                   page="header" 
                   section="buttons" 
                   contentKey="requestVolunteers"
-                  fallback="Request Volunteers"
+                  fallback=<DynamicText page="header" section="buttons" contentKey="request_volunteers" fallback=<DynamicText page="modals" section="request_volunteers" contentKey="title" fallback="Request Volunteers" /> />
                   as="span"
                 />
               </PrimaryButton>

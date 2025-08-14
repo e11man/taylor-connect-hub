@@ -40,7 +40,7 @@ const OrganizationPendingApproval: React.FC = () => {
                   page="organizationPendingApproval" 
                   section="main" 
                   contentKey="title"
-                  fallback="Registration Submitted Successfully!"
+                  fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="title" fallback="Registration Submitted Successfully!" />
                   as="span"
                 />
               </h1>
@@ -52,7 +52,7 @@ const OrganizationPendingApproval: React.FC = () => {
                     page="organizationPendingApproval" 
                     section="main" 
                     contentKey="statusBadge"
-                    fallback="Pending Admin Approval"
+                    fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="statusBadge" fallback="Pending Admin Approval" />
                     as="span"
                   />
                 </span>
@@ -67,7 +67,7 @@ const OrganizationPendingApproval: React.FC = () => {
                     page="organizationPendingApproval" 
                     section="main" 
                     contentKey="subtitle"
-                    fallback="Thank you for submitting your organization registration!"
+                    fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="subtitle" fallback="Thank you for submitting your organization registration!" />
                     as="span"
                   />
                 </p>
@@ -76,7 +76,7 @@ const OrganizationPendingApproval: React.FC = () => {
                     page="organizationPendingApproval" 
                     section="main" 
                     contentKey="description"
-                    fallback="Your application is currently under review by our administrative team. We will notify you via email once your organization has been approved and you can begin using the platform."
+                    fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="description" fallback="Your application is currently under review by our administrative team. We will notify you via email once your organization has been approved and you can begin using the platform." />
                     as="span"
                   />
                 </p>
@@ -90,7 +90,7 @@ const OrganizationPendingApproval: React.FC = () => {
                     page="organizationPendingApproval" 
                     section="main" 
                     contentKey="nextStepsTitle"
-                    fallback="What happens next?"
+                    fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="nextStepsTitle" fallback="What happens next?" />
                     as="span"
                   />
                 </h3>
@@ -101,7 +101,7 @@ const OrganizationPendingApproval: React.FC = () => {
                       page="organizationPendingApproval" 
                       section="main" 
                       contentKey="step1"
-                      fallback="Our admin team will review your organization details and credentials"
+                      fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="step1" fallback="Our admin team will review your organization details and credentials" />
                       as="span"
                     />
                   </li>
@@ -111,7 +111,7 @@ const OrganizationPendingApproval: React.FC = () => {
                       page="organizationPendingApproval" 
                       section="main" 
                       contentKey="step2"
-                      fallback="You'll receive an email notification when your application is approved"
+                      fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="step2" fallback="You'll receive an email notification when your application is approved" />
                       as="span"
                     />
                   </li>
@@ -121,7 +121,7 @@ const OrganizationPendingApproval: React.FC = () => {
                       page="organizationPendingApproval" 
                       section="main" 
                       contentKey="step3"
-                      fallback="Once approved, you can log in and start creating events for the community"
+                      fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="step3" fallback="Once approved, you can log in and start creating events for the community" />
                       as="span"
                     />
                   </li>
@@ -136,7 +136,7 @@ const OrganizationPendingApproval: React.FC = () => {
                     page="organizationPendingApproval" 
                     section="main" 
                     contentKey="timelineTitle"
-                    fallback="Typical Review Timeline"
+                    fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="timelineTitle" fallback="Typical Review Timeline" />
                     as="span"
                   />
                 </h3>
@@ -145,7 +145,7 @@ const OrganizationPendingApproval: React.FC = () => {
                     page="organizationPendingApproval" 
                     section="main" 
                     contentKey="timelineDescription"
-                    fallback="Most organization applications are reviewed within 2-3 business days. During peak periods, it may take up to 5 business days."
+                    fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="timelineDescription" fallback="Most organization applications are reviewed within 2-3 business days. During peak periods, it may take up to 5 business days." />
                     as="span"
                   />
                 </p>
@@ -163,7 +163,7 @@ const OrganizationPendingApproval: React.FC = () => {
                   page="organizationPendingApproval" 
                   section="main" 
                   contentKey="contactButton"
-                  fallback="Contact Support"
+                  fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="contactButton" fallback="Contact Support" />
                   as="span"
                 />
               </button>
@@ -177,7 +177,7 @@ const OrganizationPendingApproval: React.FC = () => {
                   page="organizationPendingApproval" 
                   section="main" 
                   contentKey="homeButton"
-                  fallback="Return Home"
+                  fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="homeButton" fallback="Return Home" />
                   as="span"
                 />
               </Link>
@@ -191,7 +191,7 @@ const OrganizationPendingApproval: React.FC = () => {
                     page="organizationPendingApproval" 
                     section="main" 
                     contentKey="additionalInfo"
-                    fallback="Questions about your application status?"
+                    fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="additionalInfo" fallback="Questions about your application status?" />
                     as="span"
                   />
                 </p>
@@ -203,7 +203,7 @@ const OrganizationPendingApproval: React.FC = () => {
                         page="organizationPendingApproval" 
                         section="main" 
                         contentKey="supportEmail"
-                        fallback="support@example.com"
+                        fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="supportEmail" fallback="support@example.com" />
                         as="span"
                       />
                     </span>
@@ -215,7 +215,7 @@ const OrganizationPendingApproval: React.FC = () => {
                         page="organizationPendingApproval" 
                         section="main" 
                         contentKey="supportPhone"
-                        fallback="(555) 123-4567"
+                        fallback=<DynamicText page="organizationPendingApproval" section="main" contentKey="supportPhone" fallback="(555) 123-4567" />
                         as="span"
                       />
                     </span>
