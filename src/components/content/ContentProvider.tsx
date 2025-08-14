@@ -25,7 +25,9 @@ export const ContentProvider = ({ children }: ContentProviderProps) => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
         // Refresh content when user returns to the tab
-        refreshContent();
+        refreshContent().catch(error => {
+          console.error('Error refreshing content on visibility change:', error);
+        });
       }
     };
     
@@ -34,7 +36,9 @@ export const ContentProvider = ({ children }: ContentProviderProps) => {
     // Set up online/offline listener
     const handleOnline = () => {
       // Refresh content when coming back online
-      refreshContent();
+      refreshContent().catch(error => {
+        console.error('Error refreshing content on online:', error);
+      });
     };
     
     window.addEventListener('online', handleOnline);
@@ -42,7 +46,9 @@ export const ContentProvider = ({ children }: ContentProviderProps) => {
     // Set up popstate listener for browser back/forward navigation
     const handlePopState = () => {
       // Refresh content when navigating via browser buttons
-      refreshContent();
+      refreshContent().catch(error => {
+        console.error('Error refreshing content on popstate:', error);
+      });
     };
     
     window.addEventListener('popstate', handlePopState);
@@ -59,7 +65,9 @@ export const ContentProvider = ({ children }: ContentProviderProps) => {
   useEffect(() => {
     // Implement stale-while-revalidate: show existing content immediately
     // while fetching fresh content in the background
-    refreshContent();
+    refreshContent().catch(error => {
+      console.error('Error refreshing content on route change:', error);
+    });
   }, [location.pathname]);
 
   const contextValue: ContentContextValue = {

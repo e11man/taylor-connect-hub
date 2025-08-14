@@ -21,10 +21,49 @@ const contentCache: ContentCache = {};
 const fallbackContent: ContentCache = {
   'home.hero.title': 'Connect. Volunteer. Make a Difference.',
   'home.hero.subtitle': 'Join our vibrant community of passionate volunteers.',
+  'home.hero.cta_primary': 'Find Opportunities',
+  'home.hero.cta_secondary': 'Learn More',
+  'home.search.title': 'Find Your Perfect Volunteer Match',
+  'home.search.subtitle': 'Discover opportunities that align with your passions and schedule',
+  'home.search.search_placeholder': 'Search opportunities...',
+  'home.opportunities.title': 'Featured Opportunities',
+  'home.opportunities.subtitle': 'Discover meaningful ways to make a difference in your community',
+  'home.opportunities.view_all': 'View All Opportunities',
+  'home.impact.title': 'Our Community Impact',
+  'home.impact.volunteers_label': 'Active Volunteers',
+  'home.impact.hours_label': 'Hours Contributed',
+  'home.impact.events_label': 'Events Completed',
+  'home.impact.organizations_label': 'Partner Organizations',
+  'home.programs.title': 'Our Programs',
+  'home.programs.subtitle': 'Explore our diverse range of volunteer programs designed to create lasting impact',
+  'home.testimonials.title': 'What Our Volunteers Say',
+  'home.testimonials.subtitle': 'Hear from community members who are making a difference',
+  'home.cta.title': 'Ready to Make a Difference?',
+  'home.cta.subtitle': 'Join our community of passionate volunteers and start creating positive change today.',
+  'home.cta.button_text': 'Get Started Today',
   'header.nav.home': 'Home',
   'header.nav.about': 'About',
+  'header.nav.opportunities': 'Opportunities',
+  'header.nav.contact': 'Contact',
+  'header.nav.login': 'Login',
+  'header.nav.get_started': 'Get Started',
   'footer.brand.name': 'Community Connect',
+  'footer.nav.about': 'About',
+  'footer.nav.contact': 'Contact',
+  'footer.nav.opportunities': 'Opportunities',
+  'footer.nav.privacy': 'Privacy',
+  'footer.nav.terms': 'Terms',
+  'footer.footer.copyright': '© 2024 Community Connect. All rights reserved.',
+  'footer.footer.partnership': 'Made in partnership with Taylor University and Upland community organizations.',
   'admin.login.title': 'Admin Console',
+  'admin.login.subtitle': 'Sign in to access the admin dashboard',
+  'about.mission.title': 'Our Mission',
+  'about.mission.description': 'Community Connect is dedicated to fostering meaningful relationships between passionate volunteers and impactful opportunities.',
+  // Statistics fallbacks
+  'home.impact.volunteers': '0',
+  'home.impact.hours': '0',
+  'home.impact.events': '0',
+  'home.impact.organizations': '0'
 };
 
 // Content loading state
@@ -65,11 +104,10 @@ const loadContent = async (languageCode: string = 'en', forceRefresh: boolean = 
       
       // Add timeout to prevent infinite loading
       const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Content loading timeout')), 10000); // 10 second timeout
+        setTimeout(() => reject(new Error('Content loading timeout')), 5000); // Reduced to 5 second timeout
       });
       
       console.log('useContent: About to query Supabase content table');
-      console.log('useContent: Supabase client:', supabase);
       
       const contentPromise = supabase
         .from('content')
@@ -82,7 +120,15 @@ const loadContent = async (languageCode: string = 'en', forceRefresh: boolean = 
 
       if (error) {
         console.error('useContent: Error loading content:', error);
-        // Don't return here, continue with fallback content
+        // Use fallback content instead of throwing
+        console.log('useContent: Using fallback content due to error');
+        Object.keys(fallbackContent).forEach(key => {
+          contentCache[key] = fallbackContent[key];
+        });
+        isContentLoaded = true;
+        lastLoadTime = Date.now();
+        contentLoadingPromise = null;
+        return;
       }
 
       // Clear existing cache if forcing refresh
@@ -464,13 +510,23 @@ export const reloadContent = async (languageCode: string = 'en'): Promise<void> 
 export const preloadContent = () => {
   // Always load fresh content on app start
   if (!contentLoadingPromise) {
-    loadContent('en', true);
+    loadContent('en', true).catch(error => {
+      console.error('Error preloading content:', error);
+      // Use fallback content if loading fails
+      Object.keys(fallbackContent).forEach(key => {
+        contentCache[key] = fallbackContent[key];
+      });
+      isContentLoaded = true;
+      lastLoadTime = Date.now();
+    });
   }
   
   // Add window focus listener to refresh content when tab becomes active
   const handleFocus = () => {
     if (isCacheStale()) {
-      loadContent('en', true);
+      loadContent('en', true).catch(error => {
+        console.error('Error refreshing content on focus:', error);
+      });
     }
   };
   
@@ -484,6 +540,11 @@ export const preloadContent = () => {
 
 // Export function to manually refresh content
 export const refreshContent = async (): Promise<void> => {
-  await loadContent('en', true);
-  subscribedComponents.forEach(callback => callback());
+  try {
+    await loadContent('en', true);
+    subscribedComponents.forEach(callback => callback());
+  } catch (error) {
+    console.error('Error refreshing content:', error);
+    // Continue with existing content if refresh fails
+  }
 };
