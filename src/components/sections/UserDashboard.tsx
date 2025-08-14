@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import { ProfileSettings } from "@/components/settings/ProfileSettings";
+import { NotificationPreferences } from "@/components/settings/NotificationPreferences";
 import { EventChatModal } from "@/components/chat/EventChatModal";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
@@ -325,37 +326,7 @@ const UserDashboard = () => {
         ) : (
           <div className="space-y-6">
             <ProfileSettings />
-            
-            {/* Blurred Notifications Section (on-brand, no emojis) */}
-            <div className="relative">
-              <div className="blur-sm pointer-events-none">
-                <div className="bg-white rounded-xl sm:rounded-2xl p-6 border-2 border-gray-200">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-[#00AFCE]"></div>
-                    <div>
-                      <h3 className="text-lg font-montserrat font-bold text-primary">Advanced Notifications</h3>
-                      <p className="text-sm text-muted-foreground">Coming soon features</p>
-                    </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div className="h-4 bg-gray-200 rounded"></div>
-                    <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                    <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-                  </div>
-                </div>
-              </div>
-              <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
-                <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#00AFCE]"></div>
-                  <h3 className="text-2xl font-montserrat font-bold text-primary mb-2">
-                    Advanced Notifications Coming Soon
-                  </h3>
-                  <p className="text-muted-foreground">
-                    Enhanced notification features are currently in development and will be available soon.
-                  </p>
-                </div>
-              </div>
-            </div>
+            <NotificationPreferences />
           </div>
         )}
       </div>
