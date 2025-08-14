@@ -10,12 +10,13 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Check, MessageSquare, RotateCcw } from 'lucide-react';
+import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Check, MessageSquare, RotateCcw, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DynamicText } from '@/components/content/DynamicText';
 import { ContentManagement } from '@/components/admin/ContentManagement';
 import { EventChatView } from '@/components/admin/EventChatView';
 import OrganizationRejectionModal from '@/components/modals/OrganizationRejectionModal';
+import { useSiteStatistics } from '@/hooks/useSiteStatistics';
 
 interface User {
   id: string;
@@ -650,16 +651,17 @@ export const AdminDashboard = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Load users/profiles
+      // Load ONLY actual users (excluding organizations)
       const { data: usersData, error: usersError } = await supabase
         .from('profiles')
         .select('*')
+        .neq('user_type', 'organization')  // Only actual users, not organizations
         .order('created_at', { ascending: false });
       
       if (usersError) throw usersError;
       setUsers(usersData || []);
 
-      // Load organizations
+      // Load organizations from organizations table
       const { data: orgsData, error: orgsError } = await supabase
         .from('organizations')
         .select('*')
@@ -704,7 +706,8 @@ export const AdminDashboard = () => {
     approved: users.filter(u => u.status === 'active').length,
     pending: users.filter(u => u.status === 'pending').length,
     pas: users.filter(u => u.role === 'pa').length,
-    organizations: organizations.length,
+    faculty: users.filter(u => u.role === 'faculty').length,
+    studentLeaders: users.filter(u => u.role === 'student_leader').length,
   };
 
   const orgStats = {
@@ -864,7 +867,7 @@ export const AdminDashboard = () => {
     try {
       const { error } = await supabase
         .from('profiles')
-        .update({ role: requestedRole, requested_role: null })
+        .update({ role: requestedRole as any, requested_role: null })
         .eq('id', userId);
 
       if (error) throw error;
@@ -1237,26 +1240,32 @@ export const AdminDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+                <CardTitle className="text-sm font-medium">Individual Users</CardTitle>
                 <Users className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{userStats.total}</div>
                 <p className="text-xs text-muted-foreground">
-                  {userStats.pas} PAs • {userStats.pending} pending
+                  {userStats.pas} PAs • {userStats.faculty} faculty • {userStats.studentLeaders} leaders
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Students, external users, admins
                 </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Organizations</CardTitle>
+                <CardTitle className="text-sm font-medium">Partner Organizations</CardTitle>
                 <Building2 className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
                 <div className="text-2xl font-bold">{orgStats.total}</div>
                 <p className="text-xs text-muted-foreground">
-                  {orgStats.approved} approved • {orgStats.pending} pending
+                  {orgStats.approved} approved • {orgStats.pending} pending • {orgStats.rejected} rejected
+                </p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Event hosting entities
                 </p>
               </CardContent>
             </Card>
@@ -1281,10 +1290,10 @@ export const AdminDashboard = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 <Button size="sm" className="w-full" onClick={() => setActiveTab('users')}>
-                  Manage Users
+                  Manage Individual Users
                 </Button>
                 <Button size="sm" variant="outline" className="w-full" onClick={() => setActiveTab('organizations')}>
-                  Manage Organizations
+                  Manage Partner Organizations
                 </Button>
               </CardContent>
             </Card>
@@ -1293,7 +1302,8 @@ export const AdminDashboard = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Recent Users</CardTitle>
+                <CardTitle>Recent Individual Users</CardTitle>
+                <CardDescription>Students, PAs, faculty, student leaders, and admins</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -1301,7 +1311,7 @@ export const AdminDashboard = () => {
                     <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium">{user.email}</p>
-                        <p className="text-sm text-gray-600">{user.role}</p>
+                        <p className="text-sm text-gray-600">{user.role} • {user.user_type}</p>
                       </div>
                       <Badge variant={user.status === 'active' ? "default" : "secondary"}>
                         {user.status}
@@ -1314,7 +1324,8 @@ export const AdminDashboard = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Recent Organizations</CardTitle>
+                <CardTitle>Recent Partner Organizations</CardTitle>
+                <CardDescription>Organizations that host events</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -1337,6 +1348,22 @@ export const AdminDashboard = () => {
 
         {/* Users Tab */}
         <TabsContent value="users" className="space-y-6">
+          {/* Clear Distinction Header */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <Users className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-blue-900">Users vs Organizations</h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  This tab shows <strong>individual users only</strong> (students, PAs, faculty, student leaders, admins). 
+                  Partner organizations are managed separately in the <strong>Organizations tab</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1344,7 +1371,7 @@ export const AdminDashboard = () => {
                 User Management
               </CardTitle>
               <CardDescription>
-                Manage all users, PAs, and organizations
+                Manage individual users, PAs, faculty, and student leaders. Organizations are managed separately in the Organizations tab.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1360,12 +1387,14 @@ export const AdminDashboard = () => {
                 </div>
                 <Select value={emailFilter} onValueChange={setEmailFilter}>
                   <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Filter by type" />
+                    <SelectValue placeholder="Filter by role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Users</SelectItem>
-                    <SelectItem value="user">Regular Users</SelectItem>
+                    <SelectItem value="all">All Roles</SelectItem>
+                    <SelectItem value="user">Students</SelectItem>
                     <SelectItem value="pa">PAs</SelectItem>
+                    <SelectItem value="faculty">Faculty</SelectItem>
+                    <SelectItem value="student_leader">Student Leaders</SelectItem>
                     <SelectItem value="admin">Admins</SelectItem>
                   </SelectContent>
                 </Select>
@@ -1522,6 +1551,22 @@ export const AdminDashboard = () => {
 
         {/* Organizations Tab */}
         <TabsContent value="organizations" className="space-y-6">
+          {/* Clear Distinction Header */}
+          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <Building2 className="w-5 h-5 text-green-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-green-900">Organizations vs Users</h3>
+                <p className="text-sm text-green-700 mt-1">
+                  This tab shows <strong>partner organizations only</strong> (entities that host events). 
+                  Individual users are managed separately in the <strong>Users tab</strong>.
+                </p>
+              </div>
+            </div>
+          </div>
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1529,7 +1574,7 @@ export const AdminDashboard = () => {
                 Organization Management
               </CardTitle>
               <CardDescription>
-                Manage organization approvals and settings
+                Manage partner organizations that host events. Individual users are managed separately in the Users tab.
               </CardDescription>
             </CardHeader>
             <CardContent>

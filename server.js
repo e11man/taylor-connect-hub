@@ -1389,11 +1389,12 @@ app.get('/api/site-statistics', async (req, res) => {
         // Calculate real values from the database
         console.log('Calculating real values from database...');
         
-        // Calculate active volunteers (ALL users in the system)
+        // Calculate active volunteers (ONLY actual users, not organizations)
         const { data: profiles, error: profilesError } = await supabase
           .from('profiles')
-          .select('id')
-          .or('status.eq.active,status.eq.pending,status.is.null');
+          .select('*')
+          .neq('user_type', 'organization')  // Only count actual users, not organizations
+          .order('created_at', { ascending: false });
 
         const activeVolunteersCount = profiles?.length || 0;
 
@@ -1504,11 +1505,12 @@ app.post('/api/site-statistics', async (req, res) => {
       console.log('Update function not available, calculating manually:', calcError.message);
       
       // Manual calculation fallback
-      // Calculate active volunteers (ALL users in the system)
+      // Calculate active volunteers (ONLY actual users, not organizations)
       const { data: activeVolunteers, error: avError } = await supabase
         .from('profiles')
-        .select('id', { count: 'exact', head: true })
-        .or('status.eq.active,status.eq.pending,status.is.null');
+        .select('*', { count: 'exact', head: true })
+        .neq('user_type', 'organization')  // Only count actual users, not organizations
+        .order('created_at', { ascending: false });
 
       const activeVolunteersCount = activeVolunteers?.length || 0;
 

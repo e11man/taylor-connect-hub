@@ -19,12 +19,13 @@ async function refreshAllStatistics() {
   try {
     console.log('🔄 Refreshing All Statistics...\n');
     
-    // 1. Update Active Volunteers (ALL users)
+    // 1. Update Active Volunteers (ONLY actual users, not organizations)
     console.log('👥 Step 1: Updating Active Volunteers...');
     const { data: profiles, error: profilesError } = await supabase
       .from('profiles')
-      .select('id, email, status, role')
-      .or('status.eq.active,status.eq.pending,status.is.null');
+      .select('*')
+      .neq('user_type', 'organization')  // Only count actual users, not organizations
+      .order('created_at', { ascending: false });
     
     if (profilesError) {
       console.error('❌ Error fetching profiles:', profilesError);
@@ -32,7 +33,12 @@ async function refreshAllStatistics() {
     }
     
     const totalUsers = profiles.length;
-    console.log(`  - Found ${totalUsers} total users`);
+    console.log(`  - Found ${totalUsers} actual users (excluding organizations)`);
+    
+    // Log user details for transparency
+    profiles.forEach(profile => {
+      console.log(`    - ${profile.email} (${profile.user_type || 'unknown'} - ${profile.role || 'user'}) - ${profile.status || 'no status'}`);
+    });
     
     // Update active volunteers
     const { error: avUpdateError } = await supabase

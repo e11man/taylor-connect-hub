@@ -69,11 +69,11 @@ def calculate_live_statistics():
     try:
         live_stats = {}
         
-        # Calculate active volunteers (ALL users in the system)
-        profiles_response = supabase.table('profiles').select('*', count='exact').execute()
+        # Calculate active volunteers (ONLY actual users, not organizations)
+        profiles_response = supabase.table('profiles').select('*', count='exact').neq('user_type', 'organization').execute()
         
         if profiles_response.data:
-            # Count all users regardless of status
+            # Count only actual users, excluding organizations
             live_stats['active_volunteers'] = len(profiles_response.data)
         else:
             live_stats['active_volunteers'] = 0
