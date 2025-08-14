@@ -760,9 +760,9 @@ export const AdminDashboard = () => {
     setSelectedUsers(new Set());
   };
 
-  const selectAllPAs = () => {
-    const paUsers = filteredUsers.filter(u => u.role === 'pa');
-    setSelectedUsers(new Set(paUsers.map(u => u.id)));
+  const selectAllLeadership = () => {
+    const leadershipUsers = filteredUsers.filter(u => ['pa', 'faculty', 'student_leader', 'admin'].includes(u.role));
+    setSelectedUsers(new Set(leadershipUsers.map(u => u.id)));
   };
 
   // Email functionality
@@ -934,19 +934,20 @@ export const AdminDashboard = () => {
     }
   };
 
-  const promoteToPA = async (userId: string) => {
+  const promoteToLeadership = async (userId: string, role: 'pa' | 'faculty' | 'student_leader' | 'admin' = 'pa') => {
     try {
       // Update only the profiles table since this app uses custom auth
       const { error: profileError } = await supabase
         .from('profiles')
-        .update({ role: 'pa' })
+        .update({ role })
         .eq('id', userId);
 
       if (profileError) throw profileError;
 
+      const roleDisplay = role === 'pa' ? 'PA' : role === 'faculty' ? 'Faculty' : role === 'student_leader' ? 'Student Leader' : 'Admin';
       toast({
         title: "Success",
-        description: "User promoted to PA successfully",
+        description: `User promoted to ${roleDisplay} successfully`,
       });
 
       loadData(); // Refresh data
@@ -959,9 +960,9 @@ export const AdminDashboard = () => {
     }
   };
 
-  const demoteFromPA = async (userId: string) => {
+  const demoteFromLeadership = async (userId: string) => {
     try {
-      // Demote PA back to user role
+      // Demote any leadership role back to user role
       const { error: profileError } = await supabase
         .from('profiles')
         .update({ role: 'user' })
@@ -971,7 +972,7 @@ export const AdminDashboard = () => {
 
       toast({
         title: "Success",
-        description: "User demoted from PA successfully",
+        description: "User demoted from leadership role successfully",
       });
 
       loadData(); // Refresh data
@@ -1414,8 +1415,8 @@ export const AdminDashboard = () => {
                 <Button variant="outline" onClick={selectAllUsers}>
                   Select All ({filteredUsers.length})
                 </Button>
-                <Button variant="outline" onClick={selectAllPAs}>
-                  Select All PAs ({filteredUsers.filter(u => u.role === 'pa').length})
+                <Button variant="outline" onClick={selectAllLeadership}>
+                  Select All Leadership ({filteredUsers.filter(u => ['pa', 'faculty', 'student_leader', 'admin'].includes(u.role)).length})
                 </Button>
                 <Button variant="outline" onClick={clearUserSelection}>
                   Clear Selection
@@ -1506,13 +1507,13 @@ export const AdminDashboard = () => {
                                </Button>
                              )}
                              {user.role === 'user' && (
-                               <Button size="sm" variant="outline" onClick={() => promoteToPA(user.id)}>
+                               <Button size="sm" variant="outline" onClick={() => promoteToLeadership(user.id, 'pa')}>
                                  Promote to PA
                                </Button>
                              )}
-                             {user.role === 'pa' && (
-                               <Button size="sm" variant="outline" onClick={() => demoteFromPA(user.id)}>
-                                 Demote from PA
+                             {['pa', 'faculty', 'student_leader', 'admin'].includes(user.role) && user.role !== 'admin' && (
+                               <Button size="sm" variant="outline" onClick={() => demoteFromLeadership(user.id)}>
+                                 Demote from {user.role === 'pa' ? 'PA' : user.role === 'faculty' ? 'Faculty' : 'Student Leader'}
                                </Button>
                              )}
                              <Button size="sm" variant="outline" onClick={() => viewUser(user)}>
@@ -1878,8 +1879,10 @@ export const AdminDashboard = () => {
                   <SelectValue placeholder="Select role" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="pa">PA</SelectItem>
+                  <SelectItem value="user">Student User</SelectItem>
+                  <SelectItem value="pa">PA (Peer Advisor)</SelectItem>
+                  <SelectItem value="faculty">Faculty</SelectItem>
+                  <SelectItem value="student_leader">Student Leader</SelectItem>
                   <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>

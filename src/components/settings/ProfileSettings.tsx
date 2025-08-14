@@ -159,6 +159,31 @@ export const ProfileSettings = () => {
     );
   };
 
+  const saveDormChanges = async (dorm: string | null, wing: string | null) => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ dorm, wing })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Dorm updated",
+        description: "Your dorm and wing information has been updated",
+      });
+    } catch (error) {
+      console.error('Error updating dorm:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update dorm information",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getAvailableWings = (dormName: string | null) => {
     if (!dormName) return [];
     return dormAndFloorData[dormName as keyof typeof dormAndFloorData] || [];
@@ -276,9 +301,12 @@ export const ProfileSettings = () => {
               </Label>
               <Select
                 value={profile.dorm || ''}
-                disabled
+                onValueChange={(value) => {
+                  setProfile(prev => prev ? { ...prev, dorm: value, wing: null } : null);
+                  saveDormChanges(value, null);
+                }}
               >
-                <SelectTrigger className="bg-muted cursor-not-allowed">
+                <SelectTrigger>
                   <SelectValue placeholder="No dorm selected" />
                 </SelectTrigger>
                 <SelectContent>
@@ -298,9 +326,12 @@ export const ProfileSettings = () => {
               </Label>
               <Select
                 value={profile.wing || ''}
-                disabled
+                onValueChange={(value) => {
+                  setProfile(prev => prev ? { ...prev, wing: value } : null);
+                  saveDormChanges(profile.dorm, value);
+                }}
               >
-                <SelectTrigger className="bg-muted cursor-not-allowed">
+                <SelectTrigger>
                   <SelectValue placeholder="No wing selected" />
                 </SelectTrigger>
                 <SelectContent>
@@ -317,7 +348,7 @@ export const ProfileSettings = () => {
           <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
             <p className="flex items-center gap-2">
               <Info className="h-4 w-4" />
-              Dorm and wing information is displayed for reference only. Contact an administrator if you need to update this information.
+              You can update your dorm and wing information below. Changes will be saved automatically.
             </p>
           </div>
 
@@ -325,8 +356,8 @@ export const ProfileSettings = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
             <Button
               variant="outline"
-              disabled
-              className="flex items-center gap-2 cursor-not-allowed"
+              onClick={() => setChangeDormModalOpen(true)}
+              className="flex items-center gap-2"
             >
               <Building className="h-4 w-4" />
               Change Dorm/Wing
