@@ -20,22 +20,53 @@ if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   console.error('Missing required Supabase environment variables');
 }
 
-// Create the Supabase client for client-side usage
-// NOTE: This uses the anon key which has limited permissions
-// Admin operations should be done through API routes with service role key
-export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    storage: typeof window !== 'undefined' ? localStorage : undefined,
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true
-  },
-  global: {
-    headers: {
-      'x-application-name': 'community-connect'
+let supabase: ReturnType<typeof createClient<Database>>;
+
+try {
+  // Create the Supabase client for client-side usage
+  // NOTE: This uses the anon key which has limited permissions
+  // Admin operations should be done through API routes with service role key
+  supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      storage: typeof window !== 'undefined' ? localStorage : undefined,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    },
+    global: {
+      headers: {
+        'x-application-name': 'community-connect'
+      }
     }
-  }
-});
+  });
+} catch (error) {
+  console.error('Failed to initialize Supabase client:', error);
+  // Create a dummy client that will fail gracefully
+  supabase = {
+    from: () => {
+      console.error('Supabase client not initialized properly');
+      return {
+        select: () => Promise.resolve({ data: null, error: new Error('Supabase client initialization failed') }),
+        insert: () => Promise.resolve({ data: null, error: new Error('Supabase client initialization failed') }),
+        update: () => Promise.resolve({ data: null, error: new Error('Supabase client initialization failed') }),
+        delete: () => Promise.resolve({ data: null, error: new Error('Supabase client initialization failed') }),
+        upsert: () => Promise.resolve({ data: null, error: new Error('Supabase client initialization failed') })
+      };
+    },
+    channel: () => ({
+      on: () => ({ subscribe: () => {} }),
+      subscribe: () => {}
+    }),
+    removeChannel: () => {},
+    auth: {
+      signIn: () => Promise.resolve({ error: new Error('Supabase client initialization failed') }),
+      signUp: () => Promise.resolve({ error: new Error('Supabase client initialization failed') }),
+      signOut: () => Promise.resolve({ error: new Error('Supabase client initialization failed') })
+    }
+  } as any;
+}
+
+export { supabase };
 
 // Helper to check if we're on the client side
 export const isClient = typeof window !== 'undefined';

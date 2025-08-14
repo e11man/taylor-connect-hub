@@ -11,6 +11,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import React, { useState } from "react";
 import UserAuthModal from "@/components/modals/UserAuthModal";
 
+// Simple error boundary wrapper for debugging
+const SectionWrapper: React.FC<{ name: string; children: React.ReactNode }> = ({ name, children }) => {
+  try {
+    return <>{children}</>;
+  } catch (error) {
+    console.error(`Error in ${name} section:`, error);
+    return (
+      <div className="p-8 text-center text-red-600">
+        Error loading {name} section
+      </div>
+    );
+  }
+};
+
 const Index = () => {
   const { user, loading } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
@@ -28,18 +42,34 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <Header />
+      <SectionWrapper name="Header">
+        <Header />
+      </SectionWrapper>
       
       <main>
-        <HeroSection />
-        <CommunityTransitionImage />
-        <MissionSection />
-        <OpportunitiesSection />
-        <TestimonialsSection setAuthModalOpen={setAuthModalOpen} />
-        <ContactSection />
+        <SectionWrapper name="HeroSection">
+          <HeroSection />
+        </SectionWrapper>
+        <SectionWrapper name="CommunityTransitionImage">
+          <CommunityTransitionImage />
+        </SectionWrapper>
+        <SectionWrapper name="MissionSection">
+          <MissionSection />
+        </SectionWrapper>
+        <SectionWrapper name="OpportunitiesSection">
+          <OpportunitiesSection />
+        </SectionWrapper>
+        <SectionWrapper name="TestimonialsSection">
+          <TestimonialsSection setAuthModalOpen={setAuthModalOpen} />
+        </SectionWrapper>
+        <SectionWrapper name="ContactSection">
+          <ContactSection />
+        </SectionWrapper>
       </main>
       
-      <Footer />
+      <SectionWrapper name="Footer">
+        <Footer />
+      </SectionWrapper>
       <UserAuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}

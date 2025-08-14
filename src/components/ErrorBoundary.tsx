@@ -23,12 +23,24 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public static getDerivedStateFromError(error: Error): State {
     // Update state so the next render will show the fallback UI
+    console.error('ErrorBoundary: getDerivedStateFromError called with:', error);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
     return { hasError: true, error, errorInfo: null };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error details for debugging
     console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      errorBoundary: 'Root ErrorBoundary',
+      timestamp: new Date().toISOString(),
+      url: window.location.href,
+      userAgent: navigator.userAgent
+    });
     
     // Check for specific Supabase/database errors
     if (error.message?.includes('schema') || error.message?.includes('Database error')) {
@@ -37,6 +49,13 @@ export class ErrorBoundary extends Component<Props, State> {
         stack: error.stack,
         componentStack: errorInfo.componentStack
       });
+    }
+
+    // Check for chunk loading errors
+    if (error.message?.includes('Failed to fetch dynamically imported module') || 
+        error.message?.includes('Loading chunk') ||
+        error.message?.includes('ChunkLoadError')) {
+      console.error('Chunk loading error detected - this often happens with Vite in production');
     }
 
     this.setState({

@@ -102,9 +102,9 @@ const loadContent = async (languageCode: string = 'en', forceRefresh: boolean = 
       console.log('useContent: Loading fresh content from Supabase...');
       const startTime = Date.now();
       
-      // Add timeout to prevent infinite loading
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => reject(new Error('Content loading timeout')), 5000); // Reduced to 5 second timeout
+      // Create a timeout promise that resolves with an error indicator instead of rejecting
+      const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => resolve({ error: new Error('Content loading timeout'), data: null }), 5000);
       });
       
       console.log('useContent: About to query Supabase content table');
@@ -114,7 +114,9 @@ const loadContent = async (languageCode: string = 'en', forceRefresh: boolean = 
         .select('*')
         .eq('language_code', languageCode);
 
-      const { data, error } = await Promise.race([contentPromise, timeoutPromise]) as any;
+      const result = await Promise.race([contentPromise, timeoutPromise]) as any;
+      
+      const { data, error } = result;
 
       console.log('useContent: Supabase query completed', { dataLength: data?.length, error });
 

@@ -9,6 +9,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { ContentProvider } from "@/components/content/ContentProvider";
 import { Analytics } from "@vercel/analytics/react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { EnvironmentCheck } from "@/components/EnvironmentCheck";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import OrganizationLogin from "./pages/OrganizationLogin";
@@ -43,6 +44,7 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <ErrorBoundary>
+    <EnvironmentCheck />
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <AuthProvider>
@@ -72,8 +74,9 @@ const App = () => (
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </ContentProvider>
-              <Analytics />
-              <SpeedInsights />
+              {/* Temporarily disable Analytics and SpeedInsights to debug */}
+              {/* <Analytics /> */}
+              {/* <SpeedInsights /> */}
             </TooltipProvider>
           </SearchProvider>
         </AuthProvider>
