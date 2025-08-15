@@ -65,13 +65,11 @@ const ProgramsSection = () => {
   const titleVariants = {
     hidden: { 
       opacity: 0, 
-      y: 20,
-      filter: "blur(8px)"
+      y: 20
     },
     visible: { 
       opacity: 1, 
-      y: 0,
-      filter: "blur(0px)"
+      y: 0
     }
   };
 

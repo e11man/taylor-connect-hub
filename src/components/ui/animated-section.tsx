@@ -69,9 +69,9 @@ const AnimatedSection: React.FC<AnimatedSectionProps> = ({
       initial="hidden"
       whileInView="visible"
       viewport={{ 
-        once: false,
-        amount: 0.2,
-        margin: "-30px"
+        once: true,  // Changed from false to true to prevent re-triggering
+        amount: 0.1,  // Reduced from 0.2 for earlier trigger
+        margin: "-50px"  // Increased margin for better trigger timing
       }}
       variants={getVariants()}
     >

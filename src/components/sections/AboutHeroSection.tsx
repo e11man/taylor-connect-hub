@@ -25,72 +25,39 @@ const AboutHeroSection = () => {
         <div className="text-center max-w-4xl mx-auto">
           {/* Main Hero Content */}
           <AnimatedSection variant="fade" delay={0.1}>
-            <AnimatedText variant="blur" delay={0.2}>
-              <h1 className="text-5xl md:text-7xl font-montserrat font-bold mb-6 leading-tight text-primary">
-                <motion.span 
-                  className="block"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.3 }}
-                  viewport={{ once: false }}
-                >
-                  {heroContent.titleLine1 || 'Make the'}
-                </motion.span>
-                <motion.span 
-                  className="block text-secondary"
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: 0.4 }}
-                  viewport={{ once: false }}
-                >
-                  {heroContent.titleLine2 || 'Connection'}
-                </motion.span>
-              </h1>
-            </AnimatedText>
+            <h1 className="text-5xl md:text-7xl font-montserrat font-bold mb-6 leading-tight text-primary">
+              <span className="block">
+                {heroContent.titleLine1 || 'Make the'}
+              </span>
+              <span className="block text-secondary">
+                {heroContent.titleLine2 || 'Connection'}
+              </span>
+            </h1>
             
-            <AnimatedText variant="slideUp" delay={0.5}>
-              <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed text-muted-foreground">
-                {heroContent.subtitle || 'Connect with meaningful opportunities that create lasting impact in Upland.'}
-              </p>
-            </AnimatedText>
+            <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto leading-relaxed text-muted-foreground">
+              {heroContent.subtitle || 'Connect with meaningful opportunities that create lasting impact in Upland.'}
+            </p>
 
             {/* CTA Buttons */}
-            <motion.div 
-              className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: false, amount: 0.3 }}
-              variants={{
-                visible: {
-                  transition: {
-                    staggerChildren: 0.1,
-                    delayChildren: 0.6
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+              <SecondaryButton 
+                size="lg"
+                onClick={() => {
+                  const contactSection = document.getElementById('contact');
+                  if (contactSection) {
+                    contactSection.scrollIntoView({ behavior: 'smooth' });
                   }
-                }
-              }}
-            >
-              <motion.div variants={buttonVariants}>
-                <SecondaryButton 
-                  size="lg"
-                  onClick={() => {
-                    const contactSection = document.getElementById('contact');
-                    if (contactSection) {
-                      contactSection.scrollIntoView({ behavior: 'smooth' });
-                    }
-                  }}
-                >
-                  {heroContent.secondaryButton || 'Learn More'}
-                </SecondaryButton>
-              </motion.div>
-              <motion.div variants={buttonVariants}>
-                <PrimaryButton 
-                  size="lg"
-                  onClick={() => navigate("/")}
-                >
-                  {heroContent.ctaButton || 'Find Opportunities'} <ArrowRight className="ml-2 w-5 h-5" />
-                </PrimaryButton>
-              </motion.div>
-            </motion.div>
+                }}
+              >
+                {heroContent.secondaryButton || 'Learn More'}
+              </SecondaryButton>
+              <PrimaryButton 
+                size="lg"
+                onClick={() => navigate("/")}
+              >
+                {heroContent.ctaButton || 'Find Opportunities'} <ArrowRight className="ml-2 w-5 h-5" />
+              </PrimaryButton>
+            </div>
           </AnimatedSection>
         </div>
       </div>

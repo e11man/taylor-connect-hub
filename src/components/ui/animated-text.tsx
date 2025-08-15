@@ -37,8 +37,8 @@ const AnimatedText: React.FC<AnimatedTextProps> = ({
         };
       case 'blur':
         return {
-          hidden: { opacity: 0, filter: "blur(8px)", y: 15 },
-          visible: { opacity: 1, filter: "blur(0px)", y: 0, transition: baseTransition }
+          hidden: { opacity: 0, y: 15 },
+          visible: { opacity: 1, y: 0, transition: baseTransition }
         };
       default:
         return {
@@ -54,9 +54,9 @@ const AnimatedText: React.FC<AnimatedTextProps> = ({
       initial="hidden"
       whileInView="visible"
       viewport={{ 
-        once: false,
-        amount: 0.3,
-        margin: "-20px"
+        once: true,
+        amount: 0.1,
+        margin: "-50px"
       }}
       variants={getVariants()}
     >
