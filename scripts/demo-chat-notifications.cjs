@@ -7,6 +7,7 @@
 
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
+// updated
 
 // Initialize Supabase client
 const supabaseUrl = process.env.SUPABASE_URL || 'https://gzzbjifmrwvqbkwbyvhm.supabase.co';
