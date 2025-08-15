@@ -7,6 +7,7 @@ import AnimatedSection from "@/components/ui/animated-section";
 import AnimatedCard from "@/components/ui/animated-card";
 import AnimatedText from "@/components/ui/animated-text";
 import { motion } from "framer-motion";
+import { DynamicText } from "@/components/content/DynamicText";
 
 import { useContentSection } from "@/hooks/useContent";
 

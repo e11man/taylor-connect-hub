@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { SignupSuccess } from "@/components/ui/SignupSuccess";
 import AddressLink from "@/components/ui/AddressLink";
+import { DynamicText } from "@/components/content/DynamicText";
 
 interface Event {
   id: string;

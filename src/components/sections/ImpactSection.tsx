@@ -4,6 +4,7 @@ import AnimatedSection from "@/components/ui/animated-section";
 import { motion } from "framer-motion";
 import CountUpNumber from "@/components/ui/CountUpNumber";
 import { Skeleton } from "@/components/ui/skeleton";
+import { DynamicText } from "@/components/content/DynamicText";
 
 const ImpactSection = () => {
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');

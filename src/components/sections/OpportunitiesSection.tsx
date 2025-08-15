@@ -16,6 +16,7 @@ import { SignupSuccess } from "@/components/ui/SignupSuccess";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { filterActiveEvents, filterEventsByAvailability, calculateEventAvailability, filterNextOccurrencePerSeries } from '@/utils/eventFilters';
 import AddressLink from "@/components/ui/AddressLink";
+import { DynamicText } from "@/components/content/DynamicText";
 
 interface Event {
   id: string;

@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { useSearch } from "@/contexts/SearchContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useContentSection } from "@/hooks/useContent";
+import { DynamicText } from "@/components/content/DynamicText";
 
 const SearchSection = () => {
   const { query, activeCategory, setQuery, setActiveCategory, clearSearch } = useSearch();

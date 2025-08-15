@@ -13,6 +13,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import DashboardOpportunities from "./DashboardOpportunities";
 import AddressLink from "@/components/ui/AddressLink";
+import { DynamicText } from "@/components/content/DynamicText";
 
 interface UserEvent {
   id: string;
