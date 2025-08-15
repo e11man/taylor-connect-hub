@@ -92,12 +92,10 @@ const GroupSignupModal = ({
 
       // Client-side filtering to exclude current user
       // Include all user_types except 'organization' 
-      // Show all regular users (exclude leadership roles like admin, pa, faculty, student_leader)
-      const leadershipRoles = ['admin', 'pa', 'faculty', 'student_leader'];
+      // Show ALL users (including leadership roles) so they can be signed up by other leaders
       let profilesData = (allProfilesData || [])
         .filter(profile => profile.id !== user.id)
-        .filter(profile => profile.user_type !== 'organization')
-        .filter(profile => !leadershipRoles.includes(profile.role));
+        .filter(profile => profile.user_type !== 'organization');
 
       console.log('Group signup modal - User filtering:', {
         currentUserId: user.id,
