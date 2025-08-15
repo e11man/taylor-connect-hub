@@ -193,4 +193,14 @@
   .btn-ghost {
     @apply btn-base text-primary hover:bg-primary/10 focus:ring-primary;
   }
+
+  /* Hide scrollbar utilities */
+  .scrollbar-hide {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;  /* Chrome, Safari and Opera */
+  }
 }
