@@ -17,30 +17,33 @@ interface TestimonialsSectionProps {
 
 const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ setAuthModalOpen }) => {
   const navigate = useNavigate();
-  const { content: testimonialsContent } = useContentSection('testimonials', 'testimonials');
+  const { content: mainContent } = useContentSection('testimonials', 'main');
+  const { content: testimonial1 } = useContentSection('testimonials', 'testimonial1');
+  const { content: testimonial2 } = useContentSection('testimonials', 'testimonial2');
+  const { content: testimonial3 } = useContentSection('testimonials', 'testimonial3');
 
   const testimonials = [
     {
       id: 1,
-      content: testimonialsContent.testimonial1?.quote || testimonialsContent.testimonial1?.content || "Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in our community.",
-      author: testimonialsContent.testimonial1?.author || "Sarah Johnson",
-      role: testimonialsContent.testimonial1?.role || "Volunteer",
+      content: testimonial1.content || "Community Connect helped me find the perfect volunteer opportunity. I've made lifelong friends while making a real difference in our community.",
+      author: testimonial1.author || "Sarah Johnson",
+      role: testimonial1.role || "Volunteer",
       initial: "S",
       highlight: false
     },
     {
       id: 2,
-      content: testimonialsContent.testimonial2?.quote || testimonialsContent.testimonial2?.content || "The platform made it so easy to find volunteers for our literacy program. We've been able to reach twice as many students this year.",
-      author: testimonialsContent.testimonial2?.author || "Marcus Chen",
-      role: testimonialsContent.testimonial2?.role || "Program Director", 
+      content: testimonial2.content || "The platform made it so easy to find volunteers for our literacy program. We've been able to reach twice as many students this year.",
+      author: testimonial2.author || "Marcus Chen",
+      role: testimonial2.role || "Program Director", 
       initial: "M",
       highlight: false
     },
     {
       id: 3,
-      content: testimonialsContent.testimonial3?.quote || testimonialsContent.testimonial3?.content || "I love how the opportunities are categorized and filtered. It's never been easier to find causes I'm passionate about.",
-      author: testimonialsContent.testimonial3?.author || "Emma Rodriguez",
-      role: testimonialsContent.testimonial3?.role || "Student",
+      content: testimonial3.content || "I love how the opportunities are categorized and filtered. It's never been easier to find causes I'm passionate about.",
+      author: testimonial3.author || "Emma Rodriguez",
+      role: testimonial3.role || "Student",
       initial: "E",
       highlight: true
     }
@@ -62,13 +65,13 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ setAuthModalO
           <div className="text-center mb-12">
             <AnimatedText variant="blur" delay={0.2}>
               <h2 className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary">
-                {testimonialsContent.title || 'Stories of Impact'}
+                {mainContent.title || 'Stories of Impact'}
               </h2>
             </AnimatedText>
             
             <AnimatedText variant="fade" delay={0.3}>
               <p className="text-xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-                {testimonialsContent.subtitle || 'Discover how Community Connect is bringing people together and making a difference in our community.'}
+                {mainContent.subtitle || 'Discover how Community Connect is bringing people together and making a difference in our community.'}
               </p>
             </AnimatedText>
           </div>
@@ -77,14 +80,14 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ setAuthModalO
         {/* Testimonials Grid */}
         <AnimatedSection variant="stagger" delay={0.4}>
           <div className="mb-12">
-            <div className="flex flex-nowrap gap-4 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide md:pb-0 md:flex-wrap md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 lg:gap-8">
+            <div className="flex flex-nowrap gap-4 overflow-x-auto pb-6 snap-x snap-mandatory scrollbar-hide md:overflow-visible md:pb-0 md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-6 lg:gap-8">
               {testimonials.map((testimonial, index) => (
                 <AnimatedCard
                   key={testimonial.id}
                   index={index}
                   delay={0.1}
                   variant="lift"
-                  className="flex-shrink-0 w-[85vw] max-w-[320px] snap-center md:w-auto md:max-w-none"
+                  className="flex-shrink-0 w-[80vw] max-w-[320px] snap-center md:flex-shrink md:w-auto md:max-w-none"
                 >
                   <motion.div 
                     className={`
@@ -133,7 +136,7 @@ const TestimonialsSection: React.FC<TestimonialsSectionProps> = ({ setAuthModalO
                       }}
                       viewport={{ once: false }}
                     >
-                      \"{testimonial.content}\"
+                      "{testimonial.content}"
                     </motion.blockquote>
 
                     {/* Author */}
