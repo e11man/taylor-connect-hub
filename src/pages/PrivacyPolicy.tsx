@@ -102,7 +102,7 @@ const PrivacyPolicy = () => {
                 
                 return (
                   <div
-                    key={feature.title}
+                    key={`privacy-feature-${index}`}
                     className={`bg-white rounded-lg p-6 shadow-sm border-2 ${borderColor}`}
                   >
                     <div className="flex items-start gap-4 mb-4">
@@ -394,4 +394,4 @@ const PrivacyPolicy = () => {
   );
 };
 
-export default PrivacyPolicy; 
+export default PrivacyPolicy;
