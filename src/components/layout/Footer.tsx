@@ -134,78 +134,61 @@ const Footer = () => {
 
           {/* Social Media Section */}
           {socialMediaLinks.length > 0 && (
-            <motion.div 
-              className="text-center mt-6 pt-6 border-t border-gray-100"
-              initial={{ opacity: 0, y: 10 }}
-              whileInView={{ 
-                opacity: 1, 
-                y: 0,
-                transition: { duration: 0.4, delay: 0.5 }
-              }}
-              viewport={{ once: false }}
-            >
-            <motion.h3 
-              className="text-sm font-montserrat font-semibold text-primary mb-4"
-              initial={{ opacity: 0 }}
-              whileInView={{ 
-                opacity: 1,
-                transition: { duration: 0.4, delay: 0.6 }
-              }}
-              viewport={{ once: false }}
-            >
-              {socialContent.title || <DynamicText page="footer" section="social" contentKey="title" fallback="Follow Us" />}
-            </motion.h3>
-            
-            <div className="flex justify-center items-center gap-3">
-              {socialMediaLinks.map((social, index) => (
-                <motion.a
-                  key={social.label}
-                  href={social.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={`
-                    w-10 h-10 rounded-xl flex items-center justify-center 
-                    bg-gray-100 hover:bg-[#00AFCE] transition-all duration-300 
-                    group relative overflow-hidden
-                    ${social.color}
-                  `}
-                  whileHover={{ 
-                    scale: 1.1,
-                    y: -2,
-                    transition: { duration: 0.2 }
-                  }}
-                  whileTap={{ scale: 0.95 }}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  whileInView={{ 
-                    opacity: 1, 
-                    scale: 1,
-                    transition: { 
-                      duration: 0.3, 
-                      delay: 0.7 + index * 0.1 
-                    }
-                  }}
-                  viewport={{ once: false }}
-                  aria-label={social.label}
-                >
-                  <social.icon className="w-5 h-5 text-gray-600 group-hover:text-white transition-colors duration-300" />
-                  
-                  {/* Tooltip */}
-                  <motion.div
-                    className="absolute -top-10 left-1/2 transform -translate-x-1/2 
-                               bg-gray-800 text-white text-xs px-2 py-1 rounded 
-                               opacity-0 group-hover:opacity-100 transition-opacity duration-300
-                               pointer-events-none whitespace-nowrap z-10"
-                    initial={{ opacity: 0, y: 5 }}
-                    whileHover={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.2 }}
+            <div className="text-center mt-6 pt-6 border-t border-gray-100">
+              <h3 className="text-sm font-montserrat font-semibold text-primary mb-4">
+                {socialContent.title || <DynamicText page="footer" section="social" contentKey="title" fallback="Follow Us" />}
+              </h3>
+              
+              <div className="flex justify-center items-center gap-3">
+                {socialMediaLinks.map((social, index) => (
+                  <motion.a
+                    key={social.label}
+                    href={social.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`
+                      w-10 h-10 rounded-xl flex items-center justify-center 
+                      bg-gray-100 hover:bg-[#00AFCE] transition-all duration-300 
+                      group relative overflow-hidden
+                      ${social.color}
+                    `}
+                    whileHover={{ 
+                      scale: 1.1,
+                      y: -2,
+                      transition: { duration: 0.2 }
+                    }}
+                    whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ 
+                      opacity: 1, 
+                      scale: 1,
+                      transition: { 
+                        duration: 0.3, 
+                        delay: 0.7 + index * 0.1 
+                      }
+                    }}
+                    viewport={{ once: false }}
+                    aria-label={social.label}
                   >
-                    {social.label}
-                    <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
-                  </motion.div>
-                </motion.a>
-              ))}
+                    <social.icon className="w-5 h-5 text-gray-600 group-hover:text-white transition-colors duration-300" />
+                    
+                    {/* Tooltip */}
+                    <motion.div
+                      className="absolute -top-10 left-1/2 transform -translate-x-1/2 
+                                 bg-gray-800 text-white text-xs px-2 py-1 rounded 
+                                 opacity-0 group-hover:opacity-100 transition-opacity duration-300
+                                 pointer-events-none whitespace-nowrap z-10"
+                      initial={{ opacity: 0, y: 5 }}
+                      whileHover={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      {social.label}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+                    </motion.div>
+                  </motion.a>
+                ))}
+              </div>
             </div>
-            </motion.div>
           )}
 
           {/* Partnership note with Taylor University logo */}

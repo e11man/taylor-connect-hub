@@ -164,7 +164,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
               <SelectValue placeholder="Select a role (optional)" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">None</SelectItem>
+              <SelectItem value="none">None</SelectItem>
               <SelectItem value="pa">PA</SelectItem>
               <SelectItem value="faculty">Faculty</SelectItem>
               <SelectItem value="student_leader">Student Leader</SelectItem>
