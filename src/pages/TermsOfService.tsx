@@ -40,7 +40,7 @@ const TermsOfService = () => {
     },
     {
       icon: Shield,
-      title: featuresContent.data_protection_title || <DynamicText page="privacy" section="features" contentKey="data_protection_title" fallback=<DynamicText page="terms" section="features" contentKey="data_protection_title" fallback="Data Protection" /> />,
+      title: featuresContent.data_protection_title || <DynamicText page="terms" section="features" contentKey="data_protection_title" fallback="Data Protection" />,
       description: featuresContent.data_protection_description || <DynamicText page="terms" section="features" contentKey="data_protection_description" fallback="Your privacy and data security are our top priorities." />
     },
     {
@@ -63,7 +63,7 @@ const TermsOfService = () => {
                   page="terms" 
                   section="hero" 
                   contentKey="title"
-                  fallback=<DynamicText page="footer" section="links" contentKey="terms" fallback=<DynamicText page="footer" section="links" contentKey="terms_link" fallback=<DynamicText page="organizationRegister" section="page" contentKey="terms_link" fallback=<DynamicText page="terms" section="hero" contentKey="title" fallback="Terms of Service" /> /> /> />
+                  fallback="Terms of Service"
                   as="span"
                 />
               </h1>
@@ -72,7 +72,7 @@ const TermsOfService = () => {
                   page="terms" 
                   section="hero" 
                   contentKey="subtitle"
-                  fallback=<DynamicText page="terms" section="hero" contentKey="subtitle" fallback="Guidelines for using our platform" />
+                  fallback="Guidelines for using our platform"
                   as="span"
                 />
               </p>
@@ -83,7 +83,7 @@ const TermsOfService = () => {
                     page="terms" 
                     section="hero" 
                     contentKey="description"
-                    fallback=<DynamicText page="privacy" section="hero" contentKey="description" fallback=<DynamicText page="terms" section="hero" contentKey="description" fallback="Last updated: January 2024" /> />
+                    fallback="Last updated: January 2024"
                     as="span"
                   />
                 </p>
@@ -103,7 +103,7 @@ const TermsOfService = () => {
                 
                 return (
                   <div
-                    key={feature.title}
+                    key={`terms-feature-${index}`}
                     className={`bg-white rounded-lg p-6 shadow-sm border-2 ${borderColor}`}
                   >
                     <div className="flex items-start gap-4 mb-4">
@@ -131,7 +131,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="main" 
                       contentKey="intro_title"
-                      fallback=<DynamicText page="privacy" section="main" contentKey="intro_title" fallback=<DynamicText page="terms" section="main" contentKey="intro_title" fallback="Introduction" /> />
+                      fallback="Introduction"
                       as="span"
                     />
                   </h2>
@@ -153,7 +153,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="acceptance" 
                       contentKey="title"
-                      fallback=<DynamicText page="terms" section="acceptance" contentKey="title" fallback="Acceptance of Terms" />
+                      fallback="Acceptance of Terms"
                       as="span"
                     />
                   </h2>
@@ -162,7 +162,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="acceptance" 
                       contentKey="description"
-                      fallback=<DynamicText page="terms" section="acceptance" contentKey="description" fallback="By creating an account, signing up for events, or using our platform in any way, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use our services." />
+                      fallback="By creating an account, signing up for events, or using our platform in any way, you acknowledge that you have read, understood, and agree to be bound by these Terms of Service. If you do not agree with any part of these terms, you may not use our services."
                       as="span"
                     />
                   </p>
@@ -175,7 +175,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="services" 
                       contentKey="title"
-                      fallback=<DynamicText page="terms" section="services" contentKey="title" fallback="Description of Services" />
+                      fallback="Description of Services"
                       as="span"
                     />
                   </h2>
@@ -194,7 +194,7 @@ const TermsOfService = () => {
                         page="terms" 
                         section="services" 
                         contentKey="service1"
-                        fallback=<DynamicText page="terms" section="services" contentKey="service1" fallback="Event creation and management for organizations" />
+                        fallback="Event creation and management for organizations"
                         as="span"
                       />
                     </li>
@@ -203,7 +203,7 @@ const TermsOfService = () => {
                         page="terms" 
                         section="services" 
                         contentKey="service2"
-                        fallback=<DynamicText page="terms" section="services" contentKey="service2" fallback="Volunteer opportunity discovery and signup" />
+                        fallback="Volunteer opportunity discovery and signup"
                         as="span"
                       />
                     </li>
@@ -212,7 +212,7 @@ const TermsOfService = () => {
                         page="terms" 
                         section="services" 
                         contentKey="service3"
-                        fallback=<DynamicText page="terms" section="services" contentKey="service3" fallback="Communication tools between volunteers and organizations" />
+                        fallback="Communication tools between volunteers and organizations"
                         as="span"
                       />
                     </li>
@@ -221,7 +221,7 @@ const TermsOfService = () => {
                         page="terms" 
                         section="services" 
                         contentKey="service4"
-                        fallback=<DynamicText page="terms" section="services" contentKey="service4" fallback="Administrative tools and reporting" />
+                        fallback="Administrative tools and reporting"
                         as="span"
                       />
                     </li>
@@ -235,7 +235,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="user" 
                       contentKey="title"
-                      fallback=<DynamicText page="terms" section="user" contentKey="title" fallback="User Responsibilities" />
+                      fallback="User Responsibilities"
                       as="span"
                     />
                   </h2>
@@ -246,7 +246,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="user" 
                           contentKey="account_title"
-                          fallback=<DynamicText page="terms" section="user" contentKey="account_title" fallback="Account Management" />
+                          fallback="Account Management"
                           as="span"
                         />
                       </h3>
@@ -255,7 +255,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="user" 
                           contentKey="account_text"
-                          fallback=<DynamicText page="terms" section="user" contentKey="account_text" fallback="You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account." />
+                          fallback="You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. You must notify us immediately of any unauthorized use of your account."
                           as="span"
                         />
                       </p>
@@ -266,7 +266,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="user" 
                           contentKey="conduct_title"
-                          fallback=<DynamicText page="terms" section="user" contentKey="conduct_title" fallback="Code of Conduct" />
+                          fallback="Code of Conduct"
                           as="span"
                         />
                       </h3>
@@ -275,7 +275,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="user" 
                           contentKey="conduct_text"
-                          fallback=<DynamicText page="terms" section="user" contentKey="conduct_text" fallback="You agree to use our platform in a manner that is respectful, lawful, and appropriate. You will not engage in any activity that could harm, disable, or impair our services or interfere with other users' enjoyment of the platform." />
+                          fallback="You agree to use our platform in a manner that is respectful, lawful, and appropriate. You will not engage in any activity that could harm, disable, or impair our services or interfere with other users' enjoyment of the platform."
                           as="span"
                         />
                       </p>
@@ -286,7 +286,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="user" 
                           contentKey="participation_title"
-                          fallback=<DynamicText page="terms" section="user" contentKey="participation_title" fallback="Event Participation" />
+                          fallback="Event Participation"
                           as="span"
                         />
                       </h3>
@@ -295,7 +295,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="user" 
                           contentKey="participation_text"
-                          fallback=<DynamicText page="terms" section="user" contentKey="participation_text" fallback="When you sign up for volunteer events, you commit to attending and participating responsibly. You should arrive on time, follow safety guidelines, and treat all participants with respect." />
+                          fallback="When you sign up for volunteer events, you commit to attending and participating responsibly. You should arrive on time, follow safety guidelines, and treat all participants with respect."
                           as="span"
                         />
                       </p>
@@ -310,7 +310,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="organization" 
                       contentKey="title"
-                      fallback=<DynamicText page="terms" section="organization" contentKey="title" fallback="Organization Responsibilities" />
+                      fallback="Organization Responsibilities"
                       as="span"
                     />
                   </h2>
@@ -321,7 +321,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="organization" 
                           contentKey="event_title"
-                          fallback=<DynamicText page="features" section="feature2" contentKey="title" fallback=<DynamicText page="terms" section="organization" contentKey="event_title" fallback="Event Management" /> />
+                          fallback="Event Management"
                           as="span"
                         />
                       </h3>
@@ -330,7 +330,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="organization" 
                           contentKey="event_text"
-                          fallback=<DynamicText page="terms" section="organization" contentKey="event_text" fallback="Organizations are responsible for providing accurate event information, maintaining safe environments, and ensuring proper supervision of volunteers. Events must comply with all applicable laws and regulations." />
+                          fallback="Organizations are responsible for providing accurate event information, maintaining safe environments, and ensuring proper supervision of volunteers. Events must comply with all applicable laws and regulations."
                           as="span"
                         />
                       </p>
@@ -341,7 +341,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="organization" 
                           contentKey="communication_title"
-                          fallback=<DynamicText page="terms" section="organization" contentKey="communication_title" fallback="Communication" />
+                          fallback="Communication"
                           as="span"
                         />
                       </h3>
@@ -350,7 +350,7 @@ const TermsOfService = () => {
                           page="terms" 
                           section="organization" 
                           contentKey="communication_text"
-                          fallback=<DynamicText page="terms" section="organization" contentKey="communication_text" fallback="Organizations must respond promptly to volunteer inquiries and provide clear instructions for event participation. Any changes to events should be communicated immediately." />
+                          fallback="Organizations must respond promptly to volunteer inquiries and provide clear instructions for event participation. Any changes to events should be communicated immediately."
                           as="span"
                         />
                       </p>
@@ -365,7 +365,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="liability" 
                       contentKey="title"
-                      fallback=<DynamicText page="terms" section="liability" contentKey="title" fallback="Limitation of Liability" />
+                      fallback="Limitation of Liability"
                       as="span"
                     />
                   </h2>
@@ -387,7 +387,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="termination" 
                       contentKey="title"
-                      fallback=<DynamicText page="terms" section="termination" contentKey="title" fallback="Termination" />
+                      fallback="Termination"
                       as="span"
                     />
                   </h2>
@@ -396,7 +396,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="termination" 
                       contentKey="description"
-                      fallback=<DynamicText page="terms" section="termination" contentKey="description" fallback="We reserve the right to terminate or suspend your account at any time for violations of these terms or for any other reason we deem appropriate. You may also terminate your account at any time by contacting us." />
+                      fallback="We reserve the right to terminate or suspend your account at any time for violations of these terms or for any other reason we deem appropriate. You may also terminate your account at any time by contacting us."
                       as="span"
                     />
                   </p>
@@ -409,7 +409,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="contact" 
                       contentKey="title"
-                      fallback=<DynamicText page="sections" section="contact" contentKey="contact_info_title" fallback=<DynamicText page="terms" section="contact" contentKey="title" fallback="Contact Information" /> />
+                      fallback="Contact Information"
                       as="span"
                     />
                   </h2>
@@ -418,7 +418,7 @@ const TermsOfService = () => {
                       page="terms" 
                       section="contact" 
                       contentKey="description"
-                      fallback=<DynamicText page="terms" section="contact" contentKey="description" fallback="If you have any questions about these Terms of Service, please contact us at legal@taylor.edu" />
+                      fallback="If you have any questions about these Terms of Service, please contact us at legal@taylor.edu"
                       as="span"
                     />
                   </p>
@@ -432,4 +432,4 @@ const TermsOfService = () => {
   );
 };
 
-export default TermsOfService; 
+export default TermsOfService;
