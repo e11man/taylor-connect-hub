@@ -275,7 +275,7 @@ const OrganizationRegister: React.FC = () => {
                   className={`w-full pl-10 pr-12 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
                     errors.password ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={formContent?.passwordPlaceholder || <DynamicText page="auth" section="signup" contentKey="password_placeholder" fallback="Create a password" />}
+                  placeholder={formContent?.passwordPlaceholder || "Create a password"}
                 />
                 <button
                   type="button"
@@ -316,7 +316,7 @@ const OrganizationRegister: React.FC = () => {
                   className={`w-full pl-10 pr-12 py-3 sm:py-4 border-2 rounded-xl focus:ring-2 focus:ring-[#00AFCE] focus:border-[#00AFCE] transition-colors duration-200 font-montserrat ${
                     errors.confirmPassword ? 'border-red-300' : 'border-gray-200'
                   }`}
-                  placeholder={formContent?.confirmPasswordPlaceholder || <DynamicText page="auth" section="signup" contentKey="confirm_password_placeholder" fallback="Confirm your password" />}
+                  placeholder={formContent?.confirmPasswordPlaceholder || "Confirm your password"}
                 />
                 <button
                   type="button"
