@@ -142,7 +142,7 @@ const Footer = () => {
               <div className="flex justify-center items-center gap-3">
                 {socialMediaLinks.map((social, index) => (
                   <motion.a
-                    key={social.label}
+                    key={`social-${index}`}
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"

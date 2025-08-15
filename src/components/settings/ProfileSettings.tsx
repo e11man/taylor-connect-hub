@@ -297,65 +297,7 @@ export const ProfileSettings = () => {
             </p>
           </div>
 
-          {/* Dorm Selection */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Building className="h-4 w-4" />
-                Residence Hall
-              </Label>
-              <Select
-                value={profile.dorm || ''}
-                onValueChange={(value) => {
-                  setProfile(prev => prev ? { ...prev, dorm: value, wing: null } : null);
-                  saveDormChanges(value, null);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="No dorm selected" />
-                </SelectTrigger>
-                <SelectContent>
-                  {Object.keys(dormAndFloorData).map((dormName) => (
-                    <SelectItem key={dormName} value={dormName}>
-                      {dormName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
 
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2">
-                <Home className="h-4 w-4" />
-                Wing/Floor
-              </Label>
-              <Select
-                value={profile.wing || ''}
-                onValueChange={(value) => {
-                  setProfile(prev => prev ? { ...prev, wing: value } : null);
-                  saveDormChanges(profile.dorm, value);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="No wing selected" />
-                </SelectTrigger>
-                <SelectContent>
-                  {getAvailableWings(profile.dorm).map((wing) => (
-                    <SelectItem key={wing} value={wing}>
-                      {wing}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div className="text-sm text-muted-foreground bg-muted p-3 rounded-lg">
-            <p className="flex items-center gap-2">
-              <Info className="h-4 w-4" />
-              You can update your dorm and wing information below. Changes will be saved automatically.
-            </p>
-          </div>
 
           {/* Quick Actions */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t">
@@ -379,93 +321,9 @@ export const ProfileSettings = () => {
         </CardContent>
       </Card>
 
-      {/* Notification Preferences */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Notification Preferences
-          </CardTitle>
-          <CardDescription>
-            Manage how and when you receive notifications about events and messages
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <Label className="flex items-center gap-2 text-base">
-                <Mail className="h-4 w-4" />
-                Email Frequency
-              </Label>
-              <Select
-                value={preferences.email_frequency}
-                onValueChange={(value: any) => 
-                  setPreferences(prev => ({ ...prev, email_frequency: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="immediate">Immediate (real-time)</SelectItem>
-                  <SelectItem value="daily">Daily digest</SelectItem>
-                  <SelectItem value="weekly">Weekly summary</SelectItem>
-                  <SelectItem value="never">Never</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-muted-foreground">
-                Choose how often you want to receive email notifications
-              </p>
-            </div>
 
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-1">
-                <Label className="flex items-center gap-2">
-                  Chat Notifications
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Get notified when someone posts in event chats you're part of
-                </p>
-              </div>
-              <Switch
-                checked={preferences.chat_notifications}
-                onCheckedChange={(checked) =>
-                  setPreferences(prev => ({ ...prev, chat_notifications: checked }))
-                }
-              />
-            </div>
 
-            <div className="flex items-center justify-between space-x-2">
-              <div className="space-y-1">
-                <Label className="flex items-center gap-2">
-                  Event Updates
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Get notified about changes to events you're signed up for
-                </p>
-              </div>
-              <Switch
-                checked={preferences.event_updates}
-                onCheckedChange={(checked) =>
-                  setPreferences(prev => ({ ...prev, event_updates: checked }))
-                }
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Save Button */}
-      <div className="flex justify-end">
-        <Button 
-          onClick={saveProfile} 
-          disabled={saving || !hasChanges()}
-          className="flex items-center gap-2"
-        >
-          <Save className="h-4 w-4" />
-          {saving ? 'Saving...' : 'Save Changes'}
-        </Button>
-      </div>
 
       {/* Modals */}
       <ChangeDormModal
