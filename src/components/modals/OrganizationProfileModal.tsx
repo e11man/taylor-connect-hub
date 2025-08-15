@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import { Tables } from "@/integrations/supabase/types";
+import { DynamicText } from "@/components/content/DynamicText";
 
 interface OrganizationProfileModalProps {
   isOpen: boolean;
@@ -190,7 +191,7 @@ const OrganizationProfileModal: React.FC<OrganizationProfileModalProps> = ({
               id="org-name"
               value={formData.name}
               onChange={(e) => handleInputChange('name', e.target.value)}
-              placeholder=<DynamicText page="modals" section="request_volunteers" contentKey="name_placeholder" fallback="Enter organization name" />
+              placeholder="Enter organization name"
               className={`${hasAttemptedSubmit && errors.name ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
               disabled={isLoading}
             />
@@ -238,7 +239,7 @@ const OrganizationProfileModal: React.FC<OrganizationProfileModalProps> = ({
               type="tel"
               value={formData.phone}
               onChange={(e) => handleInputChange('phone', e.target.value)}
-              placeholder=<DynamicText page="organizationPendingApproval" section="main" contentKey="supportPhone" fallback="(555) 123-4567" />
+              placeholder="(555) 123-4567"
               className={`${hasAttemptedSubmit && errors.phone ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
               disabled={isLoading}
             />

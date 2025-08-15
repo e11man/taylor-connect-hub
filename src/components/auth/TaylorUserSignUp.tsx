@@ -9,6 +9,7 @@ import { dormAndFloorData } from "@/utils/dormData";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Taylor2FAVerification } from './Taylor2FAVerification';
+import { DynamicText } from "@/components/content/DynamicText";
 
 interface TaylorUserSignUpProps {
   onClose?: () => void;
@@ -176,7 +177,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
           <div className="relative">
             <Input
               type={showPassword ? "text" : "password"}
-              placeholder=<DynamicText page="auth" section="login" contentKey="password_label" fallback=<DynamicText page="auth" section="signup" contentKey="password_label" fallback=<DynamicText page="organizationLogin" section="page" contentKey="password_label" fallback=<DynamicText page="organizationRegister" section="page" contentKey="password_label" fallback="Password" /> /> /> />
+              placeholder="Password"
               value={password}
               onChange={(e) => {
                 setPassword(e.target.value);
@@ -217,7 +218,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         <div className="relative">
           <Input
             type={showConfirmPassword ? "text" : "password"}
-            placeholder=<DynamicText page="auth" section="signup" contentKey="confirm_password_label" fallback=<DynamicText page="organizationRegister" section="page" contentKey="confirm_password_label" fallback="Confirm Password" /> />
+            placeholder="Confirm Password"
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             className={`h-12 pr-12 ${
@@ -298,7 +299,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
             // || (isTaylorUser && (!selectedDorm || !selectedFloor))
           }
         >
-          {isLoading ? "Creating Account..." : <DynamicText page="auth" section="signup" contentKey="create_account_title" fallback=<DynamicText page="auth" section="signup" contentKey="title" fallback=<DynamicText page="auth" section="signup" contentKey="submit" fallback=<DynamicText page="organizationRegister" section="page" contentKey="create_account_button" fallback="Create Account" /> /> /> />}
+          {isLoading ? "Creating Account..." : "Create Account"}
         </Button>
       </div>
     </div>
