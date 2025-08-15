@@ -47,8 +47,15 @@ export const ProfileSettings = () => {
 
   useEffect(() => {
     if (user) {
-      fetchUserProfile();
-      fetchNotificationPreferences();
+      const loadData = async () => {
+        try {
+          await fetchUserProfile();
+          await fetchNotificationPreferences();
+        } finally {
+          setLoading(false);
+        }
+      };
+      loadData();
     }
   }, [user]);
 
@@ -98,8 +105,6 @@ export const ProfileSettings = () => {
     } catch (error) {
       console.error('Error fetching preferences:', error);
       // Don't show error toast here since this might not be implemented yet
-    } finally {
-      setLoading(false);
     }
   };
 

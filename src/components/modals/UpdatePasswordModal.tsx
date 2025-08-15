@@ -8,6 +8,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from '@/utils/password';
 import { Eye, EyeOff, Lock } from 'lucide-react';
+import { DynamicText } from '@/components/content/DynamicText';
 
 interface UpdatePasswordModalProps {
   isOpen: boolean;

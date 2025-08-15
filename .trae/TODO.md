@@ -1,6 +1,6 @@
 # TODO:
 
-- [x] 1: Add client-side filtering in UserDashboard to filter out expired events from commitments display (priority: High)
-- [x] 2: Add manual cleanup trigger when dashboard loads to ensure expired events are cleaned up immediately (priority: High)
-- [x] 3: Implement the same expiration logic as backend - events that ended more than 1 hour ago should not be shown (priority: High)
-- [x] 4: Test the updated UserDashboard component to ensure expired events are properly filtered (priority: Medium)
+- [x] fix-auth-context: Fix AuthContext Fast Refresh export issue causing HMR problems (priority: High)
+- [x] fix-profile-loading: Check and fix profile loading issues in ProfileSettings component (priority: High)
+- [x] test-profile-nav: Test profile navigation from dashboard to ensure it works correctly (priority: Medium)
+- [x] run-check: Run npm run check to verify all fixes work properly (priority: Medium)
