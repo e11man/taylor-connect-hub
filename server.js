@@ -993,16 +993,33 @@ const performEventCleanup = async () => {
     // Find events that ended more than 1 hour ago
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     
-    const { data: expiredEvents, error: fetchError } = await supabase
+    // First, get events with estimated_end_time that have passed
+    const { data: eventsWithEndTime, error: fetchError1 } = await supabase
       .from('events')
-      .select('id, title, estimated_end_time')
+      .select('id, title, date, estimated_end_time')
       .not('estimated_end_time', 'is', null)
       .lt('estimated_end_time', oneHourAgo);
 
-    if (fetchError) {
-      console.error('❌ Error fetching expired events:', fetchError);
+    if (fetchError1) {
+      console.error('❌ Error fetching events with end time:', fetchError1);
       return;
     }
+
+    // Second, get events without estimated_end_time where the date has passed by more than 1 hour
+    // For events with "Time TBD", we assume they end at midnight of their date
+    const { data: eventsWithoutEndTime, error: fetchError2 } = await supabase
+      .from('events')
+      .select('id, title, date, estimated_end_time')
+      .is('estimated_end_time', null)
+      .lt('date', oneHourAgo);
+
+    if (fetchError2) {
+      console.error('❌ Error fetching events without end time:', fetchError2);
+      return;
+    }
+
+    // Combine both sets of events
+    const expiredEvents = [...(eventsWithEndTime || []), ...(eventsWithoutEndTime || [])];
 
     if (!expiredEvents || expiredEvents.length === 0) {
       console.log('✅ No expired events found');
@@ -1010,6 +1027,8 @@ const performEventCleanup = async () => {
     }
 
     console.log(`🔍 Found ${expiredEvents.length} expired events to check for signups`);
+    console.log(`   - ${eventsWithEndTime?.length || 0} events with specific end times`);
+    console.log(`   - ${eventsWithoutEndTime?.length || 0} events with Time TBD`);
 
     let totalDecommittedUsers = 0;
     let processedEvents = 0;
@@ -1034,7 +1053,11 @@ const performEventCleanup = async () => {
           continue;
         }
 
-        console.log(`👥 Decommitting ${signups.length} users from expired event: ${event.title} (${event.id})`);
+        const eventTimeInfo = event.estimated_end_time 
+          ? `ended at ${new Date(event.estimated_end_time).toLocaleString()}`
+          : `date: ${new Date(event.date).toLocaleDateString()} (Time TBD)`;
+        
+        console.log(`👥 Decommitting ${signups.length} users from expired event: ${event.title} (${eventTimeInfo})`);
 
         // Remove all signups for this expired event
         const { error: deleteError } = await supabase
@@ -1083,19 +1106,38 @@ app.post('/api/cleanup-events', async (req, res) => {
     // Find events that ended more than 1 hour ago
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     
-    const { data: expiredEvents, error: fetchError } = await supabase
+    // First, get events with estimated_end_time that have passed
+    const { data: eventsWithEndTime, error: fetchError1 } = await supabase
       .from('events')
-      .select('id, title, estimated_end_time')
+      .select('id, title, date, estimated_end_time')
       .not('estimated_end_time', 'is', null)
       .lt('estimated_end_time', oneHourAgo);
 
-    if (fetchError) {
-      console.error('Error fetching expired events:', fetchError);
+    if (fetchError1) {
+      console.error('Error fetching events with end time:', fetchError1);
       return res.status(500).json({ 
-        error: 'Failed to fetch expired events',
-        details: fetchError.message
+        error: 'Failed to fetch expired events with end time',
+        details: fetchError1.message
       });
     }
+
+    // Second, get events without estimated_end_time where the date has passed by more than 1 hour
+    const { data: eventsWithoutEndTime, error: fetchError2 } = await supabase
+      .from('events')
+      .select('id, title, date, estimated_end_time')
+      .is('estimated_end_time', null)
+      .lt('date', oneHourAgo);
+
+    if (fetchError2) {
+      console.error('Error fetching events without end time:', fetchError2);
+      return res.status(500).json({ 
+        error: 'Failed to fetch expired events without end time',
+        details: fetchError2.message
+      });
+    }
+
+    // Combine both sets of events
+    const expiredEvents = [...(eventsWithEndTime || []), ...(eventsWithoutEndTime || [])];
 
     if (!expiredEvents || expiredEvents.length === 0) {
       console.log('No expired events found');
@@ -1106,6 +1148,10 @@ app.post('/api/cleanup-events', async (req, res) => {
         processedEvents: 0
       });
     }
+
+    console.log(`Found ${expiredEvents.length} expired events to check for signups`);
+    console.log(`   - ${eventsWithEndTime?.length || 0} events with specific end times`);
+    console.log(`   - ${eventsWithoutEndTime?.length || 0} events with Time TBD`);
 
     let totalDecommittedUsers = 0;
     let processedEvents = 0;
@@ -1131,7 +1177,11 @@ app.post('/api/cleanup-events', async (req, res) => {
           continue;
         }
 
-        console.log(`Decommitting ${signups.length} users from expired event: ${event.title} (${event.id})`);
+        const eventTimeInfo = event.estimated_end_time 
+          ? `ended at ${new Date(event.estimated_end_time).toLocaleString()}`
+          : `date: ${new Date(event.date).toLocaleDateString()} (Time TBD)`;
+        
+        console.log(`Decommitting ${signups.length} users from expired event: ${event.title} (${eventTimeInfo})`);
 
         // Remove all signups for this expired event
         const { error: deleteError } = await supabase
@@ -1152,6 +1202,8 @@ app.post('/api/cleanup-events', async (req, res) => {
         eventDetails.push({
           eventId: event.id,
           eventTitle: event.title,
+          eventDate: event.date,
+          eventEndTime: event.estimated_end_time,
           decommittedUsersCount: signups.length
         });
 
@@ -1169,6 +1221,8 @@ app.post('/api/cleanup-events', async (req, res) => {
       decommittedUsers: totalDecommittedUsers,
       processedEvents,
       totalExpiredEvents: expiredEvents.length,
+      eventsWithEndTime: eventsWithEndTime?.length || 0,
+      eventsWithoutEndTime: eventsWithoutEndTime?.length || 0,
       eventDetails,
       errors: errors.length > 0 ? errors : undefined
     });
@@ -1178,6 +1232,24 @@ app.post('/api/cleanup-events', async (req, res) => {
     res.status(500).json({ 
       error: 'Internal server error during user decommitment',
       details: error.message
+    });
+  }
+});
+
+// Test endpoint to manually trigger event cleanup
+app.get('/api/test-cleanup', async (req, res) => {
+  try {
+    console.log('🧪 Test cleanup triggered manually');
+    await performEventCleanup();
+    res.json({ 
+      success: true, 
+      message: 'Event cleanup executed. Check server logs for details.' 
+    });
+  } catch (error) {
+    console.error('Error in test cleanup:', error);
+    res.status(500).json({ 
+      error: 'Failed to execute cleanup',
+      details: error.message 
     });
   }
 });
@@ -1954,6 +2026,82 @@ app.delete('/api/event-signup', async (req, res) => {
   } catch (error) {
     console.error('Error canceling event signup:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Check expired events endpoint - shows which events would be cleaned up without actually doing it
+app.get('/api/check-expired-events', async (req, res) => {
+  try {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    
+    // Get events with estimated_end_time that have passed
+    const { data: eventsWithEndTime, error: fetchError1 } = await supabase
+      .from('events')
+      .select('id, title, date, estimated_end_time, arrival_time')
+      .not('estimated_end_time', 'is', null)
+      .lt('estimated_end_time', oneHourAgo);
+
+    if (fetchError1) {
+      return res.status(500).json({ 
+        error: 'Failed to fetch events with end time',
+        details: fetchError1.message
+      });
+    }
+
+    // Get events without estimated_end_time where the date has passed
+    const { data: eventsWithoutEndTime, error: fetchError2 } = await supabase
+      .from('events')
+      .select('id, title, date, estimated_end_time, arrival_time')
+      .is('estimated_end_time', null)
+      .lt('date', oneHourAgo);
+
+    if (fetchError2) {
+      return res.status(500).json({ 
+        error: 'Failed to fetch events without end time',
+        details: fetchError2.message
+      });
+    }
+
+    // For each event, check how many users are signed up
+    const eventsWithSignups = [];
+    
+    for (const event of [...(eventsWithEndTime || []), ...(eventsWithoutEndTime || [])]) {
+      const { data: signups, error: signupError } = await supabase
+        .from('user_events')
+        .select('id, user_id')
+        .eq('event_id', event.id);
+
+      if (!signupError && signups && signups.length > 0) {
+        eventsWithSignups.push({
+          ...event,
+          signupCount: signups.length,
+          wouldBeDecommitted: true
+        });
+      }
+    }
+
+    res.json({
+      success: true,
+      currentTime: new Date().toISOString(),
+      oneHourAgo,
+      summary: {
+        totalExpiredEvents: (eventsWithEndTime?.length || 0) + (eventsWithoutEndTime?.length || 0),
+        eventsWithSpecificEndTime: eventsWithEndTime?.length || 0,
+        eventsWithTimeTBD: eventsWithoutEndTime?.length || 0,
+        eventsWithActiveSignups: eventsWithSignups.length,
+        totalUsersToBeDecommitted: eventsWithSignups.reduce((sum, event) => sum + event.signupCount, 0)
+      },
+      eventsWithEndTime: eventsWithEndTime || [],
+      eventsWithoutEndTime: eventsWithoutEndTime || [],
+      eventsWithActiveSignups: eventsWithSignups
+    });
+
+  } catch (error) {
+    console.error('Error checking expired events:', error);
+    res.status(500).json({ 
+      error: 'Internal server error',
+      details: error.message
+    });
   }
 });
 
