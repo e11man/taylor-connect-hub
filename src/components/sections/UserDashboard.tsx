@@ -54,8 +54,47 @@ const UserDashboard = () => {
   useEffect(() => {
     if (user) {
       fetchUserData();
+      // Trigger manual cleanup when dashboard loads
+      triggerManualCleanup();
     }
   }, [user, userEventsRefreshTrigger]);
+
+  // Function to check if an event is expired (same logic as backend)
+  const isEventExpired = (event: UserEvent['events']) => {
+    const now = new Date();
+    const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000);
+    
+    let eventEndTime: Date;
+    
+    if (event.estimated_end_time) {
+      // Use estimated_end_time if available
+      eventEndTime = new Date(`${event.date}T${event.estimated_end_time}`);
+    } else {
+      // Fallback: use date + 2 hours as default end time
+      const eventDate = new Date(event.date);
+      eventEndTime = new Date(eventDate.getTime() + 2 * 60 * 60 * 1000);
+    }
+    
+    return eventEndTime < oneHourAgo;
+  };
+
+  // Function to trigger manual cleanup
+  const triggerManualCleanup = async () => {
+    try {
+      const response = await fetch('/api/cleanup-events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        console.warn('Manual cleanup failed:', response.statusText);
+      }
+    } catch (error) {
+      console.warn('Error triggering manual cleanup:', error);
+    }
+  };
 
   const fetchUserData = async () => {
     if (!user) return;
@@ -88,7 +127,11 @@ const UserDashboard = () => {
       if (eventsError) {
         console.error('Error fetching user events:', eventsError);
       } else {
-        setUserEvents(eventsData || []);
+        // Filter out expired events on the client side
+        const filteredEvents = (eventsData || []).filter(userEvent => 
+          userEvent.events && !isEventExpired(userEvent.events)
+        );
+        setUserEvents(filteredEvents);
       }
 
       // Fetch user profile

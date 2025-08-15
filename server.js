@@ -993,18 +993,69 @@ const performEventCleanup = async () => {
     // Find events that ended more than 1 hour ago
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     
-    const { data: expiredEvents, error: fetchError } = await supabase
+    // Use a comprehensive query to get all events with calculated end times
+    const { data: allEvents, error: fetchError } = await supabase
       .from('events')
-      .select('id, title, estimated_end_time')
-      .not('estimated_end_time', 'is', null)
-      .lt('estimated_end_time', oneHourAgo);
+      .select(`
+        id, 
+        title, 
+        date,
+        estimated_end_time,
+        event_series!inner(
+          end_time
+        )
+      `);
 
     if (fetchError) {
-      console.error('❌ Error fetching expired events:', fetchError);
+      console.error('❌ Error fetching events:', fetchError);
       return;
     }
 
-    if (!expiredEvents || expiredEvents.length === 0) {
+    // Also get events without series
+    const { data: standaloneEvents, error: standaloneError } = await supabase
+      .from('events')
+      .select('id, title, date, estimated_end_time')
+      .is('series_id', null);
+
+    if (standaloneError) {
+      console.error('❌ Error fetching standalone events:', standaloneError);
+      return;
+    }
+
+    // Combine and filter expired events
+    const combinedEvents = [...(allEvents || []), ...(standaloneEvents || [])];
+    const expiredEvents = [];
+
+    for (const event of combinedEvents) {
+      let eventEndTime = null;
+      
+      // Priority 1: Use estimated_end_time if available
+      if (event.estimated_end_time) {
+        eventEndTime = new Date(event.estimated_end_time);
+      }
+      // Priority 2: Calculate from date + series end_time
+      else if (event.event_series && event.event_series.end_time && event.date) {
+        const eventDate = new Date(event.date);
+        const [hours, minutes] = event.event_series.end_time.split(':');
+        eventEndTime = new Date(eventDate);
+        eventEndTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      }
+      // Priority 3: Use date + 2 hours as default
+      else if (event.date) {
+        eventEndTime = new Date(event.date);
+        eventEndTime.setHours(eventEndTime.getHours() + 2);
+      }
+      
+      // Check if event ended more than 1 hour ago
+      if (eventEndTime && eventEndTime < new Date(oneHourAgo)) {
+        expiredEvents.push({
+          ...event,
+          calculated_end_time: eventEndTime.toISOString()
+        });
+      }
+    }
+
+    if (expiredEvents.length === 0) {
       console.log('✅ No expired events found');
       return;
     }
@@ -1034,7 +1085,7 @@ const performEventCleanup = async () => {
           continue;
         }
 
-        console.log(`👥 Decommitting ${signups.length} users from expired event: ${event.title} (${event.id})`);
+        console.log(`👥 Decommitting ${signups.length} users from expired event: ${event.title} (ended at ${event.calculated_end_time})`);
 
         // Remove all signups for this expired event
         const { error: deleteError } = await supabase
@@ -1083,27 +1134,82 @@ app.post('/api/cleanup-events', async (req, res) => {
     // Find events that ended more than 1 hour ago
     const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
     
-    const { data: expiredEvents, error: fetchError } = await supabase
+    // Use a comprehensive query to get all events with calculated end times
+    const { data: allEvents, error: fetchError } = await supabase
       .from('events')
-      .select('id, title, estimated_end_time')
-      .not('estimated_end_time', 'is', null)
-      .lt('estimated_end_time', oneHourAgo);
+      .select(`
+        id, 
+        title, 
+        date,
+        estimated_end_time,
+        event_series!inner(
+          end_time
+        )
+      `);
 
     if (fetchError) {
-      console.error('Error fetching expired events:', fetchError);
+      console.error('Error fetching events:', fetchError);
       return res.status(500).json({ 
-        error: 'Failed to fetch expired events',
+        error: 'Failed to fetch events',
         details: fetchError.message
       });
     }
 
-    if (!expiredEvents || expiredEvents.length === 0) {
+    // Also get events without series
+    const { data: standaloneEvents, error: standaloneError } = await supabase
+      .from('events')
+      .select('id, title, date, estimated_end_time')
+      .is('series_id', null);
+
+    if (standaloneError) {
+      console.error('Error fetching standalone events:', standaloneError);
+      return res.status(500).json({ 
+        error: 'Failed to fetch standalone events',
+        details: standaloneError.message
+      });
+    }
+
+    // Combine and filter expired events
+    const combinedEvents = [...(allEvents || []), ...(standaloneEvents || [])];
+    const expiredEvents = [];
+
+    for (const event of combinedEvents) {
+      let eventEndTime = null;
+      
+      // Priority 1: Use estimated_end_time if available
+      if (event.estimated_end_time) {
+        eventEndTime = new Date(event.estimated_end_time);
+      }
+      // Priority 2: Calculate from date + series end_time
+      else if (event.event_series && event.event_series.end_time && event.date) {
+        const eventDate = new Date(event.date);
+        const [hours, minutes] = event.event_series.end_time.split(':');
+        eventEndTime = new Date(eventDate);
+        eventEndTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+      }
+      // Priority 3: Use date + 2 hours as default
+      else if (event.date) {
+        eventEndTime = new Date(event.date);
+        eventEndTime.setHours(eventEndTime.getHours() + 2);
+      }
+      
+      // Check if event ended more than 1 hour ago
+      if (eventEndTime && eventEndTime < new Date(oneHourAgo)) {
+        expiredEvents.push({
+          ...event,
+          calculated_end_time: eventEndTime.toISOString()
+        });
+      }
+    }
+
+    if (expiredEvents.length === 0) {
       console.log('No expired events found');
       return res.json({ 
         success: true, 
         message: 'No expired events found',
         decommittedUsers: 0,
-        processedEvents: 0
+        processedEvents: 0,
+        totalEventsChecked: combinedEvents.length
       });
     }
 
@@ -1131,7 +1237,7 @@ app.post('/api/cleanup-events', async (req, res) => {
           continue;
         }
 
-        console.log(`Decommitting ${signups.length} users from expired event: ${event.title} (${event.id})`);
+        console.log(`Decommitting ${signups.length} users from expired event: ${event.title} (ended at ${event.calculated_end_time})`);
 
         // Remove all signups for this expired event
         const { error: deleteError } = await supabase
@@ -1152,6 +1258,7 @@ app.post('/api/cleanup-events', async (req, res) => {
         eventDetails.push({
           eventId: event.id,
           eventTitle: event.title,
+          eventEndTime: event.calculated_end_time,
           decommittedUsersCount: signups.length
         });
 
@@ -1169,6 +1276,7 @@ app.post('/api/cleanup-events', async (req, res) => {
       decommittedUsers: totalDecommittedUsers,
       processedEvents,
       totalExpiredEvents: expiredEvents.length,
+      totalEventsChecked: combinedEvents.length,
       eventDetails,
       errors: errors.length > 0 ? errors : undefined
     });
