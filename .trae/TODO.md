@@ -1,10 +1,10 @@
 # TODO:
 
-- [x] 1: Create SQL migration to add missing contact info content entries (priority: High)
-- [x] 2: Add phone_description entry for 'Monday - Friday, 9AM - 5PM' (priority: High)
-- [x] 3: Add address_description entry for 'Taylor University Campus' (priority: High)
-- [x] 5: Apply the migration to Supabase (priority: High)
-- [x] 6: Fix Terms of Service page React key prop in features grid (priority: High)
-- [x] 7: Fix malformed DynamicText components with nested fallback props (priority: High)
-- [x] 4: Add other hardcoded fallback values from ContactSection (priority: Medium)
-- [x] 8: Test the TOS page to ensure duplicates are resolved (priority: Medium)
+- [x] 9: Create SQL migration for WhatWeDoSection content entries (priority: High)
+- [x] 10: Add WhatWeDoSection main title and description entries (priority: High)
+- [x] 11: Add WhatWeDoSection service entries (Local Ministries, Community Plunge, World Opportunities, Community Outreach Programs) (priority: High)
+- [x] 12: Create SQL migration for ProgramsSection content entries (priority: High)
+- [x] 13: Add ProgramsSection main title and description entries (priority: High)
+- [x] 14: Add ProgramsSection program entries (Basics, Basics Jr., Carpenter's Hands, ESL, Lift, ReaLife) (priority: High)
+- [x] 15: Apply migrations to Supabase database (priority: High)
+- [x] 16: Verify dynamic loading is working for all new content entries (priority: Medium)
