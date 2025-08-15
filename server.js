@@ -1236,6 +1236,103 @@ app.post('/api/cleanup-events', async (req, res) => {
   }
 });
 
+// Diagnostic endpoint to check past events with active signups
+app.get('/api/debug-past-events', async (req, res) => {
+  try {
+    const now = new Date();
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    
+    // Get ALL events to analyze them
+    const { data: allEvents, error: allEventsError } = await supabase
+      .from('events')
+      .select('id, title, date, arrival_time, estimated_end_time')
+      .order('date', { ascending: true })
+      .limit(50);
+    
+    if (allEventsError) {
+      return res.status(500).json({ error: allEventsError.message });
+    }
+    
+    // Check each event and categorize it
+    const categorizedEvents = await Promise.all(allEvents.map(async (event) => {
+      // Get signup count
+      const { data: signups } = await supabase
+        .from('user_events')
+        .select('id, user_id')
+        .eq('event_id', event.id);
+      
+      const eventDate = new Date(event.date);
+      const hasEndTime = event.estimated_end_time !== null;
+      const endTime = hasEndTime ? new Date(event.estimated_end_time) : null;
+      
+      // Determine if it's past
+      let isPast = false;
+      let pastReason = '';
+      
+      if (hasEndTime && endTime < now) {
+        isPast = true;
+        pastReason = `End time passed: ${endTime.toLocaleString()}`;
+      } else if (!hasEndTime && eventDate < now) {
+        isPast = true;
+        pastReason = `Event date passed: ${eventDate.toLocaleString()} (Time TBD)`;
+      }
+      
+      // Check if it should be cleaned up
+      let shouldBeCleanedUp = false;
+      let cleanupReason = '';
+      
+      if (hasEndTime && endTime < oneHourAgo) {
+        shouldBeCleanedUp = true;
+        cleanupReason = 'End time > 1 hour ago';
+      } else if (!hasEndTime && eventDate < oneHourAgo) {
+        shouldBeCleanedUp = true;
+        cleanupReason = 'Event date > 1 hour ago (Time TBD)';
+      }
+      
+      return {
+        id: event.id,
+        title: event.title,
+        date: event.date,
+        dateFormatted: eventDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+        fullDateFormatted: eventDate.toLocaleString(),
+        arrivalTime: event.arrival_time,
+        estimatedEndTime: event.estimated_end_time,
+        hasSpecificTimes: hasEndTime,
+        signupCount: signups?.length || 0,
+        isPast,
+        pastReason,
+        shouldBeCleanedUp,
+        cleanupReason,
+        hoursAgo: Math.round((now - (endTime || eventDate)) / (1000 * 60 * 60) * 10) / 10
+      };
+    }));
+    
+    // Filter to show different categories
+    const pastEventsWithSignups = categorizedEvents.filter(e => e.isPast && e.signupCount > 0);
+    const shouldBeCleanedUp = categorizedEvents.filter(e => e.shouldBeCleanedUp && e.signupCount > 0);
+    const futureEvents = categorizedEvents.filter(e => !e.isPast);
+    
+    res.json({
+      success: true,
+      currentTime: now.toISOString(),
+      currentTimeFormatted: now.toLocaleString(),
+      summary: {
+        totalEvents: allEvents.length,
+        pastEventsWithSignups: pastEventsWithSignups.length,
+        eventsNeedingCleanup: shouldBeCleanedUp.length,
+        futureEvents: futureEvents.length
+      },
+      pastEventsWithSignups,
+      eventsNeedingCleanup: shouldBeCleanedUp,
+      futureEvents: futureEvents.slice(0, 5) // Show first 5 future events
+    });
+    
+  } catch (error) {
+    console.error('Error in debug-past-events:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Test endpoint to manually trigger event cleanup
 app.get('/api/test-cleanup', async (req, res) => {
   try {
@@ -2135,6 +2232,95 @@ ALTER TABLE public.user_events ADD CONSTRAINT user_events_signed_up_by_fkey
   } catch (error) {
     console.error('Error in fix-foreign-keys endpoint:', error);
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Force cleanup endpoint - removes user signups from past events without waiting
+app.post('/api/force-cleanup', async (req, res) => {
+  try {
+    const { eventId, cleanupAll } = req.body;
+    console.log('Force cleanup requested:', { eventId, cleanupAll });
+    
+    let eventsToClean = [];
+    
+    if (eventId) {
+      // Clean up specific event
+      const { data: event, error } = await supabase
+        .from('events')
+        .select('id, title, date, estimated_end_time')
+        .eq('id', eventId)
+        .single();
+        
+      if (error) {
+        return res.status(404).json({ error: 'Event not found' });
+      }
+      
+      eventsToClean = [event];
+    } else if (cleanupAll) {
+      // Get all past events
+      const now = new Date().toISOString();
+      
+      // Events with end time in the past
+      const { data: eventsWithEndTime } = await supabase
+        .from('events')
+        .select('id, title, date, estimated_end_time')
+        .not('estimated_end_time', 'is', null)
+        .lt('estimated_end_time', now);
+      
+      // Events without end time where date is in the past
+      const { data: eventsWithoutEndTime } = await supabase
+        .from('events')
+        .select('id, title, date, estimated_end_time')
+        .is('estimated_end_time', null)
+        .lt('date', now);
+      
+      eventsToClean = [...(eventsWithEndTime || []), ...(eventsWithoutEndTime || [])];
+    } else {
+      return res.status(400).json({ error: 'Must specify eventId or cleanupAll' });
+    }
+    
+    let totalDecommittedUsers = 0;
+    let processedEvents = 0;
+    const results = [];
+    
+    for (const event of eventsToClean) {
+      // Check for signups
+      const { data: signups } = await supabase
+        .from('user_events')
+        .select('id, user_id')
+        .eq('event_id', event.id);
+      
+      if (signups && signups.length > 0) {
+        // Remove signups
+        const { error: deleteError } = await supabase
+          .from('user_events')
+          .delete()
+          .eq('event_id', event.id);
+          
+        if (!deleteError) {
+          totalDecommittedUsers += signups.length;
+          processedEvents++;
+          results.push({
+            eventId: event.id,
+            eventTitle: event.title,
+            decommittedCount: signups.length
+          });
+          console.log(`✅ Force decommitted ${signups.length} users from: ${event.title}`);
+        }
+      }
+    }
+    
+    res.json({
+      success: true,
+      message: `Force cleanup completed. Decommitted ${totalDecommittedUsers} users from ${processedEvents} events.`,
+      totalDecommittedUsers,
+      processedEvents,
+      results
+    });
+    
+  } catch (error) {
+    console.error('Error in force cleanup:', error);
+    res.status(500).json({ error: error.message });
   }
 });
 
