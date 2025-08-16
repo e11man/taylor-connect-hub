@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Building2, User2, AlignLeft, Globe, Phone, Loader2, Info } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Building2, User2, AlignLeft, Globe, Phone, Loader2 } from 'lucide-react';
 import PrimaryButton from '../components/buttons/PrimaryButton';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import UserAuthModal from '@/components/modals/UserAuthModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useContentSection } from '@/hooks/useContent';
@@ -14,7 +13,6 @@ const OrganizationRegister: React.FC = () => {
   const { content: pageContent, loading: contentLoading } = useContentSection('organizationRegister', 'main');
   const { content: formContent } = useContentSection('organizationRegister', 'form');
   
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [formData, setFormData] = useState({
     organizationName: '',
     contactName: '',
@@ -450,23 +448,9 @@ const OrganizationRegister: React.FC = () => {
               />
             </Link>
           </div>
-          
-          {/* User Auth Info Button */}
-          <div className="mt-6 pt-4 border-t border-gray-200 text-center">
-            <button 
-              onClick={() => setShowAuthModal(true)}
-              className="inline-flex items-center text-sm font-medium text-[#00AFCE] hover:text-[#009ac2] font-montserrat"
-            >
-              <Info className="w-4 h-4 mr-1" />
-              View User Authentication Documentation
-            </button>
-          </div>
         </form>
         </div>
       </div>
-      
-      {/* User Auth Modal */}
-      <UserAuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} />
       
       <Footer />
     </div>
