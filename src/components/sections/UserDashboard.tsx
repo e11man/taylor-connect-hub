@@ -14,6 +14,7 @@ import Footer from "@/components/layout/Footer";
 import DashboardOpportunities from "./DashboardOpportunities";
 import AddressLink from "@/components/ui/AddressLink";
 import { DynamicText } from "@/components/content/DynamicText";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 interface UserEvent {
   id: string;
@@ -42,6 +43,8 @@ interface UserProfile {
 }
 
 const UserDashboard = () => {
+  usePageTitle("Dashboard");
+  
   const [userEvents, setUserEvents] = useState<UserEvent[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);

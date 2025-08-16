@@ -17,6 +17,7 @@ import { ContentManagement } from '@/components/admin/ContentManagement';
 import { EventChatView } from '@/components/admin/EventChatView';
 import OrganizationRejectionModal from '@/components/modals/OrganizationRejectionModal';
 import { useSiteStatistics } from '@/hooks/useSiteStatistics';
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 interface User {
   id: string;
@@ -381,6 +382,8 @@ const SiteStatisticsEditor = () => {
 };
 
 export const AdminDashboard = () => {
+  usePageTitle("Admin Dashboard");
+  
   const [users, setUsers] = useState<User[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [events, setEvents] = useState<Event[]>([]);

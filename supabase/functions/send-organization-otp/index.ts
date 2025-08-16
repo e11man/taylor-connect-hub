@@ -51,42 +51,36 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("📨 Sending email via Resend...");
     
     const emailResponse = await resend.emails.send({
-      from: "Community Connect <onboarding@resend.dev>",
+      from: "Main Street Connect <onboarding@resend.dev>",
       to: [email],
-      subject: "Verify Your Organization Registration",
+      subject: "Verify your organization - Verification Code",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="text-align: center; margin-bottom: 30px;">
-            <h1 style="color: #00AFCE; margin-bottom: 10px;">Community Connect</h1>
+            <h1 style="color: #00AFCE; margin-bottom: 10px;">Main Street Connect</h1>
             <h2 style="color: #333; margin-bottom: 20px;">Organization Verification</h2>
           </div>
           
-          <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+          <div style="background-color: #f5f5f5; border-radius: 8px; padding: 30px; margin-bottom: 30px;">
             <p style="color: #333; font-size: 16px; margin-bottom: 15px;">
-              Hello <strong>${organizationName}</strong>,
+              Hello ${organizationName},
             </p>
             <p style="color: #333; font-size: 16px; margin-bottom: 15px;">
-              Thank you for registering your organization with Community Connect. To complete your registration, please use the verification code below:
+              Thank you for registering your organization with Main Street Connect. To complete your registration, please use the verification code below:
             </p>
             
-            <div style="text-align: center; margin: 30px 0;">
-              <div style="background-color: #00AFCE; color: white; font-size: 32px; font-weight: bold; padding: 20px; border-radius: 8px; letter-spacing: 8px; display: inline-block;">
-                ${otp}
-              </div>
+            <div style="background-color: #00AFCE; color: white; font-size: 32px; font-weight: bold; letter-spacing: 5px; text-align: center; padding: 20px; border-radius: 8px; margin: 20px 0;">
+              ${otp}
             </div>
             
-            <p style="color: #666; font-size: 14px; margin-top: 20px;">
-              This code will expire in 10 minutes. If you didn't request this verification, please ignore this email.
-            </p>
-            
             <p style="color: #666; font-size: 14px; margin-top: 15px;">
-              <strong>Important:</strong> After verification, your organization will need admin approval before you can access the platform. You'll receive an email notification once approved.
+              This code will expire in 10 minutes. If you didn't request this verification, please ignore this email.
             </p>
           </div>
           
           <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
             <p style="color: #888; font-size: 12px;">
-              Community Connect - Connecting volunteers with meaningful opportunities
+              Main Street Connect - Connecting volunteers with meaningful opportunities
             </p>
           </div>
         </div>

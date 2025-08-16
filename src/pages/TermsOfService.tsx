@@ -3,8 +3,11 @@ import Footer from "@/components/layout/Footer";
 import { DynamicText } from "@/components/content/DynamicText";
 import { useContentSection } from "@/hooks/useContent";
 import { FileText, CheckCircle, AlertTriangle, Users, Shield, Clock } from "lucide-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const TermsOfService = () => {
+  usePageTitle("Terms of Service");
+  
   const { content: heroContent } = useContentSection('terms', 'hero');
   const { content: mainContent } = useContentSection('terms', 'main');
   const { content: acceptanceContent } = useContentSection('terms', 'acceptance');

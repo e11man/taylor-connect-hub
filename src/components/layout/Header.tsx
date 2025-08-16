@@ -201,13 +201,13 @@ const Header = () => {
             onClick={closeMenu}
             tabIndex={isOpen ? 0 : -1}
           >
-            <img src={logo} alt="Community Connect Logo" className="h-12 w-auto" />
+            <img src={logo} alt="Main Street Connect Logo" className="h-12 w-auto" />
             <span className="text-lg font-montserrat">
               <DynamicText 
                 page="header" 
                 section="brand" 
                 contentKey="name"
-                fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Community Connect" /> />
+                fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Main Street Connect" /> />
                 as="span"
               />
             </span>
@@ -332,7 +332,7 @@ const Header = () => {
               page="footer" 
               section="copyright" 
               contentKey="text"
-              fallback={`© ${new Date().getFullYear()} Community Connect`}
+                              fallback={`© ${new Date().getFullYear()} Main Street Connect`}
               as="span"
             />
           </div>
@@ -348,13 +348,13 @@ const Header = () => {
       <div className="max-w-screen-xl mx-auto flex items-center justify-between h-16 px-4 md:px-8">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 font-bold text-gray-900 text-lg md:text-xl tracking-tight">
-          <img src={logo} alt="Community Connect Logo" className="w-12 h-12 rounded-lg object-contain" />
+          <img src={logo} alt="Main Street Connect Logo" className="w-12 h-12 rounded-lg object-contain" />
           <span className="hidden sm:inline text-base md:text-xl font-montserrat">
             <DynamicText 
               page="header" 
               section="brand" 
               contentKey="name"
-              fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Community Connect" /> />
+              fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Main Street Connect" /> />
               as="span"
             />
           </span>

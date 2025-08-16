@@ -23,7 +23,7 @@ const fallbackContent: ContentCache = {
   'home.hero.subtitle': 'Join our vibrant community of passionate volunteers.',
   'header.nav.home': 'Home',
   'header.nav.about': 'About',
-  'footer.brand.name': 'Community Connect',
+  'footer.brand.name': 'Main Street Connect',
   'admin.login.title': 'Admin Console',
 };
 

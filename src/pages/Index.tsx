@@ -10,17 +10,19 @@ import ContactSection from "@/components/sections/ContactSection";
 import { Skeleton } from "@/components/ui/skeleton";
 import React, { useState } from "react";
 import UserAuthModal from "@/components/modals/UserAuthModal";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const Index = () => {
   const { user, loading } = useAuth();
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  usePageTitle();
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-xl text-foreground">Loading Community Connect...</p>
+          <p className="text-xl text-foreground">Loading Main Street Connect...</p>
         </div>
       </div>
     );

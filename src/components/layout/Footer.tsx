@@ -79,7 +79,7 @@ const Footer = () => {
                   page="footer" 
                   section="brand" 
                   contentKey="name"
-                  fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Community Connect" /> />
+                  fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Main Street Connect" /> />
                   as="span"
                 />
               </span>
@@ -126,7 +126,7 @@ const Footer = () => {
                 page="footer" 
                 section="copyright" 
                 contentKey="text"
-                fallback="© 2024 Community Connect"
+                fallback="© 2024 Main Street Connect"
                 as="span"
               />
             </motion.p>
