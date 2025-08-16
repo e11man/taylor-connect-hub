@@ -14,6 +14,10 @@ interface NotificationPreferences {
   email_frequency: 'immediate' | 'daily' | 'weekly' | 'never';
   chat_notifications: boolean;
   event_updates: boolean;
+  volunteer_signups?: boolean;
+  volunteer_cancellations?: boolean;
+  weekly_summary?: boolean;
+  system_updates?: boolean;
 }
 
 export const sendChatMessage = async (

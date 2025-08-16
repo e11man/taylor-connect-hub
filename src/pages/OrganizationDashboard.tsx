@@ -24,6 +24,7 @@ import SafetyGuidelinesModal from '@/components/modals/SafetyGuidelinesModal';
 import OrganizationProfileModal from '@/components/modals/OrganizationProfileModal';
 import { filterActiveEvents } from '@/utils/eventFilters';
 import { SignupSuccess } from '@/components/ui/SignupSuccess';
+import { OrganizationNotificationPreferences } from '@/components/settings/OrganizationNotificationPreferences';
 
 interface Event {
   id: string;
@@ -1168,53 +1169,8 @@ const OrganizationDashboard = () => {
                       )}
 
           {/* Notification Settings Section */}
-          <div className="mt-12 relative">
-            <div className="blur-sm pointer-events-none">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <MessageCircle className="h-5 w-5" />
-                    Email Notifications
-                  </CardTitle>
-                  <CardDescription>
-                    Manage email notifications for your organization's events and activities
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label className="text-base">Event Notifications</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Get notified when volunteers sign up or cancel
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-base">Weekly Summary</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Receive weekly reports about your organization's activities
-                      </p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label className="text-base">System Updates</Label>
-                      <p className="text-sm text-muted-foreground">
-                        Important announcements and platform updates
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-            <div className="absolute inset-0 flex items-center justify-center bg-white bg-opacity-75 backdrop-blur-sm">
-              <div className="text-center p-8 bg-white rounded-2xl shadow-lg border border-gray-200">
-                <MessageCircle className="w-16 h-16 mx-auto mb-4 text-[#00AFCE]" />
-                <h3 className="text-2xl font-montserrat font-bold text-primary mb-2">
-                  Email Notifications Coming Soon
-                </h3>
-                <p className="text-muted-foreground">
-                  Enhanced email notification features are currently in development and will be available soon.
-                </p>
-              </div>
-            </div>
+          <div className="mt-12">
+            <OrganizationNotificationPreferences />
           </div>
 
           {/* Edit Modal */}

@@ -175,6 +175,10 @@ export type Database = {
           id: string
           updated_at: string
           user_id: string
+          volunteer_signups: boolean
+          volunteer_cancellations: boolean
+          weekly_summary: boolean
+          system_updates: boolean
         }
         Insert: {
           chat_notifications?: boolean
@@ -184,6 +188,10 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id: string
+          volunteer_signups?: boolean
+          volunteer_cancellations?: boolean
+          weekly_summary?: boolean
+          system_updates?: boolean
         }
         Update: {
           chat_notifications?: boolean
@@ -193,6 +201,10 @@ export type Database = {
           id?: string
           updated_at?: string
           user_id?: string
+          volunteer_signups?: boolean
+          volunteer_cancellations?: boolean
+          weekly_summary?: boolean
+          system_updates?: boolean
         }
         Relationships: []
       }
