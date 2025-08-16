@@ -25,6 +25,7 @@ import OrganizationProfileModal from '@/components/modals/OrganizationProfileMod
 import { filterActiveEvents } from '@/utils/eventFilters';
 import { SignupSuccess } from '@/components/ui/SignupSuccess';
 import { OrganizationNotificationPreferences } from '@/components/settings/OrganizationNotificationPreferences';
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 interface Event {
   id: string;
@@ -53,6 +54,8 @@ interface Organization {
 }
 
 const OrganizationDashboard = () => {
+  usePageTitle("Organization Dashboard");
+  
   const { user, signOut, refreshUserEvents, refreshEvents } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

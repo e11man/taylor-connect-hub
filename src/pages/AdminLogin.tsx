@@ -12,8 +12,11 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { DynamicText } from '@/components/content/DynamicText';
 import { useContent } from '@/hooks/useContent';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const AdminLogin = () => {
+  usePageTitle("Admin Login");
+  
   const navigate = useNavigate();
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');

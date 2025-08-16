@@ -12,8 +12,11 @@ import { DynamicText } from '@/components/content/DynamicText';
 import { useContent } from '@/hooks/useContent';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import { usePageTitle } from '@/hooks/usePageTitle';
 
 const ResetPassword = () => {
+  usePageTitle("Reset Password");
+  
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

@@ -70,18 +70,18 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Send email notification
     const emailTemplate = action === 'approve' ? {
-      subject: "Organization Approved - Community Connect",
+      subject: "Organization Approved - Main Street Connect",
       html: `
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
-            <title>Organization Approved - Community Connect</title>
+            <title>Organization Approved - Main Street Connect</title>
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #00AFCE; margin: 0;">Community Connect</h1>
+                    <h1 style="color: #00AFCE; margin: 0;">Main Street Connect</h1>
                     <p style="color: #666; margin: 10px 0;">Connecting volunteers with meaningful opportunities</p>
                 </div>
                 
@@ -115,7 +115,7 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
                     <p style="color: #888; font-size: 12px;">
-                        Community Connect - Connecting volunteers with meaningful opportunities
+                        Main Street Connect - Connecting volunteers with meaningful opportunities
                     </p>
                 </div>
             </div>
@@ -123,18 +123,18 @@ const handler = async (req: Request): Promise<Response> => {
         </html>
       `
     } : {
-      subject: "Organization Registration Update - Community Connect",
+      subject: "Organization Registration Update - Main Street Connect",
       html: `
         <!DOCTYPE html>
         <html>
         <head>
             <meta charset="utf-8">
-            <title>Organization Registration Update - Community Connect</title>
+            <title>Organization Registration Update - Main Street Connect</title>
         </head>
         <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
             <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <h1 style="color: #00AFCE; margin: 0;">Community Connect</h1>
+                    <h1 style="color: #00AFCE; margin: 0;">Main Street Connect</h1>
                     <p style="color: #666; margin: 10px 0;">Connecting volunteers with meaningful opportunities</p>
                 </div>
                 
@@ -162,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
                 
                 <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
                     <p style="color: #888; font-size: 12px;">
-                        Community Connect - Connecting volunteers with meaningful opportunities
+                        Main Street Connect - Connecting volunteers with meaningful opportunities
                     </p>
                 </div>
             </div>
@@ -174,7 +174,7 @@ const handler = async (req: Request): Promise<Response> => {
     console.log('📨 Sending notification email...');
 
     const emailResponse = await resend.emails.send({
-      from: "Community Connect <onboarding@resend.dev>",
+      from: "Main Street Connect <onboarding@resend.dev>",
       to: [organization.contact_email],
       subject: emailTemplate.subject,
       html: emailTemplate.html,

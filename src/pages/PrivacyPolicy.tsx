@@ -3,8 +3,11 @@ import Footer from "@/components/layout/Footer";
 import { DynamicText } from "@/components/content/DynamicText";
 import { useContentSection } from "@/hooks/useContent";
 import { Shield, Eye, Lock, Users, Database, Bell } from "lucide-react";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const PrivacyPolicy = () => {
+  usePageTitle("Privacy Policy");
+  
   const { content: heroContent } = useContentSection('privacy', 'hero');
   const { content: mainContent } = useContentSection('privacy', 'main');
   const { content: collectionContent } = useContentSection('privacy', 'collection');

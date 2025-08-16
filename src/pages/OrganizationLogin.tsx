@@ -10,8 +10,10 @@ import Footer from "@/components/layout/Footer";
 import { useAuth } from '@/contexts/AuthContext';
 import { DynamicText } from '@/components/content/DynamicText';
 import { ForgotPasswordModal } from '@/components/modals/ForgotPasswordModal';
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const OrganizationLogin = () => {
+  usePageTitle("Organization Login");
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);

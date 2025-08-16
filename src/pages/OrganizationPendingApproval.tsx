@@ -1,12 +1,16 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Clock, Mail, Phone, MessageSquare, CheckCircle2, ArrowLeft } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { DynamicText } from '@/components/content/DynamicText';
 import { useContentSection } from '@/hooks/useContent';
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const OrganizationPendingApproval: React.FC = () => {
+  usePageTitle("Pending Approval");
+  
+  const navigate = useNavigate();
   const { content: pageContent } = useContentSection('organizationPendingApproval', 'main');
 
   const handleContactSupport = () => {

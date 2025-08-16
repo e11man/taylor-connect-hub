@@ -8,8 +8,10 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useContentSection } from '@/hooks/useContent';
 import { DynamicText } from '@/components/content/DynamicText';
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const OrganizationRegister: React.FC = () => {
+  usePageTitle("Organization Registration");
   const { content: pageContent, loading: contentLoading } = useContentSection('organizationRegister', 'main');
   const { content: formContent } = useContentSection('organizationRegister', 'form');
   

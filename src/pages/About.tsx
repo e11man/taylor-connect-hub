@@ -6,8 +6,11 @@ import ImpactSection from "@/components/sections/ImpactSection";
 import WhatWeDoSection from "@/components/sections/WhatWeDoSection";
 import ProgramsSection from "@/components/sections/ProgramsSection";
 import ContactSection from "@/components/sections/ContactSection";
+import { usePageTitle } from "@/hooks/usePageTitle";
 
 const About = () => {
+  usePageTitle("About Us");
+  
   return (
     <div className="min-h-screen bg-white">
       <Header />
