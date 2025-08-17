@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import dotenv from 'dotenv';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 
 dotenv.config();
 
@@ -17,10 +18,60 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:8080', 'http://127.0.0.1:8080'],
+  origin: [
+    'http://localhost:8080',
+    'http://127.0.0.1:8080',
+    'http://localhost:3000',
+    'http://127.0.0.1:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:5173'
+  ],
   credentials: true
 }));
 app.use(express.json());
+
+// Local email endpoint for development using Resend
+app.post('/api/local-notify-signup', async (req, res) => {
+  try {
+    const { signups } = req.body;
+    const RESEND_API_KEY = process.env.RESEND_API_KEY;
+    if (!RESEND_API_KEY) {
+      return res.status(500).json({ error: 'RESEND_API_KEY not configured' });
+    }
+
+    if (!signups || !Array.isArray(signups) || signups.length === 0) {
+      return res.status(400).json({ error: 'No signups provided' });
+    }
+
+    const resend = new Resend(RESEND_API_KEY);
+    const FROM = 'Main Street Connect <noreply@uplandmainstreet.org>';
+
+    const buildHtml = (s) => `<!doctype html><html><body><div style="font-family:Arial,sans-serif;padding:16px">` +
+      `<h2 style="margin:0 0 12px 0">Event Signup Confirmation</h2>` +
+      `<p>You have been signed up for <strong>${s.eventName}</strong> by <strong>${s.signedUpBy}</strong>.</p>` +
+      `</div></body></html>`;
+
+    const results = await Promise.allSettled(signups.map(async (s) => {
+      if (!s.email) return { success: false, reason: 'No email' };
+      const resp = await resend.emails.send({
+        from: FROM,
+        to: [s.email],
+        subject: `You've been signed up for: ${s.eventName}`,
+        html: buildHtml(s)
+      });
+      if (resp.error) return { success: false, reason: resp.error };
+      return { success: true };
+    }));
+
+    const sent = results.filter(r => r.status === 'fulfilled' && r.value.success).length;
+    const failed = results.length - sent;
+    const status = failed > 0 ? 207 : 200;
+    return res.status(status).json({ sent, failed, total: results.length });
+  } catch (err) {
+    console.error('local-notify-signup error', err);
+    return res.status(500).json({ error: 'Failed to send emails', details: err.message });
+  }
+});
 
 // Email sending endpoint using Python script
 app.post('/api/send-verification-code', async (req, res) => {
@@ -2069,6 +2120,51 @@ app.delete('/api/event-signup', async (req, res) => {
     res.json({ success: true });
   } catch (error) {
     console.error('Error canceling event signup:', error);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// New endpoint for leadership users to cancel specific group signups they created
+app.delete('/api/group-signup', async (req, res) => {
+  try {
+    const { user_id, event_id, signed_up_by } = req.body;
+    
+    if (!user_id || !event_id || !signed_up_by) {
+      return res.status(400).json({ success: false, error: 'Missing required fields: user_id, event_id, signed_up_by' });
+    }
+
+    // Verify the requester is the one who signed up this user
+    const { data: signupRecord, error: fetchError } = await supabase
+      .from('user_events')
+      .select('signed_up_by')
+      .eq('user_id', user_id)
+      .eq('event_id', event_id)
+      .single();
+
+    if (fetchError || !signupRecord) {
+      return res.status(404).json({ success: false, error: 'Signup not found' });
+    }
+
+    // Only allow cancellation if the requester is the one who signed up the user
+    if (signupRecord.signed_up_by !== signed_up_by) {
+      return res.status(403).json({ success: false, error: 'Only the user who signed up this person can cancel their signup' });
+    }
+
+    // Delete the specific signup
+    const { error } = await supabase
+      .from('user_events')
+      .delete()
+      .eq('user_id', user_id)
+      .eq('event_id', event_id);
+
+    if (error) throw error;
+    
+    res.json({ 
+      success: true, 
+      message: 'Group signup cancelled successfully' 
+    });
+  } catch (error) {
+    console.error('Error canceling group signup:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });

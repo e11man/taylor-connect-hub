@@ -67,7 +67,7 @@ const GroupSignupModal = ({
       const { data: currentUserProfile } = await supabase
         .from('profiles')
         .select('dorm, wing')
-        .eq('user_id', user.id)
+        .eq('id', user.id)
         .single();
 
       // Get all active user profiles
@@ -288,25 +288,88 @@ const GroupSignupModal = ({
         throw new Error(errorMessage || 'Failed to sign up users');
       }
 
-      // Send confirmation emails (optional - won't break if it fails)
+      // Send confirmation emails via Vercel API (align with other email flows)
       try {
-        const signupData = userIds.map(userId => ({
-          userId,
-          eventId,
-          signedUpBy: user.id
-        }));
-
-        const emailResponse = await supabase.functions.invoke('send-signup-confirmation', {
-          body: { signups: signupData }
-        });
+        console.log('=== EMAIL NOTIFICATION DEBUG ===');
+        console.log('User IDs to send emails for:', userIds);
+        console.log('Current user:', user);
+        console.log('Event details:', { eventId, eventTitle });
         
-        if (emailResponse.error) {
-          console.error('Error sending confirmation emails:', emailResponse.error);
-          // Don't fail the entire operation if emails fail
+        // Get the emails for the users who were just signed up
+        const signupData = userIds.map(userId => {
+          const userProfile = users.find(u => u.id === userId);
+          console.log(`User ${userId} profile:`, userProfile);
+          return {
+            email: userProfile?.email,
+            userId: userId,
+            eventId: eventId,
+            eventName: eventTitle,
+            signedUpBy: user.email || 'Leadership User'
+          };
+        }).filter(s => s.email); // Only include users with valid emails
+
+        console.log('Final signup data for emails:', signupData);
+        console.log('Number of emails to send:', signupData.length);
+
+        if (signupData.length > 0) {
+          // In production, use Vercel API; in development, hit local server helper
+          const apiUrl = process.env.NODE_ENV === 'production' 
+            ? '/api/notify-signup' 
+            : 'http://localhost:3001/api/local-notify-signup';
+          
+          console.log('Calling email API at:', apiUrl);
+          console.log('Environment:', process.env.NODE_ENV);
+          
+          const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
+            body: JSON.stringify({ 
+              signups: signupData, 
+              eventDetails: { id: eventId, name: eventTitle } 
+            })
+          });
+
+          console.log('Email API response status:', response.status);
+          console.log('Email API response headers:', Object.fromEntries(response.headers.entries()));
+          
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Email notification failed:', response.status, errorText);
+            toast({
+              title: "Warning",
+              description: "Signups successful but email notifications failed. Users will not receive confirmation emails.",
+              variant: "destructive",
+            });
+          } else {
+            const result = await response.json();
+            console.log('Email notifications sent successfully:', result);
+            
+            if (result.sent > 0) {
+              toast({
+                title: "Emails Sent",
+                description: `Confirmation emails sent to ${result.sent} users.`,
+              });
+            }
+          }
+        } else {
+          console.log('No valid emails to send notifications to');
+          toast({
+            title: "Warning",
+            description: "No valid email addresses found for the signed up users.",
+            variant: "destructive",
+          });
         }
+        console.log('=== END EMAIL DEBUG ===');
       } catch (emailError) {
-        console.error('Error invoking email function:', emailError);
-        // Don't fail the entire operation if emails fail
+        console.error('Error sending email notifications:', emailError);
+        toast({
+          title: "Warning",
+          description: "Signups successful but email notifications failed. Users will not receive confirmation emails.",
+          variant: "destructive",
+        });
       }
 
       onSignupSuccess();
