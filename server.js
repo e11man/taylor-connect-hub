@@ -2005,12 +2005,18 @@ app.post('/api/group-signup', async (req, res) => {
 
     if (existingError) throw existingError;
 
+    let alreadySignedUpUsers = [];
     if (existing && existing.length > 0) {
       const existingUserIds = existing.map(e => e.user_id);
+      alreadySignedUpUsers = existingUserIds;
       const newUserIds = user_ids.filter(id => !existingUserIds.includes(id));
       
       if (newUserIds.length === 0) {
-        return res.status(400).json({ success: false, error: 'All selected users are already signed up for this event' });
+        return res.status(400).json({ 
+          success: false, 
+          error: 'All selected users are already signed up for this event',
+          alreadySignedUp: alreadySignedUpUsers
+        });
       }
       
       // Only sign up users who aren't already signed up
@@ -2035,7 +2041,9 @@ app.post('/api/group-signup', async (req, res) => {
     res.json({ 
       success: true, 
       data,
-      message: `Successfully signed up ${user_ids.length} ${user_ids.length === 1 ? 'user' : 'users'} for the event`
+      alreadySignedUp: alreadySignedUpUsers,
+      newlySignedUp: user_ids.length,
+      message: `Successfully signed up ${user_ids.length} ${user_ids.length === 1 ? 'user' : 'users'} for the event${alreadySignedUpUsers.length > 0 ? ` (${alreadySignedUpUsers.length} were already signed up)` : ''}`
     });
   } catch (error) {
     console.error('Error in group signup:', error);

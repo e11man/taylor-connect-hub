@@ -25,9 +25,10 @@ interface UserProfile {
   email: string;
   dorm: string;
   wing: string;
-  role?: 'admin' | 'pa' | 'user';
+  role?: 'admin' | 'pa' | 'user' | 'faculty' | 'student_leader';
   user_type?: string | null;
   commitments: number;
+  alreadySignedUp: boolean;
 }
 
 const GroupSignupModal = ({ 
@@ -62,19 +63,14 @@ const GroupSignupModal = ({
     
     setLoading(true);
     try {
-      // Get current user's profile first - use 'id' field, not 'user_id'
-      const { data: currentUserProfile, error: profileError } = await supabase
+      // Get current user's profile for filtering
+      const { data: currentUserProfile } = await supabase
         .from('profiles')
         .select('dorm, wing')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .single();
 
-      if (profileError) {
-        console.error('Error fetching current user profile:', profileError);
-        throw profileError;
-      }
-
-      // Get all active profiles first, then filter client-side
+      // Get all active user profiles
       const { data: allProfilesData, error } = await supabase
         .from('profiles')
         .select(`
@@ -125,11 +121,22 @@ const GroupSignupModal = ({
         return acc;
       }, {}) || {};
 
-      // Filter users based on search term and add commitment count
+      // Check if users are already signed up for this specific event
+      const { data: eventSignupsData } = await supabase
+        .from('user_events')
+        .select('user_id')
+        .eq('event_id', eventId)
+        .in('user_id', userIds);
+
+      // Create a set of users already signed up for this event
+      const alreadySignedUp = new Set(eventSignupsData?.map(s => s.user_id) || []);
+
+      // Filter users based on search term and add commitment count and event signup status
       const filteredUsers = profilesData
         .map(profile => ({
           ...profile,
-          commitments: commitmentCounts[profile.id] || 0
+          commitments: commitmentCounts[profile.id] || 0,
+          alreadySignedUp: alreadySignedUp.has(profile.id)
         }))
         .filter(profile => {
           if (!searchTerm) return true;
@@ -233,6 +240,22 @@ const GroupSignupModal = ({
 
         if (response.ok && result.success) {
           signupSuccessful = true;
+          
+          // Show detailed feedback about the signup results
+          let successMessage = `Successfully signed up ${result.newlySignedUp || userIds.length} ${(result.newlySignedUp || userIds.length) === 1 ? 'person' : 'people'} for "${eventTitle}".`;
+          
+          if (result.alreadySignedUp && result.alreadySignedUp.length > 0) {
+            successMessage += ` ${result.alreadySignedUp.length} ${result.alreadySignedUp.length === 1 ? 'person was' : 'people were'} already signed up.`;
+          }
+          
+          if (result.message) {
+            successMessage = result.message;
+          }
+          
+          toast({
+            title: "Success!",
+            description: successMessage,
+          });
         } else {
           errorMessage = result.error || 'API signup failed';
         }
@@ -285,12 +308,6 @@ const GroupSignupModal = ({
         console.error('Error invoking email function:', emailError);
         // Don't fail the entire operation if emails fail
       }
-
-      const totalSignups = userIds.length;
-      toast({
-        title: "Success!",
-        description: `Successfully signed up ${totalSignups} ${totalSignups === 1 ? 'person' : 'people'} for "${eventTitle}". Confirmation emails have been sent.`,
-      });
 
       onSignupSuccess();
       onClose();
@@ -362,11 +379,31 @@ const GroupSignupModal = ({
                   Sign myself up too
                 </label>
               </div>
+              
+              {/* Removed hideAlreadySignedUp checkbox */}
             </div>
           </div>
 
           {/* User List */}
           <div className="border rounded-lg max-h-60 sm:max-h-80 overflow-y-auto">
+            {/* Summary Info */}
+            {users.length > 0 && (
+              <div className="p-3 bg-gray-50 border-b text-xs text-muted-foreground">
+                <div className="flex justify-between items-center">
+                  <span>
+                    <span className="text-green-600 font-medium">{users.filter(u => u.alreadySignedUp).length}</span> already signed up • 
+                    <span className="text-red-500 font-medium">{users.filter(u => u.commitments >= 2 && !u.alreadySignedUp).length}</span> at max commitments
+                  </span>
+                  <span>
+                    <span className="text-blue-600 font-medium">{users.filter(u => !u.alreadySignedUp && u.commitments < 2).length}</span> available to sign up
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500 mt-1">
+                  All users are shown - unavailable users are greyed out
+                </div>
+              </div>
+            )}
+            
             {loading ? (
               <div className="p-4 text-center text-muted-foreground">
                 Loading users...
@@ -387,47 +424,74 @@ const GroupSignupModal = ({
                 {users.map((userProfile) => {
                   const isSelected = selectedUsers.has(userProfile.id);
                   const cannotSignUp = userProfile.commitments >= 2;
+                  const alreadySignedUp = userProfile.alreadySignedUp;
+                  
+                  // Determine visual styling based on status
+                  let statusClass = '';
+                  let statusText = '';
+                  let isDisabled = false;
+                  
+                  if (alreadySignedUp) {
+                    statusClass = 'bg-green-50 border-green-200 opacity-75';
+                    statusText = 'Already signed up';
+                    isDisabled = true;
+                  } else if (cannotSignUp) {
+                    statusClass = 'bg-gray-50 border-gray-200 opacity-75';
+                    statusText = 'Max commitments (2/2)';
+                    isDisabled = true;
+                  } else {
+                    statusClass = 'hover:bg-gray-50 border-gray-200';
+                    statusText = 'Available';
+                    isDisabled = false;
+                  }
                   
                   return (
                     <div
                       key={userProfile.id}
-                      className={`flex items-center justify-between p-2 sm:p-3 rounded-lg border transition-all cursor-pointer ${
+                      className={`flex items-center justify-between p-2 sm:p-3 rounded-lg border transition-all ${
                         isSelected 
                           ? 'bg-accent/10 border-accent' 
-                          : cannotSignUp
-                          ? 'bg-gray-50 border-gray-200 opacity-60 cursor-not-allowed'
-                          : 'hover:bg-gray-50 border-gray-200'
-                      }`}
-                      onClick={() => !cannotSignUp && handleUserToggle(userProfile.id)}
+                          : statusClass
+                      } ${isDisabled ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                      onClick={() => !isDisabled && handleUserToggle(userProfile.id)}
                     >
                       <div className="flex items-center space-x-2 sm:space-x-3 flex-1 min-w-0">
                         <Checkbox
                           checked={isSelected}
-                          disabled={cannotSignUp}
+                          disabled={isDisabled}
                           className="pointer-events-none flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">
+                          <p className={`font-medium text-sm truncate ${isDisabled ? 'text-gray-500' : ''}`}>
                             {userProfile.email.split('@')[0]}
                           </p>
-                          <p className="text-xs text-muted-foreground truncate">
+                          <p className={`text-xs truncate ${isDisabled ? 'text-gray-400' : 'text-muted-foreground'}`}>
                             {userProfile.email}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className={`text-xs ${isDisabled ? 'text-gray-400' : 'text-muted-foreground'}`}>
                             {userProfile.dorm} - {userProfile.wing}
                           </p>
                         </div>
                       </div>
                       
                       <div className="flex flex-col sm:flex-row items-end sm:items-center gap-1 sm:gap-2 flex-shrink-0">
-                        <div className="text-xs text-muted-foreground whitespace-nowrap">
+                        <div className={`text-xs whitespace-nowrap ${isDisabled ? 'text-gray-400' : 'text-muted-foreground'}`}>
                           Commitments: {userProfile.commitments}/2
                         </div>
-                        {cannotSignUp && (
-                          <div className="text-xs text-red-500 font-medium whitespace-nowrap">
-                            Maximum reached
+                        <div className="flex items-center gap-1">
+                          <div className={`w-2 h-2 rounded-full ${
+                            alreadySignedUp ? 'bg-green-500' : 
+                            cannotSignUp ? 'bg-red-500' : 
+                            'bg-blue-500'
+                          }`}></div>
+                          <div className={`text-xs font-medium whitespace-nowrap ${
+                            alreadySignedUp ? 'text-green-600' : 
+                            cannotSignUp ? 'text-red-500' : 
+                            'text-blue-600'
+                          }`}>
+                            {statusText}
                           </div>
-                        )}
+                        </div>
                       </div>
                     </div>
                   );
