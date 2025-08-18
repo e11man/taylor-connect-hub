@@ -79,7 +79,7 @@ const SearchSection = () => {
               >
                 <Input
                   type="text"
-                  placeholder={searchContent.placeholder || <DynamicText page="search" section="main" contentKey="placeholder" fallback="Search by title, description, or category..." />}
+                  placeholder={searchContent.placeholder || "Search by title, description, or category..."}
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   className="pl-10 sm:pl-12 pr-12 sm:pr-4 py-4 sm:py-5 text-base sm:text-lg rounded-xl sm:rounded-2xl border-2 border-gray-200 focus:border-[#00AFCE] bg-white transition-all duration-300 hover:shadow-md focus:shadow-lg min-h-[48px] sm:min-h-[56px]"
