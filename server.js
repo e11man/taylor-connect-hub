@@ -1570,20 +1570,12 @@ app.get('/api/site-statistics', async (req, res) => {
           });
         }
 
-        // Calculate partner organizations
-        const { data: events, error: eventsError } = await supabase
-          .from('events')
-          .select('organization_id');
+        // Calculate partner organizations (same as admin dashboard - count all organizations)
+        const { data: organizations, error: orgsError } = await supabase
+          .from('organizations')
+          .select('*', { count: 'exact', head: true });
 
-        const uniqueOrganizations = new Set();
-        if (events) {
-          events.forEach(event => {
-            if (event.organization_id) {
-              uniqueOrganizations.add(event.organization_id);
-            }
-          });
-        }
-        const partnerOrganizationsCount = uniqueOrganizations.size;
+        const partnerOrganizationsCount = organizations?.length || 0;
         
         // Return calculated values with fallback display values
         const defaultStats = {
@@ -1686,20 +1678,12 @@ app.post('/api/site-statistics', async (req, res) => {
         });
       }
 
-      // Calculate partner organizations
-      const { data: events, error: eventsError } = await supabase
-        .from('events')
-        .select('organization_id');
+      // Calculate partner organizations (same as admin dashboard - count all organizations)
+      const { data: organizations, error: orgsError } = await supabase
+        .from('organizations')
+        .select('*', { count: 'exact', head: true });
 
-      const uniqueOrganizations = new Set();
-      if (events) {
-        events.forEach(event => {
-          if (event.organization_id) {
-            uniqueOrganizations.add(event.organization_id);
-          }
-        });
-      }
-      const partnerOrganizationsCount = uniqueOrganizations.size;
+      const partnerOrganizationsCount = organizations?.length || 0;
 
       // Update the calculated values
       const updates = [
