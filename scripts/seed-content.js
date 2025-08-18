@@ -146,7 +146,7 @@ const contentData = [
   { page: 'header', section: 'nav', key: 'about', value: 'About', language_code: 'en' },
   { page: 'header', section: 'nav', key: 'opportunities', value: 'Opportunities', language_code: 'en' },
   { page: 'header', section: 'nav', key: 'contact', value: 'Contact', language_code: 'en' },
-  { page: 'header', section: 'brand', key: 'name', value: 'Taylor Connect Hub', language_code: 'en' },
+  { page: 'header', section: 'brand', key: 'name', value: 'Main Street Connect', language_code: 'en' },
   { page: 'header', section: 'buttons', key: 'login', value: 'Login', language_code: 'en' },
   { page: 'header', section: 'buttons', key: 'get_started', value: 'Get Started', language_code: 'en' },
   { page: 'header', section: 'buttons', key: 'sign_out', value: 'Sign Out', language_code: 'en' },
