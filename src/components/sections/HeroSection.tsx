@@ -10,11 +10,13 @@ import CountUpNumber from "@/components/ui/CountUpNumber";
 import { useContentSection } from "@/hooks/useContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DynamicText } from "@/components/content/DynamicText";
+import { useLiveStatistics } from "@/hooks/useLiveStatistics";
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
+  const { statistics: liveStats, loading: statsLoading } = useLiveStatistics();
   
   // Extract content with fallbacks
   const titleLine1 = heroContent.titleLine1 || "Connect.";
@@ -24,22 +26,25 @@ const HeroSection = () => {
   const ctaButton = heroContent.ctaButton || "Get Started";
   const secondaryButton = heroContent.secondaryButton || "Learn More";
   
-  // Simple stats using the existing content system
+  // Use live statistics with same format as admin dashboard
   const statsData = [
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: impactContent.active_volunteers || "0"
+      value: liveStats ? liveStats.active_volunteers.display_value : 0,
+      loading: statsLoading
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: impactContent.hours_contributed || "0"
+      value: liveStats ? liveStats.hours_contributed.display_value : 0,
+      loading: statsLoading
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: impactContent.partner_organizations || "0"
+      value: liveStats ? liveStats.partner_organizations.display_value : 0,
+      loading: statsLoading
     }
   ];
 
@@ -189,7 +194,11 @@ const HeroSection = () => {
                       whileHover={{ scale: 1.05 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <CountUpNumber value={stat.value} />
+                      {stat.loading ? (
+                        <Skeleton className="h-8 md:h-10 lg:h-12 w-20 md:w-28 lg:w-32 mx-auto" />
+                      ) : (
+                        <CountUpNumber value={stat.value} />
+                      )}
                     </motion.div>
                     <div className="relative text-xs md:text-sm lg:text-base xl:text-lg text-gray-600 font-montserrat font-semibold tracking-wide leading-tight">
                       {stat.label}

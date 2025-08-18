@@ -5,29 +5,34 @@ import { motion } from "framer-motion";
 import CountUpNumber from "@/components/ui/CountUpNumber";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DynamicText } from "@/components/content/DynamicText";
+import { useLiveStatistics } from "@/hooks/useLiveStatistics";
 
 const ImpactSection = () => {
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
   const { content: aboutImpactContent } = useContentSection('about', 'impact');
+  const { statistics: liveStats, loading: statsLoading } = useLiveStatistics();
   
-  // Simple stats using the existing content system
+  // Use live statistics with same format as admin dashboard
   const statsData = [
     { 
       icon: Users, 
       label: impactContent.volunteers_label || <DynamicText page="homepage" section="impact" contentKey="volunteers_label" fallback=<DynamicText page="impact" section="main" contentKey="volunteers_label" fallback="Active Volunteers" /> />, 
-      value: impactContent.active_volunteers || "0",
+      value: liveStats ? liveStats.active_volunteers.display_value : 0,
+      loading: statsLoading,
       description: aboutImpactContent.volunteers_description || <DynamicText page="impact" section="main" contentKey="volunteers_description" fallback="Passionate individuals serving Upland" />
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || <DynamicText page="homepage" section="impact" contentKey="hours_label" fallback=<DynamicText page="impact" section="main" contentKey="hours_label" fallback="Hours Contributed" /> />, 
-      value: impactContent.hours_contributed || "0",
+      value: liveStats ? liveStats.hours_contributed.display_value : 0,
+      loading: statsLoading,
       description: aboutImpactContent.hours_description || <DynamicText page="impact" section="main" contentKey="hours_description" fallback="Collective time dedicated to service" />
     },
     { 
       icon: Building, 
       label: impactContent.organizations_label || <DynamicText page="adminDashboard" section="page" contentKey="partner_organizations" fallback=<DynamicText page="homepage" section="impact" contentKey="organizations_label" fallback=<DynamicText page="impact" section="main" contentKey="organizations_label" fallback="Partner Organizations" /> /> />, 
-      value: impactContent.partner_organizations || "0",
+      value: liveStats ? liveStats.partner_organizations.display_value : 0,
+      loading: statsLoading,
       description: aboutImpactContent.organizations_description || <DynamicText page="impact" section="main" contentKey="organizations_description" fallback="Local organizations making a difference" />
     }
   ];
@@ -126,7 +131,11 @@ const ImpactSection = () => {
                     </div>
                   </div>
                   <div className="relative text-xl md:text-3xl lg:text-4xl xl:text-5xl font-montserrat font-black mb-1 md:mb-2 lg:mb-3 text-secondary group-hover:scale-110 transition-transform duration-300">
-                    <CountUpNumber value={stat.value} />
+                    {stat.loading ? (
+                      <Skeleton className="h-8 md:h-10 lg:h-12 w-20 md:w-28 lg:w-32 mx-auto" />
+                    ) : (
+                      <CountUpNumber value={stat.value} />
+                    )}
                   </div>
                   <div className="relative text-xs md:text-sm lg:text-base xl:text-lg font-montserrat font-bold mb-1 md:mb-2 text-primary group-hover:text-[#00AFCE] transition-colors duration-300 leading-tight">
                     {stat.label}
