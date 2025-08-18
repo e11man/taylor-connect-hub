@@ -165,7 +165,7 @@ const AdminLogin = () => {
               </div>
               
               <Button
-                type="submit"
+                type="button" onClick={handleLogin}
                 className="w-full h-12 bg-secondary text-secondary-foreground hover:bg-secondary/90 font-semibold"
                 disabled={isLoading}
               >
