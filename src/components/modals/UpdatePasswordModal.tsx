@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { verifyPassword, hashPassword } from '@/utils/password';
 import { Eye, EyeOff, Lock } from 'lucide-react';
 import { DynamicText } from '@/components/content/DynamicText';
+import { useContent } from '@/hooks/useContent';
 
 interface UpdatePasswordModalProps {
   isOpen: boolean;
@@ -25,6 +26,11 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  
+  // Get placeholder text content
+  const { content: currentPasswordPlaceholder } = useContent('modals', 'updatePassword', 'current_password_placeholder', 'Enter current password');
+  const { content: newPasswordPlaceholder } = useContent('modals', 'updatePassword', 'new_password_placeholder', 'Enter new password');
+  const { content: confirmPasswordPlaceholder } = useContent('modals', 'updatePassword', 'confirm_password_placeholder', 'Confirm new password');
 
   const validatePassword = (password: string) => {
     if (password.length < 6) {
@@ -179,7 +185,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
               <Input
                 id="current-password"
                 type={showCurrentPassword ? "text" : "password"}
-                placeholder=<DynamicText page="modals" section="updatePassword" contentKey="current_password_placeholder" fallback="Enter current password" />
+                placeholder={currentPasswordPlaceholder}
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 className="h-12 pr-12"
@@ -201,7 +207,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
               <Input
                 id="new-password"
                 type={showNewPassword ? "text" : "password"}
-                placeholder=<DynamicText page="modals" section="updatePassword" contentKey="new_password_placeholder" fallback="Enter new password" />
+                placeholder={newPasswordPlaceholder}
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 className="h-12 pr-12"
@@ -226,7 +232,7 @@ export const UpdatePasswordModal = ({ isOpen, onClose }: UpdatePasswordModalProp
               <Input
                 id="confirm-password"
                 type={showConfirmPassword ? "text" : "password"}
-                placeholder=<DynamicText page="modals" section="updatePassword" contentKey="confirm_password_placeholder" fallback="Confirm new password" />
+                placeholder={confirmPasswordPlaceholder}
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="h-12 pr-12"
