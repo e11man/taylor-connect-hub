@@ -202,6 +202,9 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
         .from('profiles')
         .update({ status: 'active' })
         .eq('id', user.id);
+      
+      // Update the user object to reflect the new status
+      user.status = 'active';
     } else {
       // For non-organization users, check profile status
       if (user.status === 'pending') {
