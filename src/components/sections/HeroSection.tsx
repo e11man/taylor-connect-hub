@@ -30,9 +30,11 @@ const HeroSection = () => {
   const statsData = [
     { 
       icon: Users, 
-      label: impactContent.volunteers_label || "Active Volunteers", 
+      label: impactContent.volunteers_label || "Individual Users", 
       value: liveStats ? liveStats.active_volunteers.display_value : 0,
-      loading: statsLoading
+      loading: statsLoading,
+      breakdown: liveStats?.active_volunteers.breakdown,
+      isUserStat: true
     },
     { 
       icon: Clock, 
@@ -203,6 +205,16 @@ const HeroSection = () => {
                     <div className="relative text-xs md:text-sm lg:text-base xl:text-lg text-gray-600 font-montserrat font-semibold tracking-wide leading-tight">
                       {stat.label}
                     </div>
+                    {stat.isUserStat && stat.breakdown && !stat.loading && (
+                      <>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {stat.breakdown.pas} PAs • {stat.breakdown.faculty} faculty • {stat.breakdown.studentLeaders} leaders
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Students, external users, admins
+                        </p>
+                      </>
+                    )}
                   </div>
                 </AnimatedCard>
               ))}

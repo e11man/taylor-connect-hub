@@ -1543,6 +1543,17 @@ app.get('/api/site-statistics', async (req, res) => {
           .order('created_at', { ascending: false });
 
         const activeVolunteersCount = profiles?.length || 0;
+        
+        // Calculate user breakdown by role
+        const userBreakdown = {
+          total: activeVolunteersCount,
+          pas: profiles?.filter(u => u.role === 'pa').length || 0,
+          faculty: profiles?.filter(u => u.role === 'faculty').length || 0,
+          studentLeaders: profiles?.filter(u => u.role === 'student_leader').length || 0,
+          students: profiles?.filter(u => u.role === 'student').length || 0,
+          admins: profiles?.filter(u => u.role === 'admin').length || 0,
+          external: profiles?.filter(u => u.role === 'external').length || 0
+        };
 
         // Calculate hours contributed
         const { data: userEvents, error: ueError } = await supabase
@@ -1583,7 +1594,8 @@ app.get('/api/site-statistics', async (req, res) => {
             calculated_value: activeVolunteersCount,
             manual_override: null,
             display_value: activeVolunteersCount > 0 ? activeVolunteersCount : 2500,
-            last_calculated_at: new Date().toISOString()
+            last_calculated_at: new Date().toISOString(),
+            breakdown: userBreakdown
           },
           hours_contributed: {
             calculated_value: totalHours,
@@ -1613,6 +1625,27 @@ app.get('/api/site-statistics', async (req, res) => {
         };
       });
       
+      // Add user breakdown for active_volunteers
+      if (formattedStats.active_volunteers) {
+        // Fetch user breakdown
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('*')
+          .neq('user_type', 'organization');
+          
+        if (profiles) {
+          formattedStats.active_volunteers.breakdown = {
+            total: profiles.length,
+            pas: profiles.filter(u => u.role === 'pa').length,
+            faculty: profiles.filter(u => u.role === 'faculty').length,
+            studentLeaders: profiles.filter(u => u.role === 'student_leader').length,
+            students: profiles.filter(u => u.role === 'student').length,
+            admins: profiles.filter(u => u.role === 'admin').length,
+            external: profiles.filter(u => u.role === 'external').length
+          };
+        }
+      }
+      
       return res.json({ success: true, data: formattedStats });
     }
     
@@ -1626,6 +1659,27 @@ app.get('/api/site-statistics', async (req, res) => {
         last_calculated_at: stat.last_calculated_at
       };
     });
+    
+    // Add user breakdown for active_volunteers
+    if (statsData.active_volunteers) {
+      // Fetch user breakdown
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('*')
+        .neq('user_type', 'organization');
+        
+      if (profiles) {
+        statsData.active_volunteers.breakdown = {
+          total: profiles.length,
+          pas: profiles.filter(u => u.role === 'pa').length,
+          faculty: profiles.filter(u => u.role === 'faculty').length,
+          studentLeaders: profiles.filter(u => u.role === 'student_leader').length,
+          students: profiles.filter(u => u.role === 'student').length,
+          admins: profiles.filter(u => u.role === 'admin').length,
+          external: profiles.filter(u => u.role === 'external').length
+        };
+      }
+    }
     
     res.json({ success: true, data: statsData });
   } catch (error) {

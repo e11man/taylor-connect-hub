@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
+interface UserBreakdown {
+  total: number;
+  pas: number;
+  faculty: number;
+  studentLeaders: number;
+  students: number;
+  admins: number;
+  external: number;
+}
+
 interface SiteStatistic {
   calculated_value: number;
   manual_override: number | null;
   display_value: number;
   last_calculated_at: string;
+  breakdown?: UserBreakdown;
 }
 
 interface LiveStatistics {
@@ -52,7 +63,16 @@ export const useLiveStatistics = () => {
           calculated_value: 2500,
           manual_override: null,
           display_value: 2500,
-          last_calculated_at: new Date().toISOString()
+          last_calculated_at: new Date().toISOString(),
+          breakdown: {
+            total: 2500,
+            pas: 800,
+            faculty: 200,
+            studentLeaders: 150,
+            students: 1200,
+            admins: 50,
+            external: 100
+          }
         },
         hours_contributed: {
           calculated_value: 15000,

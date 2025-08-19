@@ -16,9 +16,11 @@ const ImpactSection = () => {
   const statsData = [
     { 
       icon: Users, 
-      label: impactContent.volunteers_label || <DynamicText page="homepage" section="impact" contentKey="volunteers_label" fallback=<DynamicText page="impact" section="main" contentKey="volunteers_label" fallback="Active Volunteers" /> />, 
+      label: impactContent.volunteers_label || <DynamicText page="homepage" section="impact" contentKey="volunteers_label" fallback=<DynamicText page="impact" section="main" contentKey="volunteers_label" fallback="Individual Users" /> />, 
       value: liveStats ? liveStats.active_volunteers.display_value : 0,
       loading: statsLoading,
+      breakdown: liveStats?.active_volunteers.breakdown,
+      isUserStat: true,
       description: aboutImpactContent.volunteers_description || <DynamicText page="impact" section="main" contentKey="volunteers_description" fallback="Passionate individuals serving Upland" />
     },
     { 
@@ -143,6 +145,16 @@ const ImpactSection = () => {
                   <div className="relative text-sm md:text-base text-muted-foreground font-montserrat font-semibold leading-relaxed hidden md:block">
                     {stat.description}
                   </div>
+                  {stat.isUserStat && stat.breakdown && !stat.loading && (
+                    <div className="mt-2 hidden md:block">
+                      <p className="text-xs text-muted-foreground">
+                        {stat.breakdown.pas} PAs • {stat.breakdown.faculty} faculty • {stat.breakdown.studentLeaders} leaders
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Students, external users, admins
+                      </p>
+                    </div>
+                  )}
                 </motion.div>
               ))}
             </motion.div>
