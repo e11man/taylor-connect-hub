@@ -118,8 +118,10 @@ const OrganizationLogin = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={emailPlaceholder}
-                      className="pl-10 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
+                      className="h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
+                      autoComplete="email"
+                      inputMode="email"
                     />
                   </div>
                 </div>
@@ -137,8 +139,9 @@ const OrganizationLogin = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={passwordPlaceholder}
-                      className="pl-10 pr-12 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
+                      className="h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
+                      autoComplete="current-password"
                     />
                     {/* Removed Show/Hide Password button as per new_code */}
                   </div>
@@ -148,7 +151,7 @@ const OrganizationLogin = () => {
                 <div className="text-right">
                   <button
                     type="button"
-                    className="text-sm text-muted-foreground hover:text-foreground font-montserrat font-medium transition-colors"
+                    className="text-sm text-muted-foreground hover:text-foreground font-montserrat font-medium transition-colors touch-action-manipulation min-h-[44px] flex items-center justify-end"
                     onClick={() => setForgotPasswordModalOpen(true)}
                   >
                     {forgotPasswordLink}
@@ -157,8 +160,8 @@ const OrganizationLogin = () => {
 
                 {/* Submit Button */}
                 <Button
-                  type="button" onClick={handleSubmit}
-                  className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  type="submit"
+                  className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300 touch-action-manipulation"
                   disabled={isLoading}
                 >
                   {isLoading ? signingIn : submitButton}
