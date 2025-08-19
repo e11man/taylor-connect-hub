@@ -5,17 +5,19 @@ import { motion } from "framer-motion";
 import CountUpNumber from "@/components/ui/CountUpNumber";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DynamicText } from "@/components/content/DynamicText";
+import { useSiteStatistics } from "@/hooks/useSiteStatistics";
 
 const ImpactSection = () => {
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
   const { content: aboutImpactContent } = useContentSection('about', 'impact');
+  const { statistics: siteStatistics, loading: siteStatsLoading } = useSiteStatistics();
   
   // Simple stats using the existing content system
   const statsData = [
     { 
       icon: Users, 
       label: impactContent.volunteers_label || <DynamicText page="homepage" section="impact" contentKey="volunteers_label" fallback=<DynamicText page="impact" section="main" contentKey="volunteers_label" fallback="Active Volunteers" /> />, 
-      value: impactContent.active_volunteers || "0",
+      value: (siteStatistics?.active_volunteers?.display_value ?? parseInt(impactContent.active_volunteers)) || 0,
       description: aboutImpactContent.volunteers_description || <DynamicText page="impact" section="main" contentKey="volunteers_description" fallback="Passionate individuals serving Upland" />
     },
     { 
@@ -27,7 +29,7 @@ const ImpactSection = () => {
     { 
       icon: Building, 
       label: impactContent.organizations_label || <DynamicText page="adminDashboard" section="page" contentKey="partner_organizations" fallback=<DynamicText page="homepage" section="impact" contentKey="organizations_label" fallback=<DynamicText page="impact" section="main" contentKey="organizations_label" fallback="Partner Organizations" /> /> />, 
-      value: impactContent.partner_organizations || "0",
+      value: (siteStatistics?.partner_organizations?.display_value ?? parseInt(impactContent.partner_organizations)) || 0,
       description: aboutImpactContent.organizations_description || <DynamicText page="impact" section="main" contentKey="organizations_description" fallback="Local organizations making a difference" />
     }
   ];
@@ -72,7 +74,7 @@ const ImpactSection = () => {
   return (
     <section id="impact" className="bg-white section-padding">
       <div className="container-custom">
-        {impactLoading ? (
+        {(impactLoading || siteStatsLoading) ? (
           <div className="text-center max-w-4xl mx-auto mb-16">
             <div className="space-y-4">
               <Skeleton className="h-12 w-1/2 mx-auto" />
