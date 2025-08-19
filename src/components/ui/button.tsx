@@ -43,11 +43,29 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
+    const [isClicking, setIsClicking] = React.useState(false)
+    
+    // Prevent double-tap issues on mobile
+    const handleClick = React.useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+      if (isClicking) {
+        e.preventDefault()
+        return
+      }
+      
+      setIsClicking(true)
+      setTimeout(() => setIsClicking(false), 300)
+      
+      if (props.onClick) {
+        props.onClick(e)
+      }
+    }, [isClicking, props.onClick])
+    
     return (
       <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
+        className={cn(buttonVariants({ variant, size, className }), "touch-manipulation")}
         ref={ref}
         {...props}
+        onClick={asChild ? props.onClick : handleClick}
       />
     )
   }
