@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,11 +19,41 @@ const OrganizationLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { signIn } = useAuth();
+  const pageRef = useRef<HTMLDivElement | null>(null);
 
   // Mobile: ensure inputs focus on first tap
   const handleTouchFocus = (e: React.TouchEvent<HTMLInputElement>) => {
     (e.currentTarget as HTMLInputElement).focus();
   };
+
+  // Mobile: ensure first tap activates buttons/links (avoid double-tap)
+  useEffect(() => {
+    const container = pageRef.current;
+    if (!container) return;
+
+    const onTouchEnd = (evt: TouchEvent) => {
+      // Only act on direct taps, not multi-touch/gestures
+      if (evt.touches.length > 0) return;
+      const target = evt.target as Element | null;
+      if (!target) return;
+
+      // Ignore form inputs
+      if (target.closest('input, textarea, select, [contenteditable="true"]')) return;
+
+      const actionable = target.closest('a, button, [role="button"]') as HTMLElement | null;
+      if (!actionable) return;
+
+      // Prevent the default synthetic click that may require a second tap
+      evt.preventDefault();
+      evt.stopPropagation();
+
+      // Programmatically trigger the click immediately
+      actionable.click();
+    };
+
+    container.addEventListener('touchend', onTouchEnd, { passive: false });
+    return () => container.removeEventListener('touchend', onTouchEnd as EventListener);
+  }, []);
 
   const { content: pageTitle } = useContent('organizationLogin', 'title', 'default', 'Organization Login');
   const { content: pageDescription } = useContent('organizationLogin', 'description', 'default', 'Sign in to your organization account');
@@ -88,7 +118,7 @@ const OrganizationLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white" ref={pageRef}>
       <Header />
       
       <main className="section-padding">
@@ -108,7 +138,7 @@ const OrganizationLogin = () => {
             </div>
 
             {/* Login Form */}
-            <div className="bg-white border-2 border-gray-200 rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-white border-2 border-gray-200 rounded-3xl p-8 shadow-lg md:hover:shadow-xl transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.2s' }}>
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Email Field */}
                 <div>
@@ -167,7 +197,7 @@ const OrganizationLogin = () => {
                 {/* Submit Button */}
                 <Button
                   type="submit"
-                  className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg md:hover:shadow-xl transition-all duration-300"
                   disabled={isLoading}
                 >
                   {isLoading ? signingIn : submitButton}
@@ -180,7 +210,7 @@ const OrganizationLogin = () => {
                   {noAccountPrompt}{" "}
                   <Link
                     to="/organization-register"
-                    className="text-[#00AFCE] hover:text-[#00AFCE]/80 font-semibold transition-colors"
+                    className="text-[#00AFCE] md:hover:text-[#00AFCE]/80 font-semibold transition-colors"
                   >
                     {signUpLink}
                   </Link>

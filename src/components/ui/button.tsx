@@ -9,16 +9,16 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        primary: "bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm hover:shadow-md hover:scale-105",
-        secondary: "bg-white text-primary border-2 border-primary hover:bg-primary/5 shadow-sm hover:shadow-md hover:scale-105",
+        primary: "bg-accent text-accent-foreground md:hover:bg-accent/90 shadow-sm md:hover:shadow-md md:hover:scale-105",
+        secondary: "bg-white text-primary border-2 border-primary md:hover:bg-primary/5 shadow-sm md:hover:shadow-md md:hover:scale-105",
         // Keep other variants for backward compatibility but they won't be used in new implementations
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-card hover:shadow-ocean",
-        ocean: "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-card hover:shadow-ocean hover:scale-105 transition-spring",
-        wave: "bg-accent text-accent-foreground shadow-card hover:bg-accent/90 hover:scale-105 transition-spring",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline: "border-2 border-primary text-primary bg-background shadow-sm hover:bg-primary hover:text-primary-foreground transition-ocean",
-        ghost: "hover:bg-accent/10 hover:text-accent transition-ocean",
-        link: "text-primary underline-offset-4 hover:underline hover:text-accent transition-ocean",
+        default: "bg-primary text-primary-foreground md:hover:bg-primary/90 shadow-card md:hover:shadow-ocean",
+        ocean: "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-card md:hover:shadow-ocean md:hover:scale-105 transition-spring",
+        wave: "bg-accent text-accent-foreground shadow-card md:hover:bg-accent/90 md:hover:scale-105 transition-spring",
+        destructive: "bg-destructive text-destructive-foreground md:hover:bg-destructive/90",
+        outline: "border-2 border-primary text-primary bg-background shadow-sm md:hover:bg-primary md:hover:text-primary-foreground transition-ocean",
+        ghost: "md:hover:bg-accent/10 md:hover:text-accent transition-ocean",
+        link: "text-primary underline-offset-4 md:hover:underline md:hover:text-accent transition-ocean",
       },
       size: {
         default: "h-11 px-6 py-3",
