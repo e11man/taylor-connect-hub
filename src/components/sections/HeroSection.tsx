@@ -10,11 +10,15 @@ import CountUpNumber from "@/components/ui/CountUpNumber";
 import { useContentSection } from "@/hooks/useContent";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DynamicText } from "@/components/content/DynamicText";
+import { useSiteStatistics } from "@/hooks/useSiteStatistics";
+import { useAdminOverviewStats } from "@/hooks/useAdminOverviewStats";
 
 const HeroSection = () => {
   const navigate = useNavigate();
   const { content: heroContent, loading: heroLoading } = useContentSection('homepage', 'hero');
   const { content: impactContent, loading: impactLoading } = useContentSection('homepage', 'impact');
+  const { statistics: siteStatistics, loading: siteStatsLoading } = useSiteStatistics();
+  const { stats: adminStats, loading: adminStatsLoading } = useAdminOverviewStats();
   
   // Extract content with fallbacks
   const titleLine1 = heroContent.titleLine1 || "Connect.";
@@ -29,7 +33,7 @@ const HeroSection = () => {
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: impactContent.active_volunteers || "0"
+      value: (adminStats.activeVolunteers || siteStatistics?.active_volunteers?.display_value || parseInt(impactContent.active_volunteers)) || 0
     },
     { 
       icon: Clock, 
@@ -39,7 +43,7 @@ const HeroSection = () => {
     { 
       icon: Building, 
       label: impactContent.organizations_label || "Partner Organizations", 
-      value: impactContent.partner_organizations || "0"
+      value: (adminStats.partnerOrganizations || siteStatistics?.partner_organizations?.display_value || parseInt(impactContent.partner_organizations)) || 0
     }
   ];
 
@@ -52,7 +56,7 @@ const HeroSection = () => {
   };
 
   // Show loading skeleton for the entire hero section on initial load
-  if ((heroLoading && Object.keys(heroContent).length === 0) || impactLoading) {
+  if ((heroLoading && Object.keys(heroContent).length === 0) || impactLoading || siteStatsLoading || adminStatsLoading) {
     return (
       <section id="home" className="bg-white section-padding">
         <div className="container-custom">
