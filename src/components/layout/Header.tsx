@@ -128,7 +128,7 @@ const Header = () => {
      <button
        aria-label={isOpen ? 'Close menu' : 'Open menu'}
        onClick={toggleMenu}
-       className="inline-flex items-center justify-center p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00AFCE] transition"
+       className="inline-flex items-center justify-center p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00AFCE] transition mobile-button-fix mobile-touch-fix"
        type="button"
      >
        <span className="sr-only">{isOpen ? 'Close menu' : 'Open menu'}</span>
@@ -178,14 +178,14 @@ const Header = () => {
         />
         {/* Drawer */}
         <nav
-          className={`fixed inset-y-0 right-0 w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 bg-white border-l border-gray-200 rounded-l-2xl ${
+          className={`fixed inset-y-0 right-0 w-4/5 max-w-xs shadow-2xl flex flex-col pt-8 pb-10 px-7 bg-white border-l border-gray-200 rounded-l-2xl mobile-nav mobile-modal ${
             !hasInteracted ? 'translate-x-full opacity-0' : 
             isOpen ? 'animate-slide-in-right' : 'animate-slide-out-right'
           }`}
         >
           {/* Close button */}
           <button
-            className="self-end mb-6 p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition shadow"
+            className="self-end mb-6 p-3 rounded-full bg-gray-100 hover:bg-gray-200 transition shadow mobile-button-fix mobile-touch-fix"
             aria-label=<DynamicText page="header" section="navigation" contentKey="close_menu" fallback="Close menu" />
             onClick={closeMenu}
             tabIndex={isOpen ? 0 : -1}

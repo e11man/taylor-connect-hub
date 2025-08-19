@@ -86,6 +86,15 @@ const OrganizationDashboard = () => {
     special_instructions: ''
   });
 
+  // Mobile-specific touch handling for form inputs
+  const handleMobileInputTouch = (e: React.TouchEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    if (!isMobile) return;
+    // Ensure proper focus and touch handling on mobile
+    e.currentTarget.focus();
+    // Prevent default touch behavior that might interfere with input
+    e.preventDefault();
+  };
+
   // Function to set default values for new events
   const setDefaultEventValues = () => {
     const today = new Date();
@@ -700,7 +709,7 @@ const OrganizationDashboard = () => {
                   Add New Opportunity
                 </PrimaryButton>
               </DialogTrigger>
-              <DialogContent className={`w-full ${isMobile ? 'max-w-sm max-h-[90vh]' : 'max-w-md'}`}>
+              <DialogContent className={`w-full mobile-modal ${isMobile ? 'max-w-sm max-h-[90vh]' : 'max-w-md'}`}>
                 <DialogHeader>
                   <DialogTitle>Create New Opportunity</DialogTitle>
                   <DialogDescription>
@@ -708,7 +717,7 @@ const OrganizationDashboard = () => {
                   </DialogDescription>
                 </DialogHeader>
                 <div
-                  className="space-y-4 pb-24 overflow-y-auto max-h-[calc(90vh-120px)]"
+                  className="space-y-4 pb-24 overflow-y-auto max-h-[calc(90vh-120px)] mobile-form"
                   onTouchStart={(e) => {
                     if (!isMobile) return;
                     touchStartXRef.current = e.changedTouches[0].clientX;
@@ -763,6 +772,7 @@ const OrganizationDashboard = () => {
                       id="title"
                       value={newEvent.title}
                       onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                      onTouchStart={handleMobileInputTouch}
                       placeholder="Opportunity Title"
                       className={`${hasAttemptedSubmit && !newEvent.title ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''} h-11`}
                     />
@@ -776,6 +786,7 @@ const OrganizationDashboard = () => {
                       id="description"
                       value={newEvent.description}
                       onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                      onTouchStart={handleMobileInputTouch}
                       placeholder="Describe the opportunity"
                       rows={4}
                       className={`${hasAttemptedSubmit && !newEvent.description ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''}`}
@@ -793,6 +804,7 @@ const OrganizationDashboard = () => {
                           value={newEvent.date}
                           min={new Date().toISOString().split('T')[0]}
                           onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
+                          onTouchStart={handleMobileInputTouch}
                           className={`${hasAttemptedSubmit && !newEvent.date ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''} h-11`}
                         />
                         {hasAttemptedSubmit && !newEvent.date && <p className="text-xs text-red-600 mt-1">Date is required</p>}
@@ -805,6 +817,7 @@ const OrganizationDashboard = () => {
                           value={newEvent.arrival_time}
                           min={isToday(newEvent.date) ? getCurrentTime() : undefined}
                           onChange={(e) => setNewEvent({...newEvent, arrival_time: e.target.value})}
+                          onTouchStart={handleMobileInputTouch}
                           className={`${hasAttemptedSubmit && !newEvent.arrival_time ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''} h-11`}
                         />
                         {hasAttemptedSubmit && !newEvent.arrival_time && <p className="text-xs text-red-600 mt-1">Arrival time is required</p>}
@@ -817,6 +830,7 @@ const OrganizationDashboard = () => {
                           value={newEvent.estimated_end_time}
                           min={newEvent.arrival_time || (isToday(newEvent.date) ? getCurrentTime() : undefined)}
                           onChange={(e) => setNewEvent({...newEvent, estimated_end_time: e.target.value})}
+                          onTouchStart={handleMobileInputTouch}
                           className={`${hasAttemptedSubmit && (!newEvent.estimated_end_time || (newEvent.arrival_time && newEvent.estimated_end_time && newEvent.arrival_time >= newEvent.estimated_end_time)) ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''} h-11`}
                         />
                         {hasAttemptedSubmit && !newEvent.estimated_end_time && <p className="text-xs text-red-600 mt-1">End time is required</p>}
@@ -848,6 +862,7 @@ const OrganizationDashboard = () => {
                       min="6"
                       value={newEvent.max_participants}
                       onChange={(e) => setNewEvent({...newEvent, max_participants: e.target.value})}
+                      onTouchStart={handleMobileInputTouch}
                       placeholder="Minimum 6 volunteers"
                       className={`${hasAttemptedSubmit && parseInt(newEvent.max_participants) < 6 ? 'border-red-500 focus:border-red-500 focus:ring-red-500' : ''} h-11`}
                     />
@@ -868,6 +883,7 @@ const OrganizationDashboard = () => {
                         type="text"
                         value={newEvent.meeting_point}
                         onChange={(e) => setNewEvent({ ...newEvent, meeting_point: e.target.value })}
+                        onTouchStart={handleMobileInputTouch}
                         placeholder="e.g., Door 6, Main Entrance"
                         className="h-11"
                       />
@@ -881,6 +897,7 @@ const OrganizationDashboard = () => {
                         type="text"
                         value={newEvent.contact_person}
                         onChange={(e) => setNewEvent({ ...newEvent, contact_person: e.target.value })}
+                        onTouchStart={handleMobileInputTouch}
                         placeholder="e.g., John Smith"
                         className="h-11"
                       />
@@ -894,6 +911,7 @@ const OrganizationDashboard = () => {
                         type="tel"
                         value={newEvent.contact_person_phone}
                         onChange={(e) => setNewEvent({ ...newEvent, contact_person_phone: e.target.value })}
+                        onTouchStart={handleMobileInputTouch}
                         placeholder="e.g., (555) 123-4567"
                         className="h-11"
                       />
@@ -906,6 +924,7 @@ const OrganizationDashboard = () => {
                         id="special_instructions"
                         value={newEvent.special_instructions}
                         onChange={(e) => setNewEvent({ ...newEvent, special_instructions: e.target.value })}
+                        onTouchStart={handleMobileInputTouch}
                         placeholder="e.g., Bring water bottle, wear comfortable shoes"
                         rows={3}
                         className="resize-none"
@@ -1041,7 +1060,7 @@ const OrganizationDashboard = () => {
                       <SecondaryButton
                         onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
                         disabled={currentStep === 1}
-                        className="flex-1 min-h-[44px]"
+                        className="flex-1 min-h-[44px] mobile-button-fix mobile-touch-fix"
                       >
                         Back
                       </SecondaryButton>
@@ -1071,7 +1090,7 @@ const OrganizationDashboard = () => {
                           newEvent.arrival_time >= newEvent.estimated_end_time
                         )) || isSubmitting
                       }
-                      className="flex-1 min-h-[44px] active:scale-[0.98]"
+                      className="flex-1 min-h-[44px] active:scale-[0.98] mobile-button-fix mobile-touch-fix"
                     >
                       {isSubmitting ? 'Creating...' : (isMobile && currentStep < totalSteps ? 'Next' : 'Create Opportunity')}
                     </PrimaryButton>
@@ -1079,7 +1098,7 @@ const OrganizationDashboard = () => {
                       setIsCreateModalOpen(false);
                       setHasAttemptedSubmit(false);
                       setCurrentStep(1);
-                    }}>
+                    }} className="mobile-button-fix mobile-touch-fix">
                       Cancel
                     </SecondaryButton>
                   </div>
@@ -1175,14 +1194,14 @@ const OrganizationDashboard = () => {
 
           {/* Edit Modal */}
           <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-            <DialogContent className="max-w-md max-h-[90vh]">
+            <DialogContent className="max-w-md max-h-[90vh] mobile-modal">
               <DialogHeader>
                 <DialogTitle>Edit Opportunity</DialogTitle>
                 <DialogDescription>
                   Update the details for this opportunity.
                 </DialogDescription>
               </DialogHeader>
-              <div className="space-y-4 pb-24 overflow-y-auto max-h-[calc(90vh-120px)]">
+              <div className="space-y-4 pb-24 overflow-y-auto max-h-[calc(90vh-120px)] mobile-form">
                 {/* Current values are prefilled directly in the form */}
                 
                 <div>
@@ -1194,6 +1213,7 @@ const OrganizationDashboard = () => {
                         id="edit-title"
                         value={newEvent.title}
                         onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                        onTouchStart={handleMobileInputTouch}
                         placeholder="Opportunity Title"
                       />
                     </div>
@@ -1203,6 +1223,7 @@ const OrganizationDashboard = () => {
                         id="edit-description"
                         value={newEvent.description}
                         onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                        onTouchStart={handleMobileInputTouch}
                         placeholder="Describe the opportunity"
                         rows={3}
                       />
@@ -1219,6 +1240,7 @@ const OrganizationDashboard = () => {
                         type="date"
                         value={newEvent.date}
                         onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
+                        onTouchStart={handleMobileInputTouch}
                         min={new Date().toISOString().split('T')[0]}
                       />
                       <p className="text-xs text-muted-foreground mt-1">The date when this opportunity takes place</p>
@@ -1240,6 +1262,7 @@ const OrganizationDashboard = () => {
                         type="time"
                         value={newEvent.arrival_time}
                         onChange={(e) => setNewEvent({...newEvent, arrival_time: e.target.value})}
+                        onTouchStart={handleMobileInputTouch}
                         placeholder="09:00"
                         min={newEvent.date === new Date().toISOString().split('T')[0] ? getCurrentTime() : undefined}
                       />
@@ -1252,6 +1275,7 @@ const OrganizationDashboard = () => {
                         type="time"
                         value={newEvent.estimated_end_time}
                         onChange={(e) => setNewEvent({...newEvent, estimated_end_time: e.target.value})}
+                        onTouchStart={handleMobileInputTouch}
                         placeholder="17:00"
                         min={newEvent.arrival_time || undefined}
                       />
@@ -1287,6 +1311,7 @@ const OrganizationDashboard = () => {
                         type="number"
                         value={newEvent.max_participants}
                         onChange={(e) => setNewEvent({...newEvent, max_participants: e.target.value})}
+                        onTouchStart={handleMobileInputTouch}
                         placeholder="Maximum number of volunteers"
                         min="6"
                       />
@@ -1307,6 +1332,7 @@ const OrganizationDashboard = () => {
                       type="text"
                       value={newEvent.meeting_point}
                       onChange={(e) => setNewEvent({ ...newEvent, meeting_point: e.target.value })}
+                      onTouchStart={handleMobileInputTouch}
                       placeholder="e.g., Door 6, Main Entrance"
                     />
                   </div>
@@ -1319,6 +1345,7 @@ const OrganizationDashboard = () => {
                       type="text"
                       value={newEvent.contact_person}
                       onChange={(e) => setNewEvent({ ...newEvent, contact_person: e.target.value })}
+                      onTouchStart={handleMobileInputTouch}
                       placeholder="e.g., John Smith"
                     />
                   </div>
@@ -1331,6 +1358,7 @@ const OrganizationDashboard = () => {
                       type="tel"
                       value={newEvent.contact_person_phone}
                       onChange={(e) => setNewEvent({ ...newEvent, contact_person_phone: e.target.value })}
+                      onTouchStart={handleMobileInputTouch}
                       placeholder="e.g., (555) 123-4567"
                     />
                   </div>
@@ -1342,6 +1370,7 @@ const OrganizationDashboard = () => {
                       id="edit-special_instructions"
                       value={newEvent.special_instructions}
                       onChange={(e) => setNewEvent({ ...newEvent, special_instructions: e.target.value })}
+                      onTouchStart={handleMobileInputTouch}
                       placeholder="e.g., Bring water bottle, wear comfortable shoes"
                       rows={3}
                       className="resize-none"
@@ -1361,11 +1390,11 @@ const OrganizationDashboard = () => {
                       (newEvent.arrival_time && !newEvent.estimated_end_time) ||
                       (!newEvent.arrival_time && newEvent.estimated_end_time)
                     }
-                    className="flex-1"
+                    className="flex-1 mobile-button-fix mobile-touch-fix"
                   >
                     Update Opportunity
                   </PrimaryButton>
-                  <SecondaryButton onClick={() => setIsEditModalOpen(false)}>
+                  <SecondaryButton onClick={() => setIsEditModalOpen(false)} className="mobile-button-fix mobile-touch-fix">
                     Cancel
                   </SecondaryButton>
                 </div>

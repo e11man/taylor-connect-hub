@@ -185,6 +185,12 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     }
   };
 
+  // Mobile-specific touch handling
+  const handleTouchStart = (e: React.TouchEvent) => {
+    // Ensure proper touch handling on mobile
+    e.currentTarget.focus();
+  };
+
   // Handle suggestion selection
   const handleSelect = (suggestion: AddressDetails) => {
     setQuery(suggestion.formatted);
@@ -256,6 +262,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
           onChange={handleInputChange}
           onKeyDown={handleKeyDown}
           onFocus={handleFocus}
+          onTouchStart={handleTouchStart}
           placeholder={placeholder}
           disabled={disabled}
           required={required}
@@ -268,7 +275,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
             selectedIndex >= 0 ? `suggestion-${selectedIndex}` : undefined
           }
           className={clsx(
-            'pr-10',
+            'pr-10 mobile-input-fix',
             error && 'border-red-500 focus:ring-red-500'
           )}
         />
@@ -316,7 +323,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
                   aria-selected={index === selectedIndex}
                   onSelect={() => handleSelect(suggestion)}
                   className={clsx(
-                    'px-3 py-2 cursor-pointer',
+                    'px-3 py-2 cursor-pointer mobile-touch-fix',
                     index === selectedIndex && 'bg-gray-100'
                   )}
                 >

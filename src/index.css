@@ -88,6 +88,65 @@
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Montserrat', sans-serif;
   }
+
+  /* Mobile-specific fixes for touch interactions */
+  @media (max-width: 767px) {
+    /* Fix input field focus and touch issues on mobile */
+    input, textarea, select {
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      appearance: none;
+      font-size: 16px !important; /* Prevent zoom on iOS */
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+      -webkit-user-select: text;
+      -khtml-user-select: text;
+      -moz-user-select: text;
+      -ms-user-select: text;
+      user-select: text;
+    }
+
+    /* Fix button touch issues on mobile */
+    button, [role="button"] {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      -khtml-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+    }
+
+    /* Fix mobile navigation touch issues */
+    .mobile-nav button {
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* Ensure proper touch handling for mobile forms */
+    .mobile-form input,
+    .mobile-form textarea,
+    .mobile-form select {
+      touch-action: manipulation;
+      -webkit-touch-callout: none;
+    }
+
+    /* Fix mobile modal touch issues */
+    .mobile-modal {
+      touch-action: manipulation;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* Prevent text selection issues on mobile */
+    .mobile-form label {
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      user-select: none;
+      touch-action: manipulation;
+    }
+  }
 }
 
 @layer components {
@@ -100,8 +159,16 @@
     animation: slideUp 0.6s ease-out forwards;
   }
 
-  .animate-slide-in-left {
-    animation: slideInLeft 0.6s ease-out forwards;
+  .animate-scale-in {
+    animation: scaleIn 0.6s ease-out forwards;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
   }
 
   /* Success pop animation for confirmations */
@@ -202,5 +269,24 @@
   
   .scrollbar-hide::-webkit-scrollbar {
     display: none;  /* Chrome, Safari and Opera */
+  }
+
+  /* Mobile-specific utility classes */
+  .mobile-touch-fix {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+  }
+
+  .mobile-input-fix {
+    -webkit-appearance: none;
+    font-size: 16px !important;
+    touch-action: manipulation;
+  }
+
+  .mobile-button-fix {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    min-height: 44px; /* iOS recommended minimum touch target */
   }
 }

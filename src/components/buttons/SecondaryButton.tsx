@@ -21,7 +21,7 @@ const SecondaryButton = forwardRef<HTMLButtonElement, SecondaryButtonProps>(
         ref={ref}
         variant="secondary"
         className={cn(
-          "font-montserrat font-semibold",
+          "font-montserrat font-semibold mobile-button-fix mobile-touch-fix",
           sizeClasses[size],
           loading && "opacity-75 cursor-not-allowed",
           className

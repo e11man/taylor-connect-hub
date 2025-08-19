@@ -20,6 +20,11 @@ const OrganizationLogin = () => {
   const { toast } = useToast();
   const { signIn } = useAuth();
 
+  // Mobile: ensure inputs focus on first tap
+  const handleTouchFocus = (e: React.TouchEvent<HTMLInputElement>) => {
+    (e.currentTarget as HTMLInputElement).focus();
+  };
+
   const { content: pageTitle } = useContent('organizationLogin', 'title', 'default', 'Organization Login');
   const { content: pageDescription } = useContent('organizationLogin', 'description', 'default', 'Sign in to your organization account');
   const { content: emailLabel } = useContent('organizationLogin', 'form', 'emailLabel', 'Email');
@@ -117,6 +122,8 @@ const OrganizationLogin = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
+                      onTouchStart={handleTouchFocus}
+                      autoComplete="email"
                       placeholder={emailPlaceholder}
                       className="pl-10 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
@@ -136,6 +143,8 @@ const OrganizationLogin = () => {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      onTouchStart={handleTouchFocus}
+                      autoComplete="current-password"
                       placeholder={passwordPlaceholder}
                       className="pl-10 pr-12 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
@@ -157,7 +166,7 @@ const OrganizationLogin = () => {
 
                 {/* Submit Button */}
                 <Button
-                  type="button" onClick={handleSubmit}
+                  type="submit"
                   className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
                   disabled={isLoading}
                 >
