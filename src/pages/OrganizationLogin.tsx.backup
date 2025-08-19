@@ -90,7 +90,7 @@ const OrganizationLogin = () => {
         <div className="container-custom">
           <div className="max-w-md mx-auto">
             {/* Header */}
-            <div className="text-center mb-8">
+            <div className="text-center mb-8 animate-slide-up">
               <div className="w-16 h-16 bg-[#00AFCE] rounded-2xl flex items-center justify-center mx-auto mb-6">
                 {/* Removed Lock icon as per new_code */}
               </div>
@@ -103,7 +103,7 @@ const OrganizationLogin = () => {
             </div>
 
             {/* Login Form */}
-            <div className="bg-white border-2 border-gray-200 rounded-3xl p-8 shadow-lg hover:shadow-xl transition-shadow duration-300">
+            <div className="bg-white border-2 border-gray-200 rounded-3xl p-8 shadow-lg hover:shadow-xl transition-all duration-300 animate-fade-in" style={{ animationDelay: '0.2s' }}>
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Email Field */}
                 <div>
@@ -118,9 +118,8 @@ const OrganizationLogin = () => {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder={emailPlaceholder}
-                      className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-colors duration-200"
+                      className="pl-10 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
-                    disabled={isLoading}
                     />
                   </div>
                 </div>
@@ -138,9 +137,8 @@ const OrganizationLogin = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder={passwordPlaceholder}
-                      className="w-full h-12 px-4 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-colors duration-200"
+                      className="pl-10 pr-12 h-12 border-2 border-gray-200 rounded-xl font-montserrat focus:border-[#00AFCE] focus:ring-[#00AFCE] transition-all duration-300"
                       required
-                    disabled={isLoading}
                     />
                     {/* Removed Show/Hide Password button as per new_code */}
                   </div>
@@ -159,9 +157,9 @@ const OrganizationLogin = () => {
 
                 {/* Submit Button */}
                 <Button
-                  type="submit"
-                  className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg hover:shadow-xl transition-shadow duration-200"
-                  disabled={isLoading || !email || !password}
+                  type="button" onClick={handleSubmit}
+                  className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
+                  disabled={isLoading}
                 >
                   {isLoading ? signingIn : submitButton}
                 </Button>
