@@ -127,8 +127,12 @@ const Header = () => {
   const MobileMenuButton = ({ isOpen, toggleMenu }: { isOpen: boolean; toggleMenu: () => void }) => (
      <button
        aria-label={isOpen ? 'Close menu' : 'Open menu'}
-       onClick={toggleMenu}
-       className="inline-flex items-center justify-center p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00AFCE] transition"
+       onClick={(e) => {
+         e.preventDefault();
+         e.stopPropagation();
+         toggleMenu();
+       }}
+       className="inline-flex items-center justify-center p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-[#00AFCE] transition z-50 relative"
        type="button"
      >
        <span className="sr-only">{isOpen ? 'Close menu' : 'Open menu'}</span>
@@ -162,7 +166,7 @@ const Header = () => {
     return (
       <aside
         ref={navRef}
-        className={`fixed inset-0 z-[100] md:hidden ${
+        className={`fixed inset-0 z-[200] md:hidden ${
           isOpen ? 'pointer-events-auto' : 'pointer-events-none'
         }`}
         aria-modal="true"
@@ -496,7 +500,10 @@ const Header = () => {
               />
             </SecondaryButton>
           )}
-          <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
+          <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => {
+            console.log('Mobile menu toggle clicked, current state:', mobileOpen);
+            setMobileOpen(v => !v);
+          }} />
         </div>
       </div>
       <MobileNav
