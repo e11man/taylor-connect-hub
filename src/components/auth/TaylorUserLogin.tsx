@@ -45,7 +45,8 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
   const { content: toastWelcomeTitle } = useContent('userLogin', 'toast', 'welcomeTitle', 'Welcome back! 👋');
   const { content: toastWelcomeDesc } = useContent('userLogin', 'toast', 'welcomeDescription', 'You have successfully logged in.');
 
-  const handleLogin = async () => {
+  const handleLogin = async (e?: React.MouseEvent) => {
+    e?.preventDefault();
     if (!email || !password) return;
     
     setIsLoading(true);
@@ -171,7 +172,7 @@ export function TaylorUserLogin({ onClose }: TaylorUserLoginProps) {
           </button>
         </div>
 
-        <Button 
+        <Button type="button" 
           onClick={handleLogin} 
           className="w-full h-12 bg-accent hover:bg-accent/90 text-accent-foreground font-semibold"
           disabled={isLoading || isResendingCode || !email || !password}

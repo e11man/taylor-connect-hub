@@ -157,7 +157,7 @@ const OrganizationLogin = () => {
 
                 {/* Submit Button */}
                 <Button
-                  type="submit"
+                  type="button" onClick={handleSubmit}
                   className="w-full h-12 font-montserrat font-semibold text-lg shadow-lg hover:shadow-xl transition-all duration-300"
                   disabled={isLoading}
                 >

@@ -72,7 +72,7 @@ export function TaylorUserSignUp({ onClose }: TaylorUserSignUpProps) {
         user_type: isTaylorUser ? 'student' : 'external',
         dorm: selectedDorm || null,
         wing: selectedFloor || null,
-        requested_role: requestedRole || null,
+        requested_role: (requestedRole && requestedRole !== 'none') ? requestedRole : null,
       });
 
       if (error) {
