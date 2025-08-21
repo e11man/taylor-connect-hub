@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { DynamicText } from "@/components/content/DynamicText";
 import { useContentSection } from "@/hooks/useContent";
 import tuLogo from "@/assets/tu_logo.png";
+import silentNightLogo from "@/assets/Tu-mainstreetmile-Silentnight-Full-Color-Rgb.svg";
 
 const Footer = () => {
   const location = useLocation();
@@ -71,9 +72,11 @@ const Footer = () => {
               whileHover={{ scale: 1.05 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="w-8 h-8 bg-[#00AFCE] rounded-xl flex items-center justify-center">
-                <Heart className="w-4 h-4 text-white" />
-              </div>
+              <img 
+                src={silentNightLogo}
+                alt="Silent Night Logo"
+                className="w-8 h-8 rounded-xl object-contain"
+              />
               <span className="text-lg font-montserrat font-bold text-primary">
                 <DynamicText 
                   page="footer" 

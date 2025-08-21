@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { LogOut, User, ChevronDown } from "lucide-react";
-import logo from "@/assets/logo.svg";
+import logo from "@/assets/Tu-mainstreetmile-Silentnight-Full-Color-Rgb.svg";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import RequestVolunteersModal from "@/components/modals/RequestVolunteersModal";
@@ -201,7 +201,7 @@ const Header = () => {
             onClick={closeMenu}
             tabIndex={isOpen ? 0 : -1}
           >
-            <img src={logo} alt="Community Connect Logo" className="h-12 w-auto" />
+            <img src={logo} alt="Silent Night Logo" className="h-12 w-auto" />
             <span className="text-lg font-montserrat">
               <DynamicText 
                 page="header" 
@@ -348,7 +348,7 @@ const Header = () => {
       <div className="max-w-screen-xl mx-auto flex items-center justify-between h-16 px-4 md:px-8">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 font-bold text-gray-900 text-lg md:text-xl tracking-tight">
-          <img src={logo} alt="Community Connect Logo" className="w-12 h-12 rounded-lg object-contain" />
+          <img src={logo} alt="Silent Night Logo" className="w-12 h-12 rounded-lg object-contain" />
           <span className="hidden sm:inline text-base md:text-xl font-montserrat">
             <DynamicText 
               page="header" 
@@ -356,6 +356,7 @@ const Header = () => {
               contentKey="name"
               fallback=<DynamicText page="footer" section="brand" contentKey="name" fallback=<DynamicText page="header" section="brand" contentKey="name" fallback="Community Connect" /> />
               as="span"
+              className="text-[#1B365F]"
             />
           </span>
         </Link>
