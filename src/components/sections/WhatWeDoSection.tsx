@@ -91,14 +91,14 @@ const WhatWeDoSection = () => {
             variants={titleVariants}
             className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary"
           >
-            {whatWeDoContent.title || 'What We Do'}
+            {whatWeDoContent.title || 'Connection Points'}
           </motion.h2>
           
           <motion.p 
             variants={descriptionVariants}
             className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-4xl mx-auto"
           >
-            {whatWeDoContent.description || 'Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in Upland.'}
+            {whatWeDoContent.description || 'Discover meaningful ways to serve and make a difference in our community by getting connected to Upland organizations.'}
           </motion.p>
         </motion.div>
 
