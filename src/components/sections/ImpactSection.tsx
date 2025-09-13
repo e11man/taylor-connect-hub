@@ -19,13 +19,13 @@ const ImpactSection = () => {
     { 
       icon: Users, 
       label: impactContent.volunteers_label || <DynamicText page="homepage" section="impact" contentKey="volunteers_label" fallback=<DynamicText page="impact" section="main" contentKey="volunteers_label" fallback="Active Volunteers" /> />, 
-      value: (adminStats.activeVolunteers || siteStatistics?.active_volunteers?.display_value || parseInt(impactContent.active_volunteers)) || 0,
+      value: ((adminStats.activeVolunteers || siteStatistics?.active_volunteers?.display_value || parseInt(impactContent.active_volunteers)) || 0) + 602,
       description: aboutImpactContent.volunteers_description || <DynamicText page="impact" section="main" contentKey="volunteers_description" fallback="Passionate individuals serving Upland" />
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || <DynamicText page="homepage" section="impact" contentKey="hours_label" fallback=<DynamicText page="impact" section="main" contentKey="hours_label" fallback="Hours Contributed" /> />, 
-      value: impactContent.hours_contributed || "0",
+      value: (((typeof impactContent.hours_contributed === 'number' ? impactContent.hours_contributed : parseInt(impactContent.hours_contributed)) || 0) + 1204),
       description: aboutImpactContent.hours_description || <DynamicText page="impact" section="main" contentKey="hours_description" fallback="Collective time dedicated to service" />
     },
     { 

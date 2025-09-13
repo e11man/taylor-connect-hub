@@ -29,16 +29,18 @@ const HeroSection = () => {
   const secondaryButton = heroContent.secondaryButton || "Learn More";
   
   // Simple stats using the existing content system
+  // Display-only offsets requested via Slack: add 602 volunteers and 1,204 hours.
+  // This does not alter underlying calculations; it only adjusts what's rendered.
   const statsData = [
     { 
       icon: Users, 
       label: impactContent.volunteers_label || "Active Volunteers", 
-      value: (adminStats.activeVolunteers || siteStatistics?.active_volunteers?.display_value || parseInt(impactContent.active_volunteers)) || 0
+      value: ((adminStats.activeVolunteers || siteStatistics?.active_volunteers?.display_value || parseInt(impactContent.active_volunteers)) || 0) + 602
     },
     { 
       icon: Clock, 
       label: impactContent.hours_label || "Hours Contributed", 
-      value: impactContent.hours_contributed || "0"
+      value: ((typeof impactContent.hours_contributed === 'number' ? impactContent.hours_contributed : parseInt(impactContent.hours_contributed)) || 0) + 1204
     },
     { 
       icon: Building, 
