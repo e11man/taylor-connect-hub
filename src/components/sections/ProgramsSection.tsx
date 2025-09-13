@@ -1,42 +1,94 @@
-import { Package, Users, Hammer, BookOpen, TrendingUp, Heart } from "lucide-react";
 import { useContentSection } from "@/hooks/useContent";
 import { motion } from "framer-motion";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import type { Tables } from "@/integrations/supabase/types";
+
+type OrganizationRow = Tables<'organizations'>;
 
 const ProgramsSection = () => {
   const { content: programsContent } = useContentSection('about', 'programs');
-  
-  const programs = [
-    {
-      icon: Package,
-      title: programsContent.basics_title || "Basics",
-      description: programsContent.basics_description || "Essential needs support for families and individuals"
-    },
-    {
-      icon: Users,
-      title: programsContent.basics_jr_title || "Basics Jr.",
-      description: programsContent.basics_jr_description || "Youth-focused programs for children and teens"
-    },
-    {
-      icon: Hammer,
-      title: programsContent.carpenters_hands_title || "Carpenter's Hands",
-      description: programsContent.carpenters_hands_description || "Home repair and construction projects"
-    },
-    {
-      icon: BookOpen,
-      title: programsContent.esl_title || "ESL",
-      description: programsContent.esl_description || "English as Second Language tutoring and support"
-    },
-    {
-      icon: TrendingUp,
-      title: programsContent.lift_title || "Lift",
-      description: programsContent.lift_description || "Mentorship and encouragement programs"
-    },
-    {
-      icon: Heart,
-      title: programsContent.realife_title || "ReaLife",
-      description: programsContent.realife_description || "Real-life skills and life coaching"
+
+  const [organizations, setOrganizations] = useState<OrganizationRow[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [startIndex, setStartIndex] = useState<number>(0);
+  const [isHovered, setIsHovered] = useState<boolean>(false);
+  const rotationIntervalRef = useRef<number | null>(null);
+
+  const fetchOrganizations = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage(null);
+      // Only show approved organizations to the public
+      const { data, error } = await supabase
+        .from('organizations')
+        .select('*')
+        .eq('status', 'approved')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOrganizations(data || []);
+    } catch (err: any) {
+      console.error('Failed to load organizations:', err);
+      setErrorMessage(err.message || 'Failed to load organizations');
+    } finally {
+      setIsLoading(false);
     }
-  ];
+  }, []);
+
+  useEffect(() => {
+    fetchOrganizations();
+
+    // Real-time updates so new orgs appear automatically
+    const channel = supabase
+      .channel('organizations_live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'organizations' }, () => fetchOrganizations())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchOrganizations]);
+
+  // Auto-rotate visible organizations in groups of three
+  useEffect(() => {
+    if (organizations.length <= 3) return; // Nothing to rotate
+
+    const startRotation = () => {
+      stopRotation();
+      rotationIntervalRef.current = window.setInterval(() => {
+        setStartIndex((prev) => (prev + 3) % organizations.length);
+      }, 5000);
+    };
+
+    const stopRotation = () => {
+      if (rotationIntervalRef.current !== null) {
+        window.clearInterval(rotationIntervalRef.current);
+        rotationIntervalRef.current = null;
+      }
+    };
+
+    if (!isHovered) {
+      startRotation();
+    } else {
+      stopRotation();
+    }
+
+    return () => stopRotation();
+  }, [organizations.length, isHovered]);
+
+  const visibleOrganizations = useMemo(() => {
+    if (organizations.length <= 3) return organizations;
+    const end = startIndex + 3;
+    if (end <= organizations.length) {
+      return organizations.slice(startIndex, end);
+    }
+    // Wrap-around to the beginning for remaining slots
+    const firstPart = organizations.slice(startIndex);
+    const secondPart = organizations.slice(0, end - organizations.length);
+    return [...firstPart, ...secondPart];
+  }, [organizations, startIndex]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -101,47 +153,70 @@ const ProgramsSection = () => {
             variants={titleVariants}
             className="text-4xl md:text-5xl font-montserrat font-bold mb-6 text-primary"
           >
-            {programsContent.title || 'Community Outreach Programs'}
+            {programsContent.title || 'Local Programs & Organizations'}
           </motion.h2>
           
           <motion.p 
             variants={descriptionVariants}
             className="text-xl md:text-2xl leading-relaxed text-muted-foreground max-w-4xl mx-auto"
           >
-            {programsContent.description || 'Share the love of Christ through diverse service opportunities that address real needs in Upland and foster meaningful relationships.'}
+            {programsContent.description || 'Discover local organizations partnering through Community Connect. As new organizations sign up, they will appear here with a short description.'}
           </motion.p>
         </motion.div>
 
-        {/* Programs Grid */}
-        <motion.div
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.2 }}
-          variants={containerVariants}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-7xl mx-auto"
+        {/* Organizations Rotating Grid (3 at a time) */}
+        <div 
+          className="max-w-7xl mx-auto"
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
         >
-          {programs.map((program, index) => (
-            <motion.div 
-              key={program.title}
-              variants={itemVariants}
-              className="group relative bg-white border-2 border-gray-200 rounded-3xl p-6 md:p-8 text-center transition-all duration-500 hover:shadow-lg hover:scale-105 hover:border-[#00AFCE]"
+          {isLoading ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[0,1,2].map((i) => (
+                <div key={i} className="bg-white rounded-3xl p-8 border-2 border-gray-200 animate-pulse h-[220px]" />
+              ))}
+            </div>
+          ) : errorMessage ? (
+            <div className="text-center text-red-600">{errorMessage}</div>
+          ) : organizations.length === 0 ? (
+            <div className="text-center text-muted-foreground">No partner organizations yet. Check back soon!</div>
+          ) : (
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.2 }}
+              variants={containerVariants}
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
             >
-              <div className="relative flex justify-center mb-6">
-                <div className="w-12 h-12 md:w-16 md:h-16 bg-[#00AFCE] rounded-2xl flex items-center justify-center shadow-md group-hover:shadow-xl group-hover:scale-110 transition-all duration-300">
-                  <program.icon className="w-6 h-6 md:w-8 md:h-8 text-white" />
-                </div>
-              </div>
-              
-              <h3 className="text-xl md:text-2xl font-montserrat font-bold mb-3 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
-                {program.title}
-              </h3>
-              
-              <p className="text-base md:text-lg text-muted-foreground leading-relaxed font-montserrat">
-                {program.description}
-              </p>
+              {visibleOrganizations.map((org) => (
+                <motion.div 
+                  key={org.id}
+                  variants={itemVariants}
+                  className="group bg-white rounded-3xl p-6 md:p-8 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300"
+                >
+                  <h3 className="text-xl md:text-2xl font-montserrat font-bold mb-3 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
+                    {org.name}
+                  </h3>
+                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed font-montserrat line-clamp-4">
+                    {org.description || 'No description provided.'}
+                  </p>
+                  {org.website && (
+                    <div className="mt-4">
+                      <a 
+                        href={org.website.startsWith('http') ? org.website : `https://${org.website}`}
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[#00AFCE] font-medium hover:underline"
+                      >
+                        Visit website
+                      </a>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
             </motion.div>
-          ))}
-        </motion.div>
+          )}
+        </div>
       </div>
     </section>
   );
