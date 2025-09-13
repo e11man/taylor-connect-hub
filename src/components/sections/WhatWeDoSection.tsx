@@ -1,4 +1,4 @@
-import { Heart, Globe, Users, HandHeart } from "lucide-react";
+import { Heart, Users, Building2, Calendar } from "lucide-react";
 import { useContentSection } from "@/hooks/useContent";
 import { motion } from "framer-motion";
 
@@ -9,22 +9,22 @@ const WhatWeDoSection = () => {
     {
       icon: Heart,
       title: whatWeDoContent.local_ministries_title || "Local Ministries",
-      description: whatWeDoContent.local_ministries_description || "Taylor World Outreach (TWO) ministries provide hands-on opportunities to serve in our local Upland and beyond. These programs focus on meeting immediate needs while building lasting relationships."
+      description: whatWeDoContent.local_ministries_description || "Hands-on opportunities to serve in local churches and ministry opportunities. These programs focus on meeting immediate needs while building lasting relationships."
     },
     {
       icon: Users,
       title: whatWeDoContent.community_plunge_title || "Community Plunge",
-      description: whatWeDoContent.community_plunge_description || "Our signature immersive experience where volunteers dive deep into service in Upland, building connections and creating lasting impact through intensive, focused engagement."
+      description: whatWeDoContent.community_plunge_description || "An annual service day bringing together hundreds of Taylor students, faculty and staff to join together in bettering our community."
     },
     {
-      icon: Globe,
-      title: whatWeDoContent.world_opportunities_title || "World Opportunities",
-      description: whatWeDoContent.world_opportunities_description || "Learn about opportunities to serve globally, from short-term mission trips to long-term international partnerships that expand your impact beyond local borders."
+      icon: Building2,
+      title: whatWeDoContent.non_profit_organizations_title || "Non-Profit Organizations",
+      description: whatWeDoContent.non_profit_organizations_description || "Local groups dedicated to fostering a charming and welcoming small-town community that bring together people from all walks of life."
     },
     {
-      icon: HandHeart,
-      title: whatWeDoContent.community_outreach_title || "Community Outreach Programs",
-      description: whatWeDoContent.community_outreach_description || "Share the love of Christ through diverse service opportunities that address real needs in Upland and foster meaningful relationships."
+      icon: Calendar,
+      title: whatWeDoContent.town_events_title || "Town Events",
+      description: whatWeDoContent.town_events_description || "Upland is home to countless festivities and events that make this town truly special. Whether it is the Labor Day parade or the Christmastime tree lighting ceremony, there are plenty of opportunities for students to join in the fun."
     }
   ];
 
