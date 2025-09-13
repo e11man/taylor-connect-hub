@@ -2,19 +2,19 @@
 
 -- WhatWeDoSection main content
 INSERT INTO content (page, section, key, value) VALUES
-('about', 'what_we_do', 'title', 'What We Do'),
-('about', 'what_we_do', 'description', 'Discover meaningful ways to serve and make a difference in our community through Taylor World Outreach programs.');
+('about', 'what_we_do', 'title', 'Connection Points'),
+('about', 'what_we_do', 'description', 'Discover meaningful ways to serve and make a difference in our community by getting connected to Upland organizations.');
 
 -- WhatWeDoSection service entries
 INSERT INTO content (page, section, key, value) VALUES
 ('about', 'what_we_do', 'local_ministries_title', 'Local Ministries'),
-('about', 'what_we_do', 'local_ministries_description', 'Taylor World Outreach (TWO) ministries provide hands-on opportunities to serve in our local Upland and beyond. These programs focus on meeting immediate needs while building lasting relationships.'),
+('about', 'what_we_do', 'local_ministries_description', 'Hands-on opportunities to serve in local churches and ministry opportunities. These programs focus on meeting immediate needs while building lasting relationships.'),
 ('about', 'what_we_do', 'community_plunge_title', 'Community Plunge'),
-('about', 'what_we_do', 'community_plunge_description', 'Our signature immersive experience where volunteers dive deep into service in Upland, building connections and creating lasting impact through intensive, focused engagement.'),
-('about', 'what_we_do', 'world_opportunities_title', 'World Opportunities'),
-('about', 'what_we_do', 'world_opportunities_description', 'Learn about opportunities to serve globally, from short-term mission trips to long-term international partnerships that expand your impact beyond local borders.'),
-('about', 'what_we_do', 'community_outreach_title', 'Community Outreach Programs'),
-('about', 'what_we_do', 'community_outreach_description', 'Share the love of Christ through diverse service opportunities that address real needs in Upland and foster meaningful relationships.');
+('about', 'what_we_do', 'community_plunge_description', 'An annual service day bringing together hundreds of Taylor students, faculty and staff to join together in bettering our community.'),
+('about', 'what_we_do', 'non_profit_organizations_title', 'Non-Profit Organizations'),
+('about', 'what_we_do', 'non_profit_organizations_description', 'Local groups dedicated to fostering a charming and welcoming small-town community that bring together people from all walks of life.'),
+('about', 'what_we_do', 'town_events_title', 'Town Events'),
+('about', 'what_we_do', 'town_events_description', 'Upland is home to countless festivities and events that make this town truly special. Whether it is the Labor Day parade or the Christmastime tree lighting ceremony, there are plenty of opportunities for students to join in the fun.');
 
 -- ProgramsSection main content
 INSERT INTO content (page, section, key, value) VALUES

@@ -27,21 +27,21 @@ const impactContent = [
 
 // What We Do Section Content
 const whatWeDoContent = [
-  { page: 'about', section: 'what_we_do', key: 'title', value: 'What We Do', language_code: 'en' },
-  { page: 'about', section: 'what_we_do', key: 'description', value: 'Community Connect facilitates a wide array of volunteer opportunities, from local ministry work to global outreach initiatives. We partner with organizations that share our commitment to making a positive difference in Upland.', language_code: 'en' },
+  { page: 'about', section: 'what_we_do', key: 'title', value: 'Connection Points', language_code: 'en' },
+  { page: 'about', section: 'what_we_do', key: 'description', value: 'Discover meaningful ways to serve and make a difference in our community by getting connected to Upland organizations.', language_code: 'en' },
   
   // Services
   { page: 'about', section: 'what_we_do', key: 'local_ministries_title', value: 'Local Ministries', language_code: 'en' },
-  { page: 'about', section: 'what_we_do', key: 'local_ministries_description', value: 'Taylor World Outreach (TWO) ministries provide hands-on opportunities to serve in our local Upland and beyond. These programs focus on meeting immediate needs while building lasting relationships.', language_code: 'en' },
+  { page: 'about', section: 'what_we_do', key: 'local_ministries_description', value: 'Hands-on opportunities to serve in local churches and ministry opportunities. These programs focus on meeting immediate needs while building lasting relationships.', language_code: 'en' },
   
   { page: 'about', section: 'what_we_do', key: 'community_plunge_title', value: 'Community Plunge', language_code: 'en' },
-  { page: 'about', section: 'what_we_do', key: 'community_plunge_description', value: 'Our signature immersive experience where volunteers dive deep into service in Upland, building connections and creating lasting impact through intensive, focused engagement.', language_code: 'en' },
+  { page: 'about', section: 'what_we_do', key: 'community_plunge_description', value: 'An annual service day bringing together hundreds of Taylor students, faculty and staff to join together in bettering our community.', language_code: 'en' },
   
-  { page: 'about', section: 'what_we_do', key: 'world_opportunities_title', value: 'World Opportunities', language_code: 'en' },
-  { page: 'about', section: 'what_we_do', key: 'world_opportunities_description', value: 'Learn about opportunities to serve globally, from short-term mission trips to long-term international partnerships that expand your impact beyond local borders.', language_code: 'en' },
+  { page: 'about', section: 'what_we_do', key: 'non_profit_organizations_title', value: 'Non-Profit Organizations', language_code: 'en' },
+  { page: 'about', section: 'what_we_do', key: 'non_profit_organizations_description', value: 'Local groups dedicated to fostering a charming and welcoming small-town community that bring together people from all walks of life.', language_code: 'en' },
   
-  { page: 'about', section: 'what_we_do', key: 'community_outreach_title', value: 'Community Outreach Programs', language_code: 'en' },
-  { page: 'about', section: 'what_we_do', key: 'community_outreach_description', value: 'Share the love of Christ through diverse service opportunities that address real needs in Upland and foster meaningful relationships.', language_code: 'en' },
+  { page: 'about', section: 'what_we_do', key: 'town_events_title', value: 'Town Events', language_code: 'en' },
+  { page: 'about', section: 'what_we_do', key: 'town_events_description', value: 'Upland is home to countless festivities and events that make this town truly special. Whether it is the Labor Day parade or the Christmastime tree lighting ceremony, there are plenty of opportunities for students to join in the fun.', language_code: 'en' },
 ];
 
 // Programs Section Content
