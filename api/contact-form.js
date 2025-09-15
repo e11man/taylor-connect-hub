@@ -200,7 +200,7 @@ export default async function handler(req, res) {
     // Send email using Resend
     const { data, error } = await resend.emails.send({
       from: 'Main Street Connect <noreply@uplandmainstreet.org>',
-      to: ['josh_ellman@icloud.com'],
+      to: ['hello@uplandmainstreet.org'],
       subject: `New Contact Form Submission - ${name}`,
       html: htmlContent,
       reply_to: email
