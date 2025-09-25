@@ -43,9 +43,6 @@ const RequestVolunteersModal = ({ isOpen, onClose }: RequestVolunteersModalProps
             <p className="text-xs sm:text-sm text-orange-700 leading-relaxed font-montserrat">
               Community Connect is currently in beta testing. We're only allowing verified organizations to post volunteer opportunities at this time.
             </p>
-            <p className="text-xs sm:text-sm text-orange-700 mt-2 font-montserrat">
-              Individual volunteer requests will be available soon!
-            </p>
           </div>
 
           {/* Organization Section */}
@@ -63,25 +60,6 @@ const RequestVolunteersModal = ({ isOpen, onClose }: RequestVolunteersModalProps
             </Link>
           </div>
 
-          {/* Individual Section */}
-          <div className="border-t border-gray-200 pt-4 sm:pt-6">
-            <h3 className="text-base sm:text-lg font-montserrat font-bold text-primary mb-2 sm:mb-3">
-              Want to be notified when we launch?
-            </h3>
-            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4 font-montserrat">
-              Get in touch and we'll let you know when individual requests are available
-            </p>
-            <PrimaryButton 
-              className="w-full py-3 sm:py-4 text-sm sm:text-base font-semibold rounded-xl touch-manipulation"
-              onClick={() => {
-                const subject = encodeURIComponent('Notify me when individual volunteer requests are available');
-                const body = encodeURIComponent(`Hi Community Connect team,\n\nI'm interested in being notified when individual volunteer requests become available on your platform.\n\nPlease add me to your notification list.\n\nThank you!\n\nBest regards`);
-                window.location.href = `mailto:hello@communityconnect.org?subject=${subject}&body=${body}`;
-              }}
-            >
-              Email for More Info
-            </PrimaryButton>
-          </div>
 
           {/* Close Button */}
           <button
