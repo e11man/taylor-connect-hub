@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, User, ChevronDown } from "lucide-react";
 import logo from "@/assets/Tu-mainstreetmile-Silentnight-Full-Color-Rgb.svg";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
 import RequestVolunteersModal from "@/components/modals/RequestVolunteersModal";
 import UserAuthModal from "@/components/modals/UserAuthModal";
+import SignInDropdownModal from "@/components/modals/SignInDropdownModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { DynamicText } from "@/components/content/DynamicText";
 import { useContentSection } from "@/hooks/useContent";
@@ -14,9 +15,11 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [signInModalOpen, setSignInModalOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const { content: navContent } = useContentSection('header', 'nav');
   const { content: brandContent } = useContentSection('header', 'brand');
   const { content: buttonContent } = useContentSection('header', 'buttons');
@@ -44,6 +47,17 @@ const Header = () => {
     }
   };
   
+  // Handle Sign In modal actions
+  const handleOrganizationSignup = () => {
+    setSignInModalOpen(false);
+    navigate('/organization-register');
+  };
+
+  const handleVolunteerSignup = () => {
+    setSignInModalOpen(false);
+    setAuthModalOpen(true);
+  };
+
   // Debug: Log user info to help troubleshoot
   if (user) {
     console.log('Current user:', {
@@ -449,6 +463,18 @@ const Header = () => {
                       as="span"
                     />
                   </SecondaryButton>
+                  <SecondaryButton
+                    onClick={() => setSignInModalOpen(true)}
+                    className="shadow-sm hover:shadow-md whitespace-nowrap bg-white text-primary border-primary hover:bg-primary/5"
+                  >
+                    <DynamicText 
+                      page="header" 
+                      section="buttons" 
+                      contentKey="signin"
+                      fallback="Sign In"
+                      as="span"
+                    />
+                  </SecondaryButton>
                   <PrimaryButton
                     onClick={() => setModalOpen(true)}
                     className="shadow-sm hover:shadow-md whitespace-nowrap"
@@ -484,18 +510,32 @@ const Header = () => {
               </PrimaryButton>
             ) : null
           ) : (
-            <SecondaryButton
-              onClick={() => setAuthModalOpen(true)}
-              className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
-            >
-              <DynamicText 
-                page="header" 
-                section="buttons" 
-                contentKey="login"
-                fallback="Log in"
-                as="span"
-              />
-            </SecondaryButton>
+            <div className="flex items-center gap-1">
+              <SecondaryButton
+                onClick={() => setAuthModalOpen(true)}
+                className="text-xs px-2 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
+              >
+                <DynamicText 
+                  page="header" 
+                  section="buttons" 
+                  contentKey="login"
+                  fallback="Log in"
+                  as="span"
+                />
+              </SecondaryButton>
+              <SecondaryButton
+                onClick={() => setSignInModalOpen(true)}
+                className="text-xs px-2 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap bg-white text-primary border-primary hover:bg-primary/5"
+              >
+                <DynamicText 
+                  page="header" 
+                  section="buttons" 
+                  contentKey="signin"
+                  fallback="Sign In"
+                  as="span"
+                />
+              </SecondaryButton>
+            </div>
           )}
           <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
         </div>
@@ -513,6 +553,12 @@ const Header = () => {
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
         defaultMode="login"
+      />
+      <SignInDropdownModal
+        isOpen={signInModalOpen}
+        onClose={() => setSignInModalOpen(false)}
+        onOrganizationSignup={handleOrganizationSignup}
+        onVolunteerSignup={handleVolunteerSignup}
       />
     </header>
   );
