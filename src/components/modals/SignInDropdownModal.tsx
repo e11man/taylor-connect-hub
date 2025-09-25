@@ -1,6 +1,6 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogOverlay } from '@/components/ui/dialog';
-import { Building2, Users } from 'lucide-react';
+import { Building2, Users, User } from 'lucide-react';
 import PrimaryButton from '@/components/buttons/PrimaryButton';
 import SecondaryButton from '@/components/buttons/SecondaryButton';
 import { DynamicText } from '@/components/content/DynamicText';
@@ -11,13 +11,15 @@ interface SignInDropdownModalProps {
   onClose: () => void;
   onOrganizationSignup: () => void;
   onVolunteerSignup: () => void;
+  onLogin: () => void;
 }
 
 const SignInDropdownModal = ({ 
   isOpen, 
   onClose, 
   onOrganizationSignup, 
-  onVolunteerSignup 
+  onVolunteerSignup,
+  onLogin
 }: SignInDropdownModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -48,6 +50,46 @@ const SignInDropdownModal = ({
 
           {/* Options */}
           <div className="space-y-4">
+            {/* Existing Users - Login Option */}
+            <div className="border border-gray-200 rounded-xl p-6 hover:border-accent/30 hover:bg-gray-50/50 transition-all duration-200">
+              <div className="flex items-center space-x-4 mb-4">
+                <div className="p-3 bg-accent/10 rounded-lg">
+                  <User className="w-6 h-6 text-accent" />
+                </div>
+                <div className="text-left flex-1">
+                  <h3 className="font-semibold text-gray-900">
+                    <DynamicText 
+                      page="header" 
+                      section="signin_modal" 
+                      contentKey="existing_user_title"
+                      fallback="Already Have an Account?"
+                      as="span"
+                    />
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    <DynamicText 
+                      page="header" 
+                      section="signin_modal" 
+                      contentKey="existing_user_description"
+                      fallback="Sign in to access your dashboard and manage events"
+                      as="span"
+                    />
+                  </p>
+                </div>
+              </div>
+              <PrimaryButton
+                onClick={onLogin}
+                className="w-full bg-accent hover:bg-accent/90"
+              >
+                <DynamicText 
+                  page="header" 
+                  section="signin_modal" 
+                  contentKey="login_button"
+                  fallback="Log In"
+                  as="span"
+                />
+              </PrimaryButton>
+            </div>
             {/* Organization Option */}
             <div className="border border-gray-200 rounded-xl p-6 hover:border-primary/30 hover:bg-gray-50/50 transition-all duration-200">
               <div className="flex items-center space-x-4 mb-4">
@@ -129,32 +171,6 @@ const SignInDropdownModal = ({
                 />
               </SecondaryButton>
             </div>
-          </div>
-
-          {/* Already have account */}
-          <div className="pt-4 border-t border-gray-200">
-            <p className="text-sm text-gray-600">
-              <DynamicText 
-                page="header" 
-                section="signin_modal" 
-                contentKey="already_have_account"
-                fallback="Already have an account?"
-                as="span"
-              />
-              {' '}
-              <button
-                onClick={onClose}
-                className="text-primary hover:text-primary/80 font-semibold transition-colors duration-200"
-              >
-                <DynamicText 
-                  page="header" 
-                  section="signin_modal" 
-                  contentKey="use_login_button"
-                  fallback="Use the Log In button"
-                  as="span"
-                />
-              </button>
-            </p>
           </div>
         </div>
       </DialogContent>

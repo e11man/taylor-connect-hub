@@ -15,6 +15,7 @@ const Header = () => {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authModalMode, setAuthModalMode] = useState<'login' | 'signup'>('login');
   const [signInModalOpen, setSignInModalOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
@@ -55,6 +56,13 @@ const Header = () => {
 
   const handleVolunteerSignup = () => {
     setSignInModalOpen(false);
+    setAuthModalMode('signup');
+    setAuthModalOpen(true);
+  };
+
+  const handleLogin = () => {
+    setSignInModalOpen(false);
+    setAuthModalMode('login');
     setAuthModalOpen(true);
   };
 
@@ -452,20 +460,8 @@ const Header = () => {
                           ) : (
                 <>
                   <SecondaryButton
-                    onClick={() => setAuthModalOpen(true)}
-                    className="shadow-sm hover:shadow-md whitespace-nowrap"
-                  >
-                    <DynamicText 
-                      page="header" 
-                      section="buttons" 
-                      contentKey="login"
-                      fallback="Log in"
-                      as="span"
-                    />
-                  </SecondaryButton>
-                  <SecondaryButton
                     onClick={() => setSignInModalOpen(true)}
-                    className="shadow-sm hover:shadow-md whitespace-nowrap bg-white text-primary border-primary hover:bg-primary/5"
+                    className="shadow-sm hover:shadow-md whitespace-nowrap"
                   >
                     <DynamicText 
                       page="header" 
@@ -510,32 +506,18 @@ const Header = () => {
               </PrimaryButton>
             ) : null
           ) : (
-            <div className="flex items-center gap-1">
-              <SecondaryButton
-                onClick={() => setAuthModalOpen(true)}
-                className="text-xs px-2 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
-              >
-                <DynamicText 
-                  page="header" 
-                  section="buttons" 
-                  contentKey="login"
-                  fallback="Log in"
-                  as="span"
-                />
-              </SecondaryButton>
-              <SecondaryButton
-                onClick={() => setSignInModalOpen(true)}
-                className="text-xs px-2 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap bg-white text-primary border-primary hover:bg-primary/5"
-              >
-                <DynamicText 
-                  page="header" 
-                  section="buttons" 
-                  contentKey="signin"
-                  fallback="Sign In"
-                  as="span"
-                />
-              </SecondaryButton>
-            </div>
+            <SecondaryButton
+              onClick={() => setSignInModalOpen(true)}
+              className="text-xs px-3 py-2 shadow-sm rounded-lg font-medium transition-all duration-300 hover:shadow-md active:scale-95 whitespace-nowrap"
+            >
+              <DynamicText 
+                page="header" 
+                section="buttons" 
+                contentKey="signin"
+                fallback="Sign In"
+                as="span"
+              />
+            </SecondaryButton>
           )}
           <MobileMenuButton isOpen={mobileOpen} toggleMenu={() => setMobileOpen(v => !v)} />
         </div>
@@ -552,13 +534,14 @@ const Header = () => {
       <UserAuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}
-        defaultMode="login"
+        defaultMode={authModalMode}
       />
       <SignInDropdownModal
         isOpen={signInModalOpen}
         onClose={() => setSignInModalOpen(false)}
         onOrganizationSignup={handleOrganizationSignup}
         onVolunteerSignup={handleVolunteerSignup}
+        onLogin={handleLogin}
       />
     </header>
   );
