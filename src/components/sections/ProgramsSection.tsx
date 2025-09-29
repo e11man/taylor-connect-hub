@@ -63,8 +63,6 @@ const ProgramsSection = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [currentSet, setCurrentSet] = useState<number>(0);
-  const [isHovered, setIsHovered] = useState<boolean>(false);
-  const rotationIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const mountedRef = useRef<boolean>(true);
 
   const fetchOrganizations = useCallback(async () => {
@@ -72,7 +70,6 @@ const ProgramsSection = () => {
     
     try {
       setErrorMessage(null);
-      console.log('Fetching organizations from Supabase...');
       
       // Only show approved organizations to the public
       const { data, error } = await supabase
@@ -82,14 +79,12 @@ const ProgramsSection = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.warn('Supabase error, using fallback data:', error);
         throw error;
       }
       
       if (!mountedRef.current) return;
       
       const orgs = data || [];
-      console.log(`Loaded ${orgs.length} organizations from database`);
       
       // Use database organizations if available, otherwise fallback
       const organizationsToUse = orgs.length > 0 ? orgs : FALLBACK_ORGANIZATIONS;
@@ -118,13 +113,11 @@ const ProgramsSection = () => {
   // Update displayed organizations when currentSet changes
   useEffect(() => {
     if (allOrganizations.length === 0) {
-      console.log('No organizations available');
       setDisplayedOrgs([]);
       return;
     }
 
     if (allOrganizations.length <= 3) {
-      console.log(`Showing all ${allOrganizations.length} organizations (no rotation needed)`);
       setDisplayedOrgs(allOrganizations);
       return;
     }
@@ -142,7 +135,6 @@ const ProgramsSection = () => {
       newDisplayed = [...firstPart, ...secondPart];
     }
     
-    console.log(`Rotation set ${currentSet}: showing organizations ${startIndex}-${endIndex-1} of ${allOrganizations.length}`);
     setDisplayedOrgs(newDisplayed);
   }, [allOrganizations, currentSet]);
 
@@ -154,38 +146,46 @@ const ProgramsSection = () => {
     };
   }, [fetchOrganizations]);
 
-  // Auto-rotate organizations when there are more than 3
+  // Calculate total number of sets
+  const totalSets = Math.ceil(allOrganizations.length / 3);
+  
+  // Navigation functions
+  const goToNextSet = () => {
+    setCurrentSet(prev => (prev + 1) % totalSets);
+  };
+  
+  const goToPrevSet = () => {
+    setCurrentSet(prev => (prev - 1 + totalSets) % totalSets);
+  };
+  
+  const goToSet = (setIndex: number) => {
+    setCurrentSet(setIndex);
+  };
+
+  // Keyboard navigation
   useEffect(() => {
-    if (allOrganizations.length <= 3 || isHovered) {
-      if (rotationIntervalRef.current) {
-        clearInterval(rotationIntervalRef.current);
-        rotationIntervalRef.current = null;
-      }
-      return;
-    }
-
-    // Start rotation after initial delay
-    const startRotation = () => {
-      if (rotationIntervalRef.current) {
-        clearInterval(rotationIntervalRef.current);
-      }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (totalSets <= 1) return;
       
-      rotationIntervalRef.current = setInterval(() => {
-        if (!mountedRef.current) return;
-        setCurrentSet(prev => prev + 1);
-      }, 8000); // 8 second intervals for better readability
-    };
-
-    const delayTimer = setTimeout(startRotation, 4000); // 4 second initial delay
-
-    return () => {
-      clearTimeout(delayTimer);
-      if (rotationIntervalRef.current) {
-        clearInterval(rotationIntervalRef.current);
-        rotationIntervalRef.current = null;
+      // Only handle arrow keys when focus is within the organizations section
+      const organizationsSection = document.getElementById('programs');
+      if (!organizationsSection?.contains(document.activeElement)) return;
+      
+      switch (event.key) {
+        case 'ArrowLeft':
+          event.preventDefault();
+          goToPrevSet();
+          break;
+        case 'ArrowRight':
+          event.preventDefault();
+          goToNextSet();
+          break;
       }
     };
-  }, [allOrganizations.length, isHovered]);
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [totalSets]);
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -274,21 +274,63 @@ const ProgramsSection = () => {
           </motion.p>
           
           {allOrganizations.length > 3 && (
-            <motion.p 
+            <motion.div 
               variants={descriptionVariants}
-              className="text-sm text-muted-foreground mt-4 opacity-75"
+              className="mt-6"
             >
-              Showing {Math.min(3, allOrganizations.length)} of {allOrganizations.length} organizations • New organizations appear automatically
-            </motion.p>
+              <p className="text-sm text-muted-foreground mb-4 opacity-75">
+                Showing {Math.min(3, allOrganizations.length)} of {allOrganizations.length} organizations • Set {currentSet + 1} of {totalSets}
+                {totalSets > 1 && <span className="block mt-1">Use the buttons below to see more organizations</span>}
+              </p>
+              
+              {/* Navigation Controls */}
+              <div className="flex items-center justify-center gap-6">
+                <button
+                  onClick={goToPrevSet}
+                  disabled={totalSets <= 1}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white border-2 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 font-medium shadow-sm hover:shadow-md"
+                  aria-label="Previous organizations"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Previous
+                </button>
+                
+                {/* Dot indicators */}
+                <div className="flex gap-3 px-4">
+                  {Array.from({ length: totalSets }, (_, index) => (
+                    <button
+                      key={index}
+                      onClick={() => goToSet(index)}
+                      className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                        index === currentSet 
+                          ? 'bg-[#00AFCE] scale-125 shadow-lg' 
+                          : 'bg-gray-300 hover:bg-gray-400 hover:scale-110'
+                      }`}
+                      aria-label={`Go to organization set ${index + 1}`}
+                    />
+                  ))}
+                </div>
+                
+                <button
+                  onClick={goToNextSet}
+                  disabled={totalSets <= 1}
+                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white border-2 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 font-medium shadow-sm hover:shadow-md"
+                  aria-label="Next organizations"
+                >
+                  Next
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
+            </motion.div>
           )}
         </motion.div>
 
         {/* Organizations Grid */}
-        <div 
-          className="max-w-7xl mx-auto"
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
-        >
+        <div className="max-w-7xl mx-auto">
           {isLoading ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[0,1,2].map((i) => (
