@@ -278,52 +278,51 @@ const ProgramsSection = () => {
               variants={descriptionVariants}
               className="mt-6"
             >
-              <p className="text-sm text-muted-foreground mb-4 opacity-75">
-                Showing {Math.min(3, allOrganizations.length)} of {allOrganizations.length} organizations • Set {currentSet + 1} of {totalSets}
-                {totalSets > 1 && <span className="block mt-1">Use the buttons below to see more organizations</span>}
-              </p>
               
-              {/* Navigation Controls */}
-              <div className="flex items-center justify-center gap-6">
-                <button
-                  onClick={goToPrevSet}
-                  disabled={totalSets <= 1}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white border-2 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 font-medium shadow-sm hover:shadow-md"
-                  aria-label="Previous organizations"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Previous
-                </button>
-                
-                {/* Dot indicators */}
-                <div className="flex gap-3 px-4">
+              {/* Mobile-Optimized Navigation Controls */}
+              <div className="flex flex-col items-center gap-4">
+                {/* Dot indicators - Mobile First */}
+                <div className="flex gap-4 px-2">
                   {Array.from({ length: totalSets }, (_, index) => (
                     <button
                       key={index}
                       onClick={() => goToSet(index)}
-                      className={`w-4 h-4 rounded-full transition-all duration-300 ${
+                      className={`w-6 h-6 sm:w-4 sm:h-4 rounded-full transition-all duration-300 touch-manipulation ${
                         index === currentSet 
-                          ? 'bg-[#00AFCE] scale-125 shadow-lg' 
-                          : 'bg-gray-300 hover:bg-gray-400 hover:scale-110'
+                          ? 'bg-[#00AFCE] scale-125 shadow-lg ring-2 ring-[#00AFCE] ring-opacity-30' 
+                          : 'bg-gray-300 hover:bg-gray-400 hover:scale-110 active:scale-95'
                       }`}
                       aria-label={`Go to organization set ${index + 1}`}
                     />
                   ))}
                 </div>
                 
-                <button
-                  onClick={goToNextSet}
-                  disabled={totalSets <= 1}
-                  className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white border-2 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 font-medium shadow-sm hover:shadow-md"
-                  aria-label="Next organizations"
-                >
-                  Next
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
+                {/* Previous/Next Buttons - Larger touch targets on mobile */}
+                <div className="flex items-center gap-3 sm:gap-6">
+                  <button
+                    onClick={goToPrevSet}
+                    disabled={totalSets <= 1}
+                    className="flex items-center gap-2 px-4 py-3 sm:px-6 sm:py-3 rounded-xl bg-white border-2 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 font-medium shadow-sm hover:shadow-md active:scale-95 touch-manipulation min-h-[48px]"
+                    aria-label="Previous organizations"
+                  >
+                    <svg className="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    <span className="hidden sm:inline">Previous</span>
+                  </button>
+                  
+                  <button
+                    onClick={goToNextSet}
+                    disabled={totalSets <= 1}
+                    className="flex items-center gap-2 px-4 py-3 sm:px-6 sm:py-3 rounded-xl bg-white border-2 border-gray-200 hover:border-[#00AFCE] hover:text-[#00AFCE] disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-300 font-medium shadow-sm hover:shadow-md active:scale-95 touch-manipulation min-h-[48px]"
+                    aria-label="Next organizations"
+                  >
+                    <span className="hidden sm:inline">Next</span>
+                    <svg className="w-5 h-5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </motion.div>
           )}
@@ -332,9 +331,9 @@ const ProgramsSection = () => {
         {/* Organizations Grid */}
         <div className="max-w-7xl mx-auto">
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {[0,1,2].map((i) => (
-                <div key={`loading-${i}`} className="bg-white rounded-3xl p-8 border-2 border-gray-200 animate-pulse h-[220px]" />
+                <div key={`loading-${i}`} className="bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border-2 border-gray-200 animate-pulse h-[200px] sm:h-[220px]" />
               ))}
             </div>
           ) : errorMessage ? (
@@ -357,29 +356,32 @@ const ProgramsSection = () => {
               initial="hidden"
               animate="visible"
               variants={containerVariants}
-              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
             >
               {displayedOrgs.map((org, index) => (
                 <motion.div 
                   key={`org-${org.id}`}
                   variants={itemVariants}
-                  className="group bg-white rounded-3xl p-6 md:p-8 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg transition-all duration-300"
+                  className="group bg-white rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 border-2 border-gray-200 hover:border-[#00AFCE] hover:shadow-lg active:scale-[0.98] transition-all duration-300 touch-manipulation"
                 >
-                  <h3 className="text-xl md:text-2xl font-montserrat font-bold mb-3 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-montserrat font-bold mb-2 sm:mb-3 text-primary group-hover:text-[#00AFCE] transition-colors duration-300">
                     {org.name || 'Unnamed Organization'}
                   </h3>
-                  <p className="text-base md:text-lg text-muted-foreground leading-relaxed font-montserrat line-clamp-4">
+                  <p className="text-sm sm:text-base md:text-lg text-muted-foreground leading-relaxed font-montserrat line-clamp-3 sm:line-clamp-4 mb-3 sm:mb-4">
                     {org.description || 'No description provided.'}
                   </p>
                   {org.website && (
-                    <div className="mt-4">
+                    <div className="mt-auto">
                       <a 
                         href={org.website.startsWith('http') ? org.website : `https://${org.website}`}
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className="text-[#00AFCE] font-medium hover:underline inline-block"
+                        className="inline-flex items-center gap-2 text-[#00AFCE] font-medium hover:underline active:scale-95 transition-transform duration-200 touch-manipulation py-2"
                       >
-                        Visit website
+                        <span>Visit website</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
                       </a>
                     </div>
                   )}
