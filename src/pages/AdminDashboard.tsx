@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Check, MessageSquare, RotateCcw, Clock } from 'lucide-react';
+import { Users, Mail, BarChart3, FileText, Search, Filter, RefreshCw, Eye, Edit, Trash2, Plus, Download, Upload, Building2, CheckCircle, XCircle, X, Check, MessageSquare, RotateCcw, Clock, ChevronDown, ChevronRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { DynamicText } from '@/components/content/DynamicText';
 import { ContentManagement } from '@/components/admin/ContentManagement';
@@ -57,6 +57,8 @@ interface Event {
   contact_person?: string | null;
   contact_person_phone?: string | null;
   special_instructions?: string | null;
+  series_id?: string | null;
+  occurrence_index?: number | null;
   created_at: string;
 }
 
@@ -394,7 +396,43 @@ export const AdminDashboard = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
+  const [expandedEventSeries, setExpandedEventSeries] = useState<Set<string>>(new Set());
   const { toast } = useToast();
+
+  // Helper function to group events by series_id
+  const groupEventsBySeries = (events: Event[]) => {
+    const grouped: { [key: string]: Event[] } = {};
+    const standalone: Event[] = [];
+
+    events.forEach(event => {
+      if (event.series_id) {
+        if (!grouped[event.series_id]) {
+          grouped[event.series_id] = [];
+        }
+        grouped[event.series_id].push(event);
+      } else {
+        standalone.push(event);
+      }
+    });
+
+    // Sort events within each series by occurrence_index
+    Object.keys(grouped).forEach(seriesId => {
+      grouped[seriesId].sort((a, b) => (a.occurrence_index || 0) - (b.occurrence_index || 0));
+    });
+
+    return { grouped, standalone };
+  };
+
+  // Toggle expanded state for event series
+  const toggleEventSeries = (seriesId: string) => {
+    const newExpanded = new Set(expandedEventSeries);
+    if (newExpanded.has(seriesId)) {
+      newExpanded.delete(seriesId);
+    } else {
+      newExpanded.add(seriesId);
+    }
+    setExpandedEventSeries(newExpanded);
+  };
 
   // Modal states
   const [viewUserModal, setViewUserModal] = useState(false);
@@ -681,6 +719,8 @@ export const AdminDashboard = () => {
           *,
           organizations(name)
         `)
+        .order('series_id', { ascending: true, nullsFirst: false })
+        .order('occurrence_index', { ascending: true })
         .order('created_at', { ascending: false });
 
       if (eventsError) throw eventsError;
@@ -1804,41 +1844,143 @@ export const AdminDashboard = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {events.map(event => (
-                      <tr key={event.id} className="hover:bg-gray-50">
-                        <td className="px-4 py-3">
-                          <div className="text-sm font-medium text-gray-900">{event.title}</div>
-                          {event.description && (
-                            <div className="text-sm text-gray-500">{event.description}</div>
-                          )}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="text-sm text-gray-500">{event.organization_name}</div>
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {new Date(event.date).toLocaleDateString()}
-                        </td>
-                        <td className="px-4 py-3 text-sm text-gray-500">
-                          {event.location || 'TBD'}
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex gap-2">
-                            <Button size="sm" variant="outline" onClick={() => viewEvent(event)} title="View Event">
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => viewEventChat(event)} title="View Chat" className="text-green-600 hover:text-green-700 hover:bg-green-50">
-                              <MessageSquare className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="outline" onClick={() => editEvent(event)} title="Edit Event">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)} title="Delete Event">
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
+                    {(() => {
+                      const { grouped, standalone } = groupEventsBySeries(events);
+                      const rows: JSX.Element[] = [];
+
+                      // Add standalone events
+                      standalone.forEach(event => {
+                        rows.push(
+                          <tr key={event.id} className="hover:bg-gray-50">
+                            <td className="px-4 py-3">
+                              <div className="text-sm font-medium text-gray-900">{event.title}</div>
+                              {event.description && (
+                                <div className="text-sm text-gray-500">{event.description}</div>
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm text-gray-500">{event.organization_name}</div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500">
+                              {new Date(event.date).toLocaleDateString()}
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500">
+                              {event.location || 'TBD'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex gap-2">
+                                <Button size="sm" variant="outline" onClick={() => viewEvent(event)} title="View Event">
+                                  <Eye className="w-4 h-4" />
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => viewEventChat(event)} title="View Chat" className="text-green-600 hover:text-green-700 hover:bg-green-50">
+                                  <MessageSquare className="w-4 h-4" />
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => editEvent(event)} title="Edit Event">
+                                  <Edit className="w-4 h-4" />
+                                </Button>
+                                <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)} title="Delete Event">
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      });
+
+                      // Add grouped events (recurring series)
+                      Object.entries(grouped).forEach(([seriesId, seriesEvents]) => {
+                        const firstEvent = seriesEvents[0];
+                        const isExpanded = expandedEventSeries.has(seriesId);
+                        
+                        // Series header row
+                        rows.push(
+                          <tr key={`series-${seriesId}`} className="hover:bg-gray-50 bg-blue-50">
+                            <td className="px-4 py-3">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => toggleEventSeries(seriesId)}
+                                  className="p-1 h-6 w-6"
+                                >
+                                  {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                                </Button>
+                                <div>
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-sm font-medium text-gray-900">{firstEvent.title}</span>
+                                    <Badge variant="secondary" className="text-xs">
+                                      Recurring ({seriesEvents.length} events)
+                                    </Badge>
+                                  </div>
+                                  {firstEvent.description && (
+                                    <div className="text-sm text-gray-500">{firstEvent.description}</div>
+                                  )}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm text-gray-500">{firstEvent.organization_name}</div>
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500">
+                              {seriesEvents.length > 1 ? 
+                                `${new Date(seriesEvents[0].date).toLocaleDateString()} - ${new Date(seriesEvents[seriesEvents.length - 1].date).toLocaleDateString()}` :
+                                new Date(firstEvent.date).toLocaleDateString()
+                              }
+                            </td>
+                            <td className="px-4 py-3 text-sm text-gray-500">
+                              {firstEvent.location || 'TBD'}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="text-sm text-gray-500">
+                                Click to expand
+                              </div>
+                            </td>
+                          </tr>
+                        );
+
+                        // Individual occurrence rows (when expanded)
+                        if (isExpanded) {
+                          seriesEvents.forEach(event => {
+                            rows.push(
+                              <tr key={event.id} className="hover:bg-gray-50 bg-blue-25">
+                                <td className="px-4 py-3 pl-12">
+                                  <div className="text-sm text-gray-700">
+                                    Occurrence #{event.occurrence_index || 1}
+                                  </div>
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="text-sm text-gray-500">{event.organization_name}</div>
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-500">
+                                  {new Date(event.date).toLocaleDateString()}
+                                </td>
+                                <td className="px-4 py-3 text-sm text-gray-500">
+                                  {event.location || 'TBD'}
+                                </td>
+                                <td className="px-4 py-3">
+                                  <div className="flex gap-2">
+                                    <Button size="sm" variant="outline" onClick={() => viewEvent(event)} title="View Event">
+                                      <Eye className="w-4 h-4" />
+                                    </Button>
+                                    <Button size="sm" variant="outline" onClick={() => viewEventChat(event)} title="View Chat" className="text-green-600 hover:text-green-700 hover:bg-green-50">
+                                      <MessageSquare className="w-4 h-4" />
+                                    </Button>
+                                    <Button size="sm" variant="outline" onClick={() => editEvent(event)} title="Edit Event">
+                                      <Edit className="w-4 h-4" />
+                                    </Button>
+                                    <Button size="sm" variant="destructive" onClick={() => deleteEvent(event.id)} title="Delete Event">
+                                      <Trash2 className="w-4 h-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              </tr>
+                            );
+                          });
+                        }
+                      });
+
+                      return rows;
+                    })()}
                   </tbody>
                 </table>
               </div>
