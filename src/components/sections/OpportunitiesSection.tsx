@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Calendar, MapPin, Users, MessageCircle, Search, Clock, Filter } from "lucide-react";
+import { Calendar, MapPin, Users, MessageCircle, Search, Clock, Filter, Eye } from "lucide-react";
 import { formatEventDate, formatEventTime, formatEventTimeRange, formatParticipants } from "@/utils/formatEvent";
 import PrimaryButton from "@/components/buttons/PrimaryButton";
 import SecondaryButton from "@/components/buttons/SecondaryButton";
@@ -11,6 +11,7 @@ import { EventChatModal } from "@/components/chat/EventChatModal";
 import GroupSignupModal from "@/components/modals/GroupSignupModal";
 import UserAuthModal from "@/components/modals/UserAuthModal";
 import SafetyGuidelinesModal from "@/components/modals/SafetyGuidelinesModal";
+import { EventDetailsModal } from "@/components/modals/EventDetailsModal";
 import { useSearch } from "@/contexts/SearchContext";
 import { SignupSuccess } from "@/components/ui/SignupSuccess";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -60,6 +61,7 @@ const OpportunitiesSection = () => {
   const [groupSignupModalOpen, setGroupSignupModalOpen] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [safetyModalOpen, setSafetyModalOpen] = useState(false);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
   const [pendingEventId, setPendingEventId] = useState<string | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventSignupCounts, setEventSignupCounts] = useState<Record<string, number>>({});
@@ -282,6 +284,16 @@ const OpportunitiesSection = () => {
     refreshUserEvents();
   };
 
+  const handleViewDetails = (event: Event) => {
+    setSelectedEvent(event);
+    setDetailsModalOpen(true);
+  };
+
+  const handleSignUpFromModal = async (eventId: string) => {
+    setDetailsModalOpen(false);
+    await handleSignUp(eventId);
+  };
+
   if (loading || searchLoading) {
     return (
       <section className="bg-white section-padding">
@@ -418,6 +430,14 @@ const OpportunitiesSection = () => {
 
                 {/* Action Buttons */}
                 <div className="mt-auto space-y-2 md:space-y-3">
+                  {/* View Details Button - Always visible */}
+                  <SecondaryButton
+                    onClick={() => handleViewDetails(event)}
+                    className="w-full min-h-[44px] touch-manipulation"
+                  >
+                    <Eye className="w-4 h-4" />
+                    View Details
+                  </SecondaryButton>
 
                   {/* Show buttons based on user role and signup status */}
                   {(() => {
@@ -559,6 +579,33 @@ const OpportunitiesSection = () => {
         onAccept={handleSafetyAccept}
         userType="volunteer"
       />
+
+      {/* Event Details Modal */}
+      {selectedEvent && (
+        <EventDetailsModal
+          isOpen={detailsModalOpen}
+          onClose={() => {
+            setDetailsModalOpen(false);
+            setSelectedEvent(null);
+          }}
+          event={{
+            ...selectedEvent,
+            organization_name: 'Main Street Connect', // You might want to fetch this from organization data
+            currentParticipants: eventSignupCounts[selectedEvent.id] || 0
+          }}
+          onSignUp={handleSignUpFromModal}
+          isSignedUp={isSignedUp(selectedEvent.id)}
+          canSignUp={user !== null}
+          signUpDisabled={!user || (userEvents.length >= 2 && userRole !== 'pa') || selectedEvent.isFull}
+          signUpButtonText={
+            !user ? 'Sign In to Sign Up' :
+            selectedEvent.isFull ? 'Event Full' :
+            userEvents.length >= 2 && userRole !== 'pa' ? 'Max Reached' :
+            'Sign Up'
+          }
+          showSignUpButton={true}
+        />
+      )}
     </section>
   );
 };
