@@ -48,6 +48,8 @@ interface Event {
   title: string;
   organization_name: string;
   date: string;
+  arrival_time?: string | null;
+  estimated_end_time?: string | null;
   description?: string;
   location?: string;
   max_participants?: number;
@@ -427,6 +429,8 @@ export const AdminDashboard = () => {
     title: '',
     description: '',
     date: '',
+    arrival_time: '',
+    estimated_end_time: '',
     location: '',
     max_participants: 0,
     meeting_point: '',
@@ -1059,10 +1063,19 @@ export const AdminDashboard = () => {
 
   const editEvent = (event: Event) => {
     setSelectedEvent(event);
+    
+    // Convert stored UTC timestamps back to local time for form inputs
+    const arrivalTime = event.arrival_time ? new Date(event.arrival_time) : null;
+    const endTime = event.estimated_end_time ? new Date(event.estimated_end_time) : null;
+    
     setEditEventForm({
       title: event.title,
       description: event.description || '',
       date: event.date,
+      arrival_time: arrivalTime ? 
+        `${arrivalTime.getHours().toString().padStart(2, '0')}:${arrivalTime.getMinutes().toString().padStart(2, '0')}` : '',
+      estimated_end_time: endTime ? 
+        `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}` : '',
       location: event.location || '',
       max_participants: event.max_participants || 0,
       meeting_point: event.meeting_point || '',
@@ -1157,13 +1170,34 @@ export const AdminDashboard = () => {
   const saveEvent = async () => {
     if (!selectedEvent) return;
     
+    // Validate that end time is after arrival time if both are provided
+    if (editEventForm.arrival_time && editEventForm.estimated_end_time) {
+      if (editEventForm.arrival_time >= editEventForm.estimated_end_time) {
+        toast({
+          title: "Error",
+          description: "End time must be after arrival time",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+    
     try {
+      // Create proper datetime objects in local timezone
+      const baseDate = new Date(`${editEventForm.date}T00:00:00`);
+      const arrivalDateTime = editEventForm.arrival_time ? 
+        new Date(`${editEventForm.date}T${editEventForm.arrival_time}:00`) : null;
+      const endDateTime = editEventForm.estimated_end_time ? 
+        new Date(`${editEventForm.date}T${editEventForm.estimated_end_time}:00`) : null;
+
       const { error } = await supabase
         .from('events')
         .update({
           title: editEventForm.title,
           description: editEventForm.description,
-          date: editEventForm.date,
+          date: baseDate.toISOString(),
+          arrival_time: arrivalDateTime?.toISOString() || null,
+          estimated_end_time: endDateTime?.toISOString() || null,
           location: editEventForm.location,
           max_participants: editEventForm.max_participants,
           meeting_point: editEventForm.meeting_point || null,
@@ -2090,6 +2124,26 @@ export const AdminDashboard = () => {
                 value={editEventForm.date}
                 onChange={(e) => setEditEventForm({ ...editEventForm, date: e.target.value })}
               />
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="event-arrival-time">Arrival Time</Label>
+                <Input
+                  id="event-arrival-time"
+                  type="time"
+                  value={editEventForm.arrival_time}
+                  onChange={(e) => setEditEventForm({ ...editEventForm, arrival_time: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label htmlFor="event-end-time">End Time</Label>
+                <Input
+                  id="event-end-time"
+                  type="time"
+                  value={editEventForm.estimated_end_time}
+                  onChange={(e) => setEditEventForm({ ...editEventForm, estimated_end_time: e.target.value })}
+                />
+              </div>
             </div>
             <div>
               <Label htmlFor="event-location">Location</Label>
