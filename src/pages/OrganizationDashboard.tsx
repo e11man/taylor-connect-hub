@@ -376,10 +376,15 @@ const OrganizationDashboard = () => {
 
     try {
       setIsSubmitting(true);
-      // Combine date and time fields into proper datetime strings
-      const eventDate = `${newEvent.date}T${newEvent.arrival_time}:00`;
-      const arrivalTime = `${newEvent.date}T${newEvent.arrival_time}:00`;
-      const endTime = `${newEvent.date}T${newEvent.estimated_end_time}:00`;
+      // Create proper datetime strings in local timezone, then convert to ISO for storage
+      const eventDateTime = new Date(`${newEvent.date}T${newEvent.arrival_time}:00`);
+      const arrivalDateTime = new Date(`${newEvent.date}T${newEvent.arrival_time}:00`);
+      const endDateTime = new Date(`${newEvent.date}T${newEvent.estimated_end_time}:00`);
+      
+      // Convert to ISO strings for database storage (this preserves the local time as UTC)
+      const eventDate = eventDateTime.toISOString();
+      const arrivalTime = arrivalDateTime.toISOString();
+      const endTime = endDateTime.toISOString();
 
       let createdEventOrSeries: any = null;
 
@@ -478,12 +483,12 @@ const OrganizationDashboard = () => {
     if (!editingEvent) return;
 
     try {
-      // Combine date and time fields to create proper timestamps
-      const baseDate = new Date(newEvent.date);
+      // Create proper datetime objects in local timezone
+      const baseDate = new Date(`${newEvent.date}T00:00:00`);
       const arrivalDateTime = newEvent.arrival_time ? 
-        new Date(`${newEvent.date}T${newEvent.arrival_time}`) : null;
+        new Date(`${newEvent.date}T${newEvent.arrival_time}:00`) : null;
       const endDateTime = newEvent.estimated_end_time ? 
-        new Date(`${newEvent.date}T${newEvent.estimated_end_time}`) : null;
+        new Date(`${newEvent.date}T${newEvent.estimated_end_time}:00`) : null;
 
       const { data, error } = await supabase
         .from('events')
@@ -567,7 +572,7 @@ const OrganizationDashboard = () => {
   const openEditModal = (event: Event) => {
     setEditingEvent(event);
     
-    // Convert stored timestamps to proper format for form inputs
+    // Convert stored UTC timestamps back to local time for form inputs
     const eventDate = new Date(event.date);
     const arrivalTime = event.arrival_time ? new Date(event.arrival_time) : null;
     const endTime = event.estimated_end_time ? new Date(event.estimated_end_time) : null;
@@ -576,8 +581,10 @@ const OrganizationDashboard = () => {
       title: event.title,
       description: event.description || '',
       date: eventDate.toISOString().split('T')[0], // YYYY-MM-DD format for date input
-      arrival_time: arrivalTime ? arrivalTime.toTimeString().slice(0, 5) : '', // HH:MM format for time input
-      estimated_end_time: endTime ? endTime.toTimeString().slice(0, 5) : '', // HH:MM format for time input
+      arrival_time: arrivalTime ? 
+        `${arrivalTime.getHours().toString().padStart(2, '0')}:${arrivalTime.getMinutes().toString().padStart(2, '0')}` : '', // HH:MM format in local time
+      estimated_end_time: endTime ? 
+        `${endTime.getHours().toString().padStart(2, '0')}:${endTime.getMinutes().toString().padStart(2, '0')}` : '', // HH:MM format in local time
       location: event.location || '',
       max_participants: event.max_participants?.toString() || '',
       meeting_point: event.meeting_point || '',
